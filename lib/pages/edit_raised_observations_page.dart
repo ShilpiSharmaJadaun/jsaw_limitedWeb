@@ -76,6 +76,10 @@ class _EditRaisedObservationsPageState extends State<EditRaisedObservationsPage>
 
   late ObservationService observationService = ObservationService();
 
+  late final TextEditingController correctiveMeasureController;
+
+  late final TextEditingController observationTextController;
+
   ValueNotifier<String> plant = ValueNotifier("Select Plant");
   ValueNotifier<String> department = ValueNotifier("Select Department");
   ValueNotifier<String> responsibility = ValueNotifier("Select Responsibility");
@@ -131,7 +135,15 @@ class _EditRaisedObservationsPageState extends State<EditRaisedObservationsPage>
 
     // Initialize _imageUrl with the initial image URL from the model
     _imageUrl = widget.filterObservationModel.imageNumber;
-    }
+
+    correctiveMeasureController = TextEditingController(
+      text: widget.filterObservationModel.correctiveMeasure?.toString() ?? "",
+    );
+
+    observationTextController = TextEditingController(
+      text: widget.filterObservationModel.observationText?.toString() ?? "",
+    );
+  }
 
   Uint8List? _selectedImage;
   Uint8List? _webImageBytes;
@@ -611,19 +623,25 @@ class _EditRaisedObservationsPageState extends State<EditRaisedObservationsPage>
                             ),
                             _buildHeadingText("Corrective Measure :"),
                             SizedBox(
-                              width: 30.screenWidth,
-                              child: Text( widget.filterObservationModel.correctiveMeasure.toString(),
+                              width: 80.screenWidth,
+                              child: TextFormField(
+                                controller: correctiveMeasureController,
                                 maxLines: 3,
-                                textAlign: TextAlign.start,
-                                overflow: TextOverflow.ellipsis,
+                                decoration: InputDecoration(
+                                  hintText: "Enter corrective measure",
+                                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                                  contentPadding: const EdgeInsets.all(10),
+                                ),
                                 style: const TextStyle(
-                                    fontWeight: FontWeight.w600,
-                                    fontSize: 14,
-                                    color: Colors.black),
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 14,
+                                  color: Colors.black,
+                                ),
                               ),
                             ),
                           ],
                         ),
+                        SizedBox(height: 20,),
                         Container(
                           width: 1000,
                           child: Row(
@@ -639,14 +657,21 @@ class _EditRaisedObservationsPageState extends State<EditRaisedObservationsPage>
                                   _buildHeadingText("Observations :"),
                                   SizedBox(
                                     width: 80.screenWidth,
-                                    child: Text( widget.filterObservationModel.observationText.toString(),
+                                    child: TextFormField(
+                                      controller: observationTextController,
                                       maxLines: 3,
-                                      textAlign: TextAlign.start,
-                                      overflow: TextOverflow.ellipsis,
+                                      decoration: InputDecoration(
+                                        hintText: "Enter observation text",
+                                        border: OutlineInputBorder(
+                                          borderRadius: BorderRadius.circular(8),
+                                        ),
+                                        contentPadding: const EdgeInsets.all(10),
+                                      ),
                                       style: const TextStyle(
-                                          fontWeight: FontWeight.w600,
-                                          fontSize: 14,
-                                          color: Colors.black),
+                                        fontWeight: FontWeight.w600,
+                                        fontSize: 14,
+                                        color: Colors.black,
+                                      ),
                                     ),
                                   ),
                                 ],
@@ -1891,6 +1916,9 @@ class _EditRaisedObservationsPageState extends State<EditRaisedObservationsPage>
             return const Center(child: CircularProgressIndicator());
           },
           orElse: () {
+            final cm = correctiveMeasureController.text.trim().isEmpty
+                ? (widget.filterObservationModel.correctiveMeasure?.toString() ?? "")
+                : correctiveMeasureController.text.trim();
             return Center(
               child: Padding(
                 padding: const EdgeInsets.all(10.0),
@@ -1901,7 +1929,12 @@ class _EditRaisedObservationsPageState extends State<EditRaisedObservationsPage>
                       "plantDept": plant.value ?? "",
                       "plantDeptCode": departCode,
                       "location": location.value,
-                      "observationText": "",
+                      "observationText": observationTextController.text.trim().isEmpty
+                          ? widget.filterObservationModel.observationText
+                          : observationTextController.text.trim(),
+                      "correctiveMeasure": correctiveMeasureController.text.trim().isEmpty
+                          ? widget.filterObservationModel.correctiveMeasure
+                          : correctiveMeasureController.text.trim(),
                       "responsibility": responsibility.value,
                       "responsibilityEnggCode": responsibleEnggCode,
                       "hazardCategory": hazard.value,

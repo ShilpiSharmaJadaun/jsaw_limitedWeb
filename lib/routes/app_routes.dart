@@ -89,6 +89,8 @@ import 'package:jsaw_limited/pages/edit_raised_observations_page.dart';
 import 'package:jsaw_limited/pages/employee_reporting_page.dart';
 import 'package:jsaw_limited/pages/feedback_page.dart';
 import 'package:jsaw_limited/pages/graph_page.dart';
+import 'package:jsaw_limited/pages/incident_Reporting_page.dart';
+import 'package:jsaw_limited/pages/medical_Officer_page.dart';
 import 'package:jsaw_limited/pages/observation.dart';
 import 'package:jsaw_limited/pages/priority_changes_page.dart';
 import 'package:jsaw_limited/pages/register_observation_page.dart';
@@ -113,6 +115,8 @@ class AppRoutes {
   static const approveObservation = '/approveObservation';
   static const approveObservationDetail = '/approveObservationDetail';
   static const employeeReporetingPage = '/employeeReportingPage';
+  // static const incidentTrackingPage = '/indicentTrackingPage';
+  // static const medicalOfficerPage = '/medicalOfficerPage';
 
 
   static Map<String, Widget Function(BuildContext)> getRoutes(BuildContext _) {
@@ -130,7 +134,9 @@ class AppRoutes {
       approvedObservationPage: (_) => ApprovedObservationPage(),
       priorityChangesPage: (_) => PriorityChangesPage(),
       dashboardSelection: (_)=> DashboardselectionPage(),
-      employeeReporetingPage: (_) => EmployeeReportingPage()
+      employeeReporetingPage: (_) => EmployeeReportingPage(),
+      // incidentTrackingPage: (_) => IncidentReportingPage(),
+      // medicalOfficerPage: (_) => MedicalOfficerPage()
     };
   }
 }

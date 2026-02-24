@@ -900,7 +900,6 @@ class _RegisterObservationPageState extends State<RegisterObservationPage> {
         ),
       ),
     );
-
   }
 
   Future<void> _buildallPlantListDialog(List<AllPlantModel> model) {

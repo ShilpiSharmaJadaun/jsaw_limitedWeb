@@ -5,6 +5,7 @@ import 'package:jsaw_limited/pages/change_password_page.dart';
 import 'package:jsaw_limited/pages/dashboardSelection.dart';
 import 'package:jsaw_limited/pages/employee_reporting_page.dart';
 import 'package:jsaw_limited/pages/graph_page.dart';
+import 'package:jsaw_limited/pages/incident_Reporting_page.dart';
 import 'package:jsaw_limited/pages/observation.dart';
 import 'package:jsaw_limited/pages/priority_changes_page.dart';
 import 'package:jsaw_limited/pages/register_observation_page.dart';
@@ -105,6 +106,7 @@ class AppDrawer extends StatelessWidget {
       'Observation',
       'Graph',
       'Raise Observation',
+      //'Incident Tracking'
     ];
 
     if (html.window.localStorage['khseCode'] == '1') {
@@ -134,6 +136,7 @@ class AppDrawer extends StatelessWidget {
       'assets/images/observation.png',
       'assets/images/graph.png',
       'assets/images/raise_observation.png',
+      //'assets/images/raise_observation.png',
 
     ];
 
@@ -167,6 +170,7 @@ class AppDrawer extends StatelessWidget {
       const ObservationPage(),
       const GraphPage(),
       const RegisterObservationPage(),
+      //const IncidentReportingPage(),
     ];
 
     if (html.window.localStorage['khseCode'] == '1') {
@@ -188,6 +192,7 @@ class AppDrawer extends StatelessWidget {
       drawerContent.add(const EmployeeReportingPage());
     }
     return drawerContent;
+
   }
 
   Widget _buildDrawerItem({
