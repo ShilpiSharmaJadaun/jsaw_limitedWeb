@@ -475,7 +475,7 @@ class _EditRaisedObservationsPageState extends State<EditRaisedObservationsPage>
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     SizedBox(
-                      width: 50.screenWidth,
+                      width: 40.screenWidth,
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -517,7 +517,7 @@ class _EditRaisedObservationsPageState extends State<EditRaisedObservationsPage>
                       ),
                     ),
                     SizedBox(
-                      width: 50.screenWidth,
+                      width: 40.screenWidth,
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -556,7 +556,7 @@ class _EditRaisedObservationsPageState extends State<EditRaisedObservationsPage>
                       ),
                     ),
                     SizedBox(
-                      width: 50.screenWidth,
+                      width: 40.screenWidth,
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -604,13 +604,13 @@ class _EditRaisedObservationsPageState extends State<EditRaisedObservationsPage>
                         height: 2,
                         alignment: Alignment.center,
                         color: kcVeryLightGrey,
-                        width: 150.screenWidth,
+                        width: 120.screenWidth,
                       )),
                 ),
                 Padding(
                   padding: const EdgeInsets.all(8.0),
                   child: SizedBox(
-                    width: 150.screenWidth,
+                    width: 120.screenWidth,
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.start,
                       crossAxisAlignment: CrossAxisAlignment.start,

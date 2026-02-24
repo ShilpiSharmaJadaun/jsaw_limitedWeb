@@ -115,7 +115,7 @@ class AppRoutes {
   static const approveObservation = '/approveObservation';
   static const approveObservationDetail = '/approveObservationDetail';
   static const employeeReporetingPage = '/employeeReportingPage';
-  // static const incidentTrackingPage = '/indicentTrackingPage';
+  static const incidentTrackingPage = '/indicentTrackingPage';
   // static const medicalOfficerPage = '/medicalOfficerPage';
 
 
@@ -135,7 +135,7 @@ class AppRoutes {
       priorityChangesPage: (_) => PriorityChangesPage(),
       dashboardSelection: (_)=> DashboardselectionPage(),
       employeeReporetingPage: (_) => EmployeeReportingPage(),
-      // incidentTrackingPage: (_) => IncidentReportingPage(),
+       incidentTrackingPage: (_) => IncidentReportingPage(),
       // medicalOfficerPage: (_) => MedicalOfficerPage()
     };
   }

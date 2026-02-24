@@ -97,35 +97,35 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                 ],
               )),
           const Spacer(flex: 60,),
-          // const Padding(
-          //   padding:
-          //   EdgeInsets.symmetric(vertical: 50, horizontal: 100),
-          //   child: Padding(
-          //     padding: EdgeInsets.all(8.0),
-          //     child: Text(
-          //       "HARESAMUDRAM " ,maxLines: 5,
-          //       textAlign: TextAlign.center,
-          //       style: TextStyle(color: kcmegenta,
-          //           decoration: TextDecoration.underline,
-          //           fontSize: 50,overflow: TextOverflow.ellipsis, fontWeight: FontWeight.bold),
-          //     ),
-          //   ),
-          // ),
-
           const Padding(
             padding:
             EdgeInsets.symmetric(vertical: 50, horizontal: 100),
             child: Padding(
               padding: EdgeInsets.all(8.0),
               child: Text(
-                "KUDATHINI" ,maxLines: 5,
+                "HARESAMUDRAM " ,maxLines: 5,
                 textAlign: TextAlign.center,
                 style: TextStyle(color: kcmegenta,
                     decoration: TextDecoration.underline,
                     fontSize: 50,overflow: TextOverflow.ellipsis, fontWeight: FontWeight.bold),
               ),
             ),
-          )
+          ),
+
+          // const Padding(
+          //   padding:
+          //   EdgeInsets.symmetric(vertical: 50, horizontal: 100),
+          //   child: Padding(
+          //     padding: EdgeInsets.all(8.0),
+          //     child: Text(
+          //       "KUDATHINI" ,maxLines: 5,
+          //       textAlign: TextAlign.center,
+          //       style: TextStyle(color: kcmegenta,
+          //           decoration: TextDecoration.underline,
+          //           fontSize: 50,overflow: TextOverflow.ellipsis, fontWeight: FontWeight.bold),
+          //     ),
+          //   ),
+          // )
         ],
       ),
     );

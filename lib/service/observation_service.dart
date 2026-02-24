@@ -758,6 +758,26 @@ class ObservationService{
     }
   }
 
+  ///Delete Observation
+
+  Future<String?> deleteObservation(Map<String, dynamic>data) async {
+    const url = '${root}observation/deleteObservation';
+    final body = data;
+    try {
+      final response = await http.delete(Uri.parse(url), body: json.encode(body), headers: headers);
+      final responseBody = json.decode(response.body);
+      if (responseBody['status'] == true) {
+        return responseBody ['msg'];
+      }else{
+        throw ApiError.fromResponse(responseBody['error']);
+      }
+    } catch (e) {
+      print(e);
+      _handleError(e);
+    }
+    // return null;
+  }
+
 
   _handleError(var e) {
     if (e is String) throw e;

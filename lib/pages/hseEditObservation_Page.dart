@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
+import 'package:jsaw_limited/bloc/deleteObservation_bloc.dart';
 import 'package:lottie/lottie.dart';
 import 'package:provider/provider.dart';
 import 'package:responsive_builder/responsive_builder.dart';
@@ -83,6 +84,8 @@ class _HseEditObservationPageState extends State<HseEditObservationPage> {
 
   late final AllFilterObservationBloc allFilterObservationBloc;
 
+  late final DeleteObservationBloc deleteObservationBloc;
+
 
   ValueNotifier<String> workGroup = ValueNotifier("Select Work Group");
   ValueNotifier<String> plant = ValueNotifier("Filter Plant");
@@ -128,6 +131,7 @@ class _HseEditObservationPageState extends State<HseEditObservationPage> {
     final dashboardService = Provider.of<DashboardService>(context, listen: false);
     //allObservationBloc = AllObservationBloc(observationService);
     filterObservationBloc= FilterObservationBloc(observationService);
+    deleteObservationBloc = DeleteObservationBloc(observationService);
     // allObservationBloc.initState();
     //filterObservationBloc.initState(currentPage,"", "", "", "", "", "", "", "", window.localStorage['kEmployeeCode'] ?? "");
     allPlantBloc = AllPlantBloc(observationService);
@@ -254,30 +258,45 @@ class _HseEditObservationPageState extends State<HseEditObservationPage> {
                         children: [
                           Padding(
                             padding: const EdgeInsets.all(8),
-                            child: SizedBox(
-                              width: 40.screenWidth,
-                              height: 20.screenHeight,
-                              child: FadeInImage(
-                                placeholder: NetworkImage(model.model[index].lowQualityImageUrl), // Low-quality image
-                                image: NetworkImage(model.model[index].imageNumber), // High-quality image
-                                fadeInDuration: const Duration(milliseconds: 300), // Fade duration for transition
-                                fadeOutDuration: const Duration(milliseconds: 300), // Fade out duration for the placeholder
-                                fit: BoxFit.cover, // Image fit mode
-                                imageErrorBuilder: (context, error, stackTrace) {
-                                  return const Icon(Icons.error); // Handle any error loading the image
-                                },
-                              ),
-                              // child:CachedNetworkImage(
-                              //   imageUrl: 'https://cors-anywhere.herokuapp.com'+model.model[index].imageNumber,
-                              //   placeholder: (context, url) => Image.network(
-                              //     model.model[index].lowQualityImageUrl,  // Display low-quality image as a placeholder
-                              //     fit: BoxFit.cover,
-                              //   ),
-                              //   errorWidget: (context, url, error) => Icon(Icons.error),
-                              //   fit: BoxFit.cover,
-                              // )
+                            child: Column(
+                              children: [
+                                SizedBox(
+                                  width: 40.screenWidth,
+                                  height: 20.screenHeight,
+                                  child: FadeInImage(
+                                    placeholder: NetworkImage(model.model[index].lowQualityImageUrl), // Low-quality image
+                                    image: NetworkImage(model.model[index].imageNumber), // High-quality image
+                                    fadeInDuration: const Duration(milliseconds: 300), // Fade duration for transition
+                                    fadeOutDuration: const Duration(milliseconds: 300), // Fade out duration for the placeholder
+                                    fit: BoxFit.cover, // Image fit mode
+                                    imageErrorBuilder: (context, error, stackTrace) {
+                                      return const Icon(Icons.error); // Handle any error loading the image
+                                    },
+                                  ),
+
+                                  // child:CachedNetworkImage(
+                                  //   imageUrl: 'https://cors-anywhere.herokuapp.com'+model.model[index].imageNumber,
+                                  //   placeholder: (context, url) => Image.network(
+                                  //     model.model[index].lowQualityImageUrl,  // Display low-quality image as a placeholder
+                                  //     fit: BoxFit.cover,
+                                  //   ),
+                                  //   errorWidget: (context, url, error) => Icon(Icons.error),
+                                  //   fit: BoxFit.cover,
+                                  // )
+                                ),
+                                Padding(
+                                  padding: const EdgeInsets.all(8.0),
+                                  child: ElevatedButton(onPressed: (){
+                                    _showDeleteDialog(context, model.model[index].uniqueIdentificationNumber, employeeCode);
+
+                                  },
+                                      style: ElevatedButton.styleFrom(backgroundColor: kcRed,),
+                                      child: const Text("Delete Observation", style: TextStyle(color: kcWhite),)),
+                                )
+                              ],
                             ),
                           ),
+
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             mainAxisAlignment: MainAxisAlignment.start,
@@ -635,6 +654,7 @@ class _HseEditObservationPageState extends State<HseEditObservationPage> {
 
                                 ],
                               ),
+
                             ],
                           ),
                         ],
@@ -645,6 +665,44 @@ class _HseEditObservationPageState extends State<HseEditObservationPage> {
       ],
     );
   }
+
+  ///Delete Observation
+
+  void _showDeleteDialog(BuildContext context, uniqueIdentificationNumber, updatedByEmpId) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text("Confirm Delete"),
+          content: Text("Are you sure you want to delete this observation?"),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(); // Close dialog
+              },
+              child: Text("No"),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(backgroundColor: kcRed),
+              onPressed: () {
+                _deleteObservation(uniqueIdentificationNumber, updatedByEmpId);
+              },
+              child: Text("Yes", style: TextStyle(color: kcWhite)),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _deleteObservation(String uniqueIdentificationNumber, String updatedByEmpId) async {
+    final data = {'uniqueIdentificationNumber': uniqueIdentificationNumber, 'updatedByEmpId': updatedByEmpId};
+    await deleteObservationBloc.deleteObservation(data);
+    allFilterObservationBloc.initState(0,"", "", "", "", "", "PENDING", "", "", "","","");
+    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Observation Deleted Successfully")));
+    Navigator.of(context).pop(); // Close dialog
+  }
+
 
   _buildHeadingText(String title) {
     return Padding(
