@@ -1,6 +1,6 @@
-# jsaw_limited
+# jsaw_web
 
-A new Flutter project.
+A Flutter project.
 
 ## Getting Started
 
