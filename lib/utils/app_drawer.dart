@@ -5,6 +5,8 @@ import 'package:jsaw_limited/pages/change_password_page.dart';
 import 'package:jsaw_limited/pages/dashboardSelection.dart';
 import 'package:jsaw_limited/pages/employee_reporting_page.dart';
 import 'package:jsaw_limited/pages/graph_page.dart';
+import 'package:jsaw_limited/pages/investigation_form.dart';
+import 'package:jsaw_limited/pages/medical_Officer_page.dart';
 import 'package:jsaw_limited/pages/observation.dart';
 import 'package:jsaw_limited/pages/priority_changes_page.dart';
 import 'package:jsaw_limited/pages/register_observation_page.dart';
@@ -106,7 +108,9 @@ class AppDrawer extends StatelessWidget {
       'Observation',
       'Graph',
       'Raise Observation',
-      'Incident Tracking'
+      'Incident Tracking',
+      'Medical Form',
+      //'Investigation Form',
     ];
 
     if (html.window.localStorage['khseCode'] == '1') {
@@ -137,6 +141,8 @@ class AppDrawer extends StatelessWidget {
       'assets/images/graph.png',
       'assets/images/raise_observation.png',
       'assets/images/raise_observation.png',
+      'assets/images/raise_observation.png',
+      //'assets/images/raise_observation.png',
 
     ];
 
@@ -171,6 +177,8 @@ class AppDrawer extends StatelessWidget {
       const GraphPage(),
       const RegisterObservationPage(),
       const IncidentReportingPage(),
+      const MedicalOfficerPage(),
+      //const InvestigationFormPage()
     ];
 
     if (html.window.localStorage['khseCode'] == '1') {
