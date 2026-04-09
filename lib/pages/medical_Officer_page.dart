@@ -100,238 +100,254 @@ class _MedicalOfficerPageState extends State<MedicalOfficerPage> {
       body: Card(
         child: Padding(
           padding: const EdgeInsets.all(20.0),
-          child: Column(
-            children: [
-              /// Employee Details
-              Row(
-                children: [
-                  Expanded(
-                    child: Row(
-                      children: [
-                        Image.asset("assets/images/uniqueid.png", scale: 20),
-                        const SizedBox(width: 4),
-                        const Text("*",
-                            style: TextStyle(color: Colors.red, fontSize: 18)),
-                        const SizedBox(width: 4),
-                        _buildHeadingText("Select Employee"),
-                        const SizedBox(width: 10),
-                        Expanded(child: _buildEmployeeNameDropdown()),
-                      ],
+          child: SingleChildScrollView(
+            child: Column(
+              children: [
+                ///Image
+                SizedBox(
+                    height: 200,
+                    width: 200,
+                    child: Image.asset("assets/images/adhyamLogo.png")),
+                
+                /// Employee Details
+                Row(
+                  children: [
+                    Expanded(
+                      child: Row(
+                        children: [
+                          Image.asset("assets/images/uniqueid.png", scale: 20),
+                          const SizedBox(width: 4),
+                          const Text("*",
+                              style: TextStyle(color: Colors.red, fontSize: 18)),
+                          const SizedBox(width: 4),
+                          _buildHeadingText("Select Employee"),
+                          const SizedBox(width: 10),
+                          Expanded(child: _buildEmployeeNameDropdown()),
+                        ],
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: 20),
-                  Expanded(
-                    child: Row(
-                      children: [
-                        Image.asset("assets/images/date.png", scale: 20),
-                        const SizedBox(width: 4),
-                        const Text("*",
-                            style: TextStyle(color: Colors.red, fontSize: 18)),
-                        const SizedBox(width: 4),
-                        _buildHeadingText("Department"),
-                        const SizedBox(width: 10),
-                        if (selectedEmployee != null)
-                          Expanded(
-                            child: _buildInfoText(
-                              selectedEmployee?["department"] ?? "",
+                    const SizedBox(width: 20),
+                    Expanded(
+                      child: Row(
+                        children: [
+                          Image.asset("assets/images/date.png", scale: 20),
+                          const SizedBox(width: 4),
+                          const Text("*",
+                              style: TextStyle(color: Colors.red, fontSize: 18)),
+                          const SizedBox(width: 4),
+                          _buildHeadingText("Department"),
+                          const SizedBox(width: 10),
+                          if (selectedEmployee != null)
+                            Expanded(
+                              child: _buildInfoText(
+                                selectedEmployee?["department"] ?? "",
+                              ),
                             ),
-                          ),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
-                ],
-              ),
-
-              const SizedBox(height: 20),
-
-              /// Unique Id + Responsible Engineer
-              Row(
-                children: [
-                  Expanded(
-                    child: Row(
-                      children: [
-                        Image.asset("assets/images/uniqueid.png", scale: 20),
-                        const SizedBox(width: 4),
-                        const Text("*",
-                            style: TextStyle(color: Colors.red, fontSize: 18)),
-                        const SizedBox(width: 4),
-                        _buildHeadingText("Unique Id"),
-                        const SizedBox(width: 10),
-                        if (selectedEmployee != null)
-                          Expanded(
-                            child: _buildInfoText(
-                              selectedEmployee?["uniqueId"] ?? "",
+                  ],
+                ),
+            
+                const SizedBox(height: 20),
+            
+                /// Unique Id + Responsible Engineer
+                Row(
+                  children: [
+                    Expanded(
+                      child: Row(
+                        children: [
+                          Image.asset("assets/images/uniqueid.png", scale: 20),
+                          const SizedBox(width: 4),
+                          const Text("*",
+                              style: TextStyle(color: Colors.red, fontSize: 18)),
+                          const SizedBox(width: 4),
+                          _buildHeadingText("Unique Id"),
+                          const SizedBox(width: 10),
+                          if (selectedEmployee != null)
+                            Expanded(
+                              child: _buildInfoText(
+                                selectedEmployee?["uniqueId"] ?? "",
+                              ),
                             ),
-                          ),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: 20),
-                  Expanded(
-                    child: Row(
-                      children: [
-                        Image.asset("assets/images/date.png", scale: 20),
-                        const SizedBox(width: 4),
-                        const Text("*",
-                            style: TextStyle(color: Colors.red, fontSize: 18)),
-                        const SizedBox(width: 4),
-                        _buildHeadingText("Responsible Engineer"),
-                        const SizedBox(width: 10),
-                        if (selectedEmployee != null)
-                          Expanded(
-                            child: _buildInfoText(
-                              selectedEmployee?["engineer"] ?? "",
+                    const SizedBox(width: 20),
+                    Expanded(
+                      child: Row(
+                        children: [
+                          Image.asset("assets/images/date.png", scale: 20),
+                          const SizedBox(width: 4),
+                          const Text("*",
+                              style: TextStyle(color: Colors.red, fontSize: 18)),
+                          const SizedBox(width: 4),
+                          _buildHeadingText("Responsible Engineer"),
+                          const SizedBox(width: 10),
+                          if (selectedEmployee != null)
+                            Expanded(
+                              child: _buildInfoText(
+                                selectedEmployee?["engineer"] ?? "",
+                              ),
                             ),
-                          ),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
-                ],
-              ),
-
-              const SizedBox(height: 20),
-
-              /// Description + Age
-              Row(
-                children: [
-                  Expanded(
-                    child: Row(
-                      children: [
-                        Image.asset("assets/images/uniqueid.png", scale: 20),
-                        const SizedBox(width: 4),
-                        const Text("*",
-                            style: TextStyle(color: Colors.red, fontSize: 18)),
-                        const SizedBox(width: 4),
-                        _buildHeadingText("Description"),
-                        const SizedBox(width: 10),
-                        if (selectedEmployee != null)
-                          Expanded(
-                            child: _buildInfoText(
-                              selectedEmployee?["description"] ?? "",
+                  ],
+                ),
+            
+                const SizedBox(height: 20),
+            
+                /// Description + Age
+                Row(
+                  children: [
+                    Expanded(
+                      child: Row(
+                        children: [
+                          Image.asset("assets/images/uniqueid.png", scale: 20),
+                          const SizedBox(width: 4),
+                          const Text("*",
+                              style: TextStyle(color: Colors.red, fontSize: 18)),
+                          const SizedBox(width: 4),
+                          _buildHeadingText("Description"),
+                          const SizedBox(width: 10),
+                          if (selectedEmployee != null)
+                            Expanded(
+                              child: _buildInfoText(
+                                selectedEmployee?["description"] ?? "",
+                              ),
                             ),
-                          ),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: 20),
-                  Expanded(
-                    child: Row(
-                      children: [
-                        Image.asset("assets/images/date.png", scale: 20),
-                        const SizedBox(width: 4),
-                        const Text("*",
-                            style: TextStyle(color: Colors.red, fontSize: 18)),
-                        const SizedBox(width: 4),
-                        _buildHeadingText("Age"),
-                        const SizedBox(width: 10),
-                        if (selectedEmployee != null)
-                          Expanded(
-                            child: _buildInfoText(
-                              selectedEmployee?["age"] ?? "",
+                    const SizedBox(width: 20),
+                    Expanded(
+                      child: Row(
+                        children: [
+                          Image.asset("assets/images/date.png", scale: 20),
+                          const SizedBox(width: 4),
+                          const Text("*",
+                              style: TextStyle(color: Colors.red, fontSize: 18)),
+                          const SizedBox(width: 4),
+                          _buildHeadingText("Age"),
+                          const SizedBox(width: 10),
+                          if (selectedEmployee != null)
+                            Expanded(
+                              child: _buildInfoText(
+                                selectedEmployee?["age"] ?? "",
+                              ),
                             ),
-                          ),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
-                ],
-              ),
-
-              const SizedBox(height: 20),
-
-              /// Type Injury + Body Part
-              Row(
-                children: [
-                  Expanded(
-                    child: Row(
-                      children: [
-                        Image.asset("assets/images/uniqueid.png", scale: 20),
-                        const SizedBox(width: 4),
-                        const Text("*",
-                            style: TextStyle(color: Colors.red, fontSize: 18)),
-                        const SizedBox(width: 4),
-                        _buildHeadingText("Type Of Injury"),
-                        const SizedBox(width: 10),
-                        Expanded(child: _buildInjuryTypeDropdown()),
-                      ],
+                    const SizedBox(width: 20),
+                    
+                  ],
+                ),
+            
+                const SizedBox(height: 20),
+            
+                /// Type Injury + Body Part
+                Row(
+                  children: [
+                    Expanded(
+                      child: Row(
+                        children: [
+                          Image.asset("assets/images/uniqueid.png", scale: 20),
+                          const SizedBox(width: 4),
+                          const Text("*",
+                              style: TextStyle(color: Colors.red, fontSize: 18)),
+                          const SizedBox(width: 4),
+                          _buildHeadingText("Type Of Injury"),
+                          const SizedBox(width: 10),
+                          Expanded(child: _buildInjuryTypeDropdown()),
+                        ],
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: 20),
-                  Expanded(
-                    child: Row(
-                      children: [
-                        Image.asset("assets/images/date.png", scale: 20),
-                        const SizedBox(width: 4),
-                        const Text("*",
-                            style: TextStyle(color: Colors.red, fontSize: 18)),
-                        const SizedBox(width: 4),
-                        _buildHeadingText("Body Part"),
-                        const SizedBox(width: 10),
-                        Expanded(child: _buildBodyTypeDropdown()),
-                      ],
+                    const SizedBox(width: 20),
+                    Expanded(
+                      child: Row(
+                        children: [
+                          Image.asset("assets/images/date.png", scale: 20),
+                          const SizedBox(width: 4),
+                          const Text("*",
+                              style: TextStyle(color: Colors.red, fontSize: 18)),
+                          const SizedBox(width: 4),
+                          _buildHeadingText("Body Part"),
+                          const SizedBox(width: 10),
+                          Expanded(child: _buildBodyTypeDropdown()),
+                        ],
+                      ),
                     ),
-                  ),
-                ],
-              ),
-
-              const SizedBox(height: 20),
-
-              /// Nature of Injury + Rest Upto
-              Row(
-                children: [
-                  Expanded(
-                    child: Row(
-                      children: [
-                        Image.asset("assets/images/uniqueid.png", scale: 20),
-                        const SizedBox(width: 4),
-                        const Text("*",
-                            style: TextStyle(color: Colors.red, fontSize: 18)),
-                        const SizedBox(width: 4),
-                        _buildHeadingText("Nature Of Injury"),
-                        const SizedBox(width: 10),
-                        Expanded(child: _buildNatureOfInjuryDropdown()),
-                      ],
+                  ],
+                ),
+            
+                const SizedBox(height: 20),
+            
+                /// Nature of Injury + Rest Upto
+                Row(
+                  children: [
+                    Expanded(
+                      child: Row(
+                        children: [
+                          Image.asset("assets/images/uniqueid.png", scale: 20),
+                          const SizedBox(width: 4),
+                          const Text("*",
+                              style: TextStyle(color: Colors.red, fontSize: 18)),
+                          const SizedBox(width: 4),
+                          _buildHeadingText("Nature Of Injury"),
+                          const SizedBox(width: 10),
+                          Expanded(child: _buildNatureOfInjuryDropdown()),
+                        ],
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: 20),
-                  Expanded(
-                    child: Row(
-                      children: [
-                        Image.asset("assets/images/date.png", scale: 20),
-                        const SizedBox(width: 4),
-                        const Text("*",
-                            style: TextStyle(color: Colors.red, fontSize: 18)),
-                        const SizedBox(width: 4),
-                        _buildHeadingText("Rest Upto in Days"),
-                        const SizedBox(width: 10),
-                        Expanded(child: _buildDetailsTextField()),
-                      ],
+                    const SizedBox(width: 20),
+                    Expanded(
+                      child: Row(
+                        children: [
+                          Image.asset("assets/images/date.png", scale: 20),
+                          const SizedBox(width: 4),
+                          const Text("*",
+                              style: TextStyle(color: Colors.red, fontSize: 18)),
+                          const SizedBox(width: 4),
+                          _buildHeadingText("Rest Upto in Days"),
+                          const SizedBox(width: 10),
+                          Expanded(child: _buildDetailsTextField()),
+                        ],
+                      ),
                     ),
-                  ),
-                ],
-              ),
-
-              const SizedBox(height: 20),
-
-              Row(
-                children: [
-                  SizedBox(
-                    width: 500,
-                    child: Row(
-                      children: [
-                        Image.asset("assets/images/date.png", scale: 20),
-                        const SizedBox(width: 4),
-                        const Text("*",
-                            style: TextStyle(color: Colors.red, fontSize: 18)),
-                        const SizedBox(width: 4),
-                        _buildHeadingText("Fit for Duty from Date"),
-                        const SizedBox(width: 10),
-                        Expanded(child: _buildDateTextField()),
-                      ],
+                  ],
+                ),
+            
+                const SizedBox(height: 20),
+            
+                Row(
+                  children: [
+                    SizedBox(
+                      width: 500,
+                      child: Row(
+                        children: [
+                          Image.asset("assets/images/date.png", scale: 20),
+                          const SizedBox(width: 4),
+                          const Text("*",
+                              style: TextStyle(color: Colors.red, fontSize: 18)),
+                          const SizedBox(width: 4),
+                          _buildHeadingText("Fit for Duty from Date"),
+                          const SizedBox(width: 10),
+                          Expanded(child: _buildDateTextField()),
+                        ],
+                      ),
                     ),
-                  ),
-                ],
-              ),
-            ],
+                  ],
+                ),
+
+                ElevatedButton(onPressed: (){},
+                    style: ElevatedButton.styleFrom(backgroundColor: kclightOrange),
+                    child: Text("Submit",style: TextStyle(color: kcWhite),)),
+
+                const SizedBox(height: 20),
+              ],
+            ),
           ),
         ),
       ),
@@ -428,6 +444,7 @@ class _MedicalOfficerPageState extends State<MedicalOfficerPage> {
                     ),
                   ),
                   const Icon(Icons.arrow_drop_down_sharp),
+                  
                 ],
               ),
             ),

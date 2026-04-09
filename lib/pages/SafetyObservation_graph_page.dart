@@ -37,7 +37,7 @@ class _SafetyObservationsChartState extends State<SafetyObservationsChart> {
         .read<SafetyByManagerBloc>()
         .initState("", ""); // Pass the necessary deptCode here
     final graphService = Provider.of<GraphService>(context, listen: false);
- //   departmentgraphExportBloc = DepartmentgraxphExportBloc(graphService);
+   departmentgraphExportBloc = DepartmentgraphExportBloc(graphService);
 
     startDateInput.text = "";
     endDateInput.text = "";
