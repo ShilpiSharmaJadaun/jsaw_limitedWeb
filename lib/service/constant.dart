@@ -1,5 +1,5 @@
 
-const root = 'http://hseap.jindalsaw.com:8078/JSAW/';
+const root = 'http://103.107.26.146:8078/JSAW/';
 // const root = 'http://103.107.26.146:8079/JSAW/';
 //const root = 'http://localhost:8091/JSAW/';
 

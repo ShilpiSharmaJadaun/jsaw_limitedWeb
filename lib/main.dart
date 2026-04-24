@@ -19,6 +19,7 @@ import 'package:jsaw_limited/pages/suggestion_page.dart';
 import 'package:jsaw_limited/service/dashboard_service.dart';
 import 'package:jsaw_limited/service/employee_reporting_service.dart';
 import 'package:jsaw_limited/service/graph.dart';
+import 'package:jsaw_limited/service/incident_service.dart';
 import 'package:jsaw_limited/service/login_service.dart';
 import 'package:jsaw_limited/service/observation_service.dart';
 import 'package:jsaw_limited/service/password_service.dart';
@@ -59,6 +60,7 @@ Future<void> main() async {
       Provider<HazardGraphExportBloc>(create: (_) => HazardGraphExportBloc(graphService)),
       Provider<Graph2Bloc>(create: (_) => Graph2Bloc(graphService)),
       Provider<EmployeeReportingService>(create: (_) => EmployeeReportingService()),
+      Provider<IncidentService>(create: (_) => IncidentService())
 
     ],
     child: const MyApp(),

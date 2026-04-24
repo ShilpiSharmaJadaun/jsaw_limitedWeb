@@ -18,5 +18,16 @@ class SharedPreferencesService {
     return prefs.getString('kEmployeeCode') ?? ''; // Provide a default value if needed
   }
 
+  static Future<String> getDepartCode() async {
+    final SharedPreferences prefs = await _getInstance();
+    return prefs.getString('kDepartCode') ?? ''; // Provide a default value if needed
+  }
+
+
+  static Future<String> getStatCode() async {
+    final SharedPreferences prefs = await _getInstance();
+    return prefs.getString('kstatCode') ?? ''; // Provide a default value if needed
+  }
+
 // Add more getters and setters as needed for other preferences
 }
