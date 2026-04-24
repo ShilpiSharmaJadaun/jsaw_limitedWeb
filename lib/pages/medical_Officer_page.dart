@@ -1,4 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:jsaw_limited/bloc/allBodyParts_bloc.dart';
+import 'package:jsaw_limited/bloc/allNatureInjury_bloc.dart';
+import 'package:jsaw_limited/bloc/allTypeIncident_bloc.dart';
+import 'package:jsaw_limited/model/allBodyParts_model.dart';
+import 'package:jsaw_limited/model/allNatureInjury_model.dart';
+import 'package:jsaw_limited/model/allTypeIncident_model.dart';
+import 'package:jsaw_limited/state/allBodyParts_state.dart';
+import 'package:jsaw_limited/state/allNatureInjury_state.dart';
+import 'package:jsaw_limited/state/allTypeIncident_state.dart';
+import 'package:provider/provider.dart';
+import '../bloc/employeeBasicDetail_bloc.dart';
+import '../model/employeeBasicDetail_model.dart';
+import '../service/incident_service.dart';
+import '../state/employeeBasicDetail_state.dart';
 import '../utils/app_color.dart';
 
 class MedicalOfficerPage extends StatefulWidget {
@@ -19,6 +34,7 @@ class _MedicalOfficerPageState extends State<MedicalOfficerPage> {
   DateTime? selectedDate;
 
   Map<String, String>? selectedEmployee;
+
 
   final List<Map<String, String>> employees = [
     {
@@ -80,11 +96,47 @@ class _MedicalOfficerPageState extends State<MedicalOfficerPage> {
     }
   }
 
+
+  late EmployeeBasicDetailBloc employeeBasicDetailBloc;
+
+  ValueNotifier<String> employeeId = ValueNotifier("");
+
+
+  late AllNatureInjuryBloc allNatureInjuryBloc;
+
+  ValueNotifier<String> injuryType = ValueNotifier("");
+
+  late AllBodyPartsBloc allBodyPartsBloc;
+
+  ValueNotifier<String> bodyPart = ValueNotifier("");
+
+  late AllTypeIncidentBloc allTypeIncidentBloc;
+
+  // ValueNotifier<String> natureOfInjury = ValueNotifier("");
+
+  ValueNotifier<String> typeOfIncident = ValueNotifier("");
+
+
+
   @override
   void initState() {
     super.initState();
     dateController = TextEditingController();
     detailsController = TextEditingController();
+
+    final incidentService = Provider.of<IncidentService>(context, listen: false);
+
+    employeeBasicDetailBloc = EmployeeBasicDetailBloc(incidentService);
+    employeeBasicDetailBloc.initState();
+
+    allNatureInjuryBloc = AllNatureInjuryBloc(incidentService);
+    allNatureInjuryBloc.initState();
+
+    allBodyPartsBloc = AllBodyPartsBloc(incidentService);
+    allBodyPartsBloc.initState();
+
+    allTypeIncidentBloc = AllTypeIncidentBloc(incidentService);
+    allTypeIncidentBloc.initState();
   }
 
   @override
@@ -122,7 +174,7 @@ class _MedicalOfficerPageState extends State<MedicalOfficerPage> {
                           const SizedBox(width: 4),
                           _buildHeadingText("Select Employee"),
                           const SizedBox(width: 10),
-                          Expanded(child: _buildEmployeeNameDropdown()),
+                          Expanded(child: _buildEmployeeDetail()),
                         ],
                       ),
                     ),
@@ -260,7 +312,7 @@ class _MedicalOfficerPageState extends State<MedicalOfficerPage> {
                           const SizedBox(width: 4),
                           _buildHeadingText("Type Of Injury"),
                           const SizedBox(width: 10),
-                          Expanded(child: _buildInjuryTypeDropdown()),
+                          Expanded(child: _buildInjuryType()),
                         ],
                       ),
                     ),
@@ -275,7 +327,7 @@ class _MedicalOfficerPageState extends State<MedicalOfficerPage> {
                           const SizedBox(width: 4),
                           _buildHeadingText("Body Part"),
                           const SizedBox(width: 10),
-                          Expanded(child: _buildBodyTypeDropdown()),
+                          Expanded(child: _buildBodyPart()),
                         ],
                       ),
                     ),
@@ -297,7 +349,7 @@ class _MedicalOfficerPageState extends State<MedicalOfficerPage> {
                           const SizedBox(width: 4),
                           _buildHeadingText("Nature Of Injury"),
                           const SizedBox(width: 10),
-                          Expanded(child: _buildNatureOfInjuryDropdown()),
+                          Expanded(child: _buildAllTypeOfIncident()),
                         ],
                       ),
                     ),
@@ -411,101 +463,33 @@ class _MedicalOfficerPageState extends State<MedicalOfficerPage> {
     );
   }
 
-  Widget _buildEmployeeNameDropdown() {
-    return Padding(
-      padding: const EdgeInsets.all(5),
-      child: InkWell(
-        onTap: _buildEmployeeListDialog,
-        child: SizedBox(
-          width: 200,
-          height: 30,
-          child: Container(
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(8.0),
-              color: kcWhite,
-            ),
-            child: Padding(
-              padding: const EdgeInsets.all(2.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  SizedBox(
-                    width: 100,
-                    child: Text(
-                      employeeName,
-                      textAlign: TextAlign.center,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        color: employeeName == "Select Employee Name"
-                            ? kcDarkGreyColor
-                            : kcLightGrey,
-                      ),
-                    ),
-                  ),
-                  const Icon(Icons.arrow_drop_down_sharp),
-                  
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
 
-  Future<void> _buildEmployeeListDialog() {
-    return showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          shape: const RoundedRectangleBorder(
-            borderRadius: BorderRadius.all(Radius.circular(5)),
-          ),
-          title: const Text(
-            "Select Employee",
-            style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-          ),
-          content: SizedBox(
-            width: 200,
-            height: 300,
-            child: ListView.builder(
-              itemCount: employees.length,
-              itemBuilder: (context, index) {
-                final employee = employees[index];
-                return InkWell(
-                  onTap: () {
-                    setState(() {
-                      employeeName = employee["name"] ?? "Select Employee Name";
-                      selectedEmployee = employee;
-                    });
-                    Navigator.pop(context);
-                  },
-                  child: Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Text(employee["name"] ?? ""),
-                  ),
-                );
-              },
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text("Close"),
-            )
-          ],
-        );
+  /// EmployeeDetails
+  Widget _buildEmployeeDetail(){
+    return  BlocConsumer<EmployeeBasicDetailBloc, EmployeeBasicDetailState>(
+      bloc: employeeBasicDetailBloc,
+      listener: (_, state){},
+      builder: (_, state){
+        return state.when(
+            loading: _buildEmployeeDetailLoding,
+            content: _buildEmployeeDetailDropdown,
+            success: _buildEmployeeDetailDropdown,
+            failed: (form, __) => _buildEmployeeDetailDropdown(form));
       },
     );
   }
 
-  Widget _buildInjuryTypeDropdown() {
+  Widget _buildEmployeeDetailLoding(List<EmployeeBasicDetailModel> employeeDetail){
+    return const CircularProgressIndicator();
+  }
+
+
+  Widget _buildEmployeeDetailDropdown(List<EmployeeBasicDetailModel> employeeDetail) {
     return Padding(
       padding: const EdgeInsets.all(5),
       child: InkWell(
         onTap: () {
-          _buildinjuryTypeListDialog();
+          _buildEmployeeDetailDialog(employeeDetail);
         },
         child: SizedBox(
           width: 200,
@@ -515,27 +499,26 @@ class _MedicalOfficerPageState extends State<MedicalOfficerPage> {
               borderRadius: BorderRadius.circular(8.0),
               color: kcWhite,
             ),
-            child: Padding(
-              padding: const EdgeInsets.all(2.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  SizedBox(
-                    width: 100,
-                    child: Text(
-                      selectedInjuryType,
-                      textAlign: TextAlign.center,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        color: selectedInjuryType == "Select Injury Type"
-                            ? kcDarkGreyColor
-                            : kcLightGrey,
+            child:  ValueListenableBuilder<String>(
+              valueListenable: employeeId,
+              builder: (context, value, child) => Padding(
+                padding: const EdgeInsets.all(2.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    SizedBox(
+                      // width: 150,
+                      // height: 20,
+                      child: Text(
+                        value.isEmpty ? "Select Unique Id" : employeeId.value,
+                        textAlign: TextAlign.center,
+                        maxLines: 4,
+                        style: TextStyle(color: (employeeId.value == "Select Unique Id") ? kcDarkGreyColor : kcLightGrey),
                       ),
                     ),
-                  ),
-                  const Icon(Icons.arrow_drop_down_sharp)
-                ],
+                    const Icon(Icons.arrow_drop_down_sharp)
+                  ],
+                ),
               ),
             ),
           ),
@@ -544,63 +527,116 @@ class _MedicalOfficerPageState extends State<MedicalOfficerPage> {
     );
   }
 
-  Future<void> _buildinjuryTypeListDialog() {
-    final List<String> plants = [
-      "Mechanical Injury",
-      "Chemical Injury",
-      "Electrical Injury",
-      "Thermal Injury"
-    ];
-
+  Future<void> _buildEmployeeDetailDialog(List<EmployeeBasicDetailModel> employeeDetail) {
+    final employeeDetailListNotifier = EmployeeDetailListNotifier(employeeDetail);
     return showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          shape: const RoundedRectangleBorder(
-            borderRadius: BorderRadius.all(Radius.circular(5)),
-          ),
-          title: const Text(
-            "Select Injury Type",
-            style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-          ),
-          content: SizedBox(
-            width: 200,
-            height: 300,
-            child: ListView.builder(
-              itemCount: plants.length,
-              itemBuilder: (context, index) {
-                return InkWell(
-                  onTap: () {
-                    setState(() {
-                      selectedInjuryType = plants[index];
-                    });
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            shape: const RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(5))),
+            title: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  "Select or search Location",
+                  style:
+                  TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                ),
+                TextFormField(
+                  onChanged: employeeDetailListNotifier.filterBasedOn,
+                  decoration: const InputDecoration(
+                      hintText: "search here...",
+                      prefixIcon: Icon(
+                        Icons.search,
+                        color: kcLightGrey,
+                      )),
+                )
+              ],
+            ),
+            content: SizedBox(
+                width: 210,
+                height: 800,
+                child:ValueListenableBuilder<List<EmployeeBasicDetailModel>>(
+                    valueListenable: employeeDetailListNotifier,
+                    builder: (context, list, widget){
+                      return ListView.builder(
+                          itemCount: list.length,
+                          shrinkWrap: true,
+                          itemBuilder: (context, index) {
+                            return Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                InkWell(
+                                  onTap: () {
+                                    employeeId.value = list[index].empCode;
+                                    Navigator.pop(context);
+                                  },
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(2.0),
+                                    child: Text(list[index].empName,
+                                    ),
+                                  ),
+                                ),
+                                const Padding(
+                                  padding: EdgeInsets.all(8.0),
+                                  child: Divider(
+                                    height: 0.8,
+                                    thickness: 1,
+                                    color: kcDarkGreyColor,
+                                  ),
+                                )
+                              ],
+                            );
+                          });
+                    }
+                )
+            ),
+            actions: [
+              Align(
+                alignment: Alignment.centerRight,
+                child: TextButton(
+                  onPressed: () {
                     Navigator.pop(context);
                   },
-                  child: Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Text(plants[index]),
+                  child: const Text(
+                    "close",
+                    style: TextStyle(color: kcDarkGreyColor, fontSize: 18),
                   ),
-                );
-              },
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text("Close"),
-            )
-          ],
-        );
+                ),
+              )
+            ],
+          );
+        }
+    );
+  }
+
+  /// Injury Type
+
+  Widget _buildInjuryType(){
+    return  BlocConsumer<AllNatureInjuryBloc, AllNatureInjuryState>(
+      bloc: allNatureInjuryBloc,
+      listener: (_, state){},
+      builder: (_, state){
+        return state.when(
+            loading: _buildInjuryTypeLoding,
+            content: _buildInjuryTypeDropdown,
+            success: _buildInjuryTypeDropdown,
+            failed: (form, __) => _buildInjuryTypeDropdown(form));
       },
     );
   }
 
-  Widget _buildBodyTypeDropdown() {
+  Widget _buildInjuryTypeLoding(List<AllNatureInjuryModel> allNatureInjury){
+    return const CircularProgressIndicator();
+  }
+
+
+  Widget _buildInjuryTypeDropdown(List<AllNatureInjuryModel> allNatureInjury) {
     return Padding(
       padding: const EdgeInsets.all(5),
       child: InkWell(
         onTap: () {
-          _buildBodyPartListDialog();
+          _buildInjuryTypeDialog(allNatureInjury);
         },
         child: SizedBox(
           width: 200,
@@ -610,27 +646,26 @@ class _MedicalOfficerPageState extends State<MedicalOfficerPage> {
               borderRadius: BorderRadius.circular(8.0),
               color: kcWhite,
             ),
-            child: Padding(
-              padding: const EdgeInsets.all(2.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  SizedBox(
-                    width: 100,
-                    child: Text(
-                      selectedBodyPaty,
-                      textAlign: TextAlign.center,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        color: selectedBodyPaty == "Select Body Part"
-                            ? kcDarkGreyColor
-                            : kcLightGrey,
+            child:  ValueListenableBuilder<String>(
+              valueListenable: injuryType,
+              builder: (context, value, child) => Padding(
+                padding: const EdgeInsets.all(2.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    SizedBox(
+                      // width: 150,
+                      // height: 20,
+                      child: Text(
+                        value.isEmpty ? "Select Injury Type" : injuryType.value,
+                        textAlign: TextAlign.center,
+                        maxLines: 4,
+                        style: TextStyle(color: (injuryType.value == "Select Injury Type") ? kcDarkGreyColor : kcLightGrey),
                       ),
                     ),
-                  ),
-                  const Icon(Icons.arrow_drop_down_sharp)
-                ],
+                    const Icon(Icons.arrow_drop_down_sharp)
+                  ],
+                ),
               ),
             ),
           ),
@@ -639,63 +674,116 @@ class _MedicalOfficerPageState extends State<MedicalOfficerPage> {
     );
   }
 
-  Future<void> _buildBodyPartListDialog() {
-    final List<String> bodyPart = [
-      "Back Upper",
-      "Leg",
-      "Hand",
-      "Face"
-    ];
-
+  Future<void> _buildInjuryTypeDialog(List<AllNatureInjuryModel> allNatureInjury) {
+    final allInjuryTypeList = InjuryTypeListNotifier(allNatureInjury);
     return showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          shape: const RoundedRectangleBorder(
-            borderRadius: BorderRadius.all(Radius.circular(5)),
-          ),
-          title: const Text(
-            "Select Body Part",
-            style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-          ),
-          content: SizedBox(
-            width: 200,
-            height: 300,
-            child: ListView.builder(
-              itemCount: bodyPart.length,
-              itemBuilder: (context, index) {
-                return InkWell(
-                  onTap: () {
-                    setState(() {
-                      selectedBodyPaty = bodyPart[index];
-                    });
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            shape: const RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(5))),
+            title: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  "Select or search Location",
+                  style:
+                  TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                ),
+                TextFormField(
+                  onChanged: allInjuryTypeList.filterBasedOn,
+                  decoration: const InputDecoration(
+                      hintText: "search here...",
+                      prefixIcon: Icon(
+                        Icons.search,
+                        color: kcLightGrey,
+                      )),
+                )
+              ],
+            ),
+            content: SizedBox(
+                width: 210,
+                height: 800,
+                child:ValueListenableBuilder<List<AllNatureInjuryModel>>(
+                    valueListenable: allInjuryTypeList,
+                    builder: (context, list, widget){
+                      return ListView.builder(
+                          itemCount: list.length,
+                          shrinkWrap: true,
+                          itemBuilder: (context, index) {
+                            return Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                InkWell(
+                                  onTap: () {
+                                    injuryType.value = list[index].description;
+                                    Navigator.pop(context);
+                                  },
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(2.0),
+                                    child: Text(list[index].description,
+                                    ),
+                                  ),
+                                ),
+                                const Padding(
+                                  padding: EdgeInsets.all(8.0),
+                                  child: Divider(
+                                    height: 0.8,
+                                    thickness: 1,
+                                    color: kcDarkGreyColor,
+                                  ),
+                                )
+                              ],
+                            );
+                          });
+                    }
+                )
+            ),
+            actions: [
+              Align(
+                alignment: Alignment.centerRight,
+                child: TextButton(
+                  onPressed: () {
                     Navigator.pop(context);
                   },
-                  child: Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Text(bodyPart[index]),
+                  child: const Text(
+                    "close",
+                    style: TextStyle(color: kcDarkGreyColor, fontSize: 18),
                   ),
-                );
-              },
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text("Close"),
-            )
-          ],
-        );
+                ),
+              )
+            ],
+          );
+        }
+    );
+  }
+
+  /// Body Part
+
+  Widget _buildBodyPart(){
+    return  BlocConsumer<AllBodyPartsBloc, AllBodyPartsState>(
+      bloc: allBodyPartsBloc,
+      listener: (_, state){},
+      builder: (_, state){
+        return state.when(
+            loading: _buildBodyPartLoading,
+            content: _buildBodyPartDropdown,
+            success: _buildBodyPartDropdown,
+            failed: (form, __) => _buildBodyPartDropdown(form));
       },
     );
   }
 
-  Widget _buildNatureOfInjuryDropdown() {
+  Widget _buildBodyPartLoading(List<AllBodyPartsModel> allBodyPart){
+    return const CircularProgressIndicator();
+  }
+
+
+  Widget _buildBodyPartDropdown(List<AllBodyPartsModel> allBodyPart) {
     return Padding(
       padding: const EdgeInsets.all(5),
       child: InkWell(
         onTap: () {
-          _buildNatureOfInjuryListDialog();
+          _buildBodyPartDialog(allBodyPart);
         },
         child: SizedBox(
           width: 200,
@@ -705,28 +793,26 @@ class _MedicalOfficerPageState extends State<MedicalOfficerPage> {
               borderRadius: BorderRadius.circular(8.0),
               color: kcWhite,
             ),
-            child: Padding(
-              padding: const EdgeInsets.all(2.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  SizedBox(
-                    width: 100,
-                    child: Text(
-                      selectedNatureOfInjury,
-                      textAlign: TextAlign.center,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        color:
-                        selectedNatureOfInjury == "Select Nature Of Injury"
-                            ? kcDarkGreyColor
-                            : kcLightGrey,
+            child:  ValueListenableBuilder<String>(
+              valueListenable: bodyPart,
+              builder: (context, value, child) => Padding(
+                padding: const EdgeInsets.all(2.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    SizedBox(
+                      // width: 150,
+                      // height: 20,
+                      child: Text(
+                        value.isEmpty ? "Select Body Part" : bodyPart.value,
+                        textAlign: TextAlign.center,
+                        maxLines: 4,
+                        style: TextStyle(color: (bodyPart.value == "Select Body Part") ? kcDarkGreyColor : kcLightGrey),
                       ),
                     ),
-                  ),
-                  const Icon(Icons.arrow_drop_down_sharp)
-                ],
+                    const Icon(Icons.arrow_drop_down_sharp)
+                  ],
+                ),
               ),
             ),
           ),
@@ -735,56 +821,236 @@ class _MedicalOfficerPageState extends State<MedicalOfficerPage> {
     );
   }
 
-  Future<void> _buildNatureOfInjuryListDialog() {
-    final List<String> natureOfInjury = [
-      "Mechanical Injury",
-      "Chemical Injury",
-      "Electrical Injury",
-      "Thermal Injury"
-    ];
-
+  Future<void> _buildBodyPartDialog(List<AllBodyPartsModel> allBodyPart) {
+    final allBodyPartList = BodyPartListNotifier(allBodyPart);
     return showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          shape: const RoundedRectangleBorder(
-            borderRadius: BorderRadius.all(Radius.circular(5)),
-          ),
-          title: const Text(
-            "Select Nature Of Injury",
-            style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-          ),
-          content: SizedBox(
-            width: 200,
-            height: 300,
-            child: ListView.builder(
-              itemCount: natureOfInjury.length,
-              itemBuilder: (context, index) {
-                return InkWell(
-                  onTap: () {
-                    setState(() {
-                      selectedNatureOfInjury = natureOfInjury[index];
-                    });
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            shape: const RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(5))),
+            title: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  "Select or search Location",
+                  style:
+                  TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                ),
+                TextFormField(
+                  onChanged: allBodyPartList.filterBasedOn,
+                  decoration: const InputDecoration(
+                      hintText: "search here...",
+                      prefixIcon: Icon(
+                        Icons.search,
+                        color: kcLightGrey,
+                      )),
+                )
+              ],
+            ),
+            content: SizedBox(
+                width: 210,
+                height: 800,
+                child:ValueListenableBuilder<List<AllBodyPartsModel>>(
+                    valueListenable: allBodyPartList,
+                    builder: (context, list, widget){
+                      return ListView.builder(
+                          itemCount: list.length,
+                          shrinkWrap: true,
+                          itemBuilder: (context, index) {
+                            return Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                InkWell(
+                                  onTap: () {
+                                    bodyPart.value = list[index].description;
+                                    Navigator.pop(context);
+                                  },
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(2.0),
+                                    child: Text(list[index].description,
+                                    ),
+                                  ),
+                                ),
+                                const Padding(
+                                  padding: EdgeInsets.all(8.0),
+                                  child: Divider(
+                                    height: 0.8,
+                                    thickness: 1,
+                                    color: kcDarkGreyColor,
+                                  ),
+                                )
+                              ],
+                            );
+                          });
+                    }
+                )
+            ),
+            actions: [
+              Align(
+                alignment: Alignment.centerRight,
+                child: TextButton(
+                  onPressed: () {
                     Navigator.pop(context);
                   },
-                  child: Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Text(natureOfInjury[index]),
+                  child: const Text(
+                    "close",
+                    style: TextStyle(color: kcDarkGreyColor, fontSize: 18),
                   ),
-                );
-              },
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text("Close"),
-            )
-          ],
-        );
+                ),
+              )
+            ],
+          );
+        }
+    );
+  }
+
+/// Type of Incident
+
+  Widget _buildAllTypeOfIncident(){
+    return  BlocConsumer<AllTypeIncidentBloc, AllTypeIncidentState>(
+      bloc: allTypeIncidentBloc,
+      listener: (_, state){},
+      builder: (_, state){
+        return state.when(
+            loading: _buildAllTypeOfIncidentLoading,
+            content: _buildAllTypeOfIncidentDropdown,
+            success: _buildAllTypeOfIncidentDropdown,
+            failed: (form, __) => _buildAllTypeOfIncidentDropdown(form));
       },
     );
   }
+
+  Widget _buildAllTypeOfIncidentLoading(List<AllTypeIncidentModel> allTypeIncident){
+    return const CircularProgressIndicator();
+  }
+
+  Widget _buildAllTypeOfIncidentDropdown(List<AllTypeIncidentModel> allTypeIncident) {
+    return Padding(
+      padding: const EdgeInsets.all(5),
+      child: InkWell(
+        onTap: () {
+          _buildAllTypeOfIncidentDialog(allTypeIncident);
+        },
+        child: SizedBox(
+          width: 200,
+          height: 30,
+          child: Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(8.0),
+              color: kcWhite,
+            ),
+            child:  ValueListenableBuilder<String>(
+              valueListenable: typeOfIncident,
+              builder: (context, value, child) => Padding(
+                padding: const EdgeInsets.all(2.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    SizedBox(
+                      // width: 150,
+                      // height: 20,
+                      child: Text(
+                        value.isEmpty ? "Select Type of Incident" : typeOfIncident.value,
+                        textAlign: TextAlign.center,
+                        maxLines: 4,
+                        style: TextStyle(color: (typeOfIncident.value == "Select Type of Incident") ? kcDarkGreyColor : kcLightGrey),
+                      ),
+                    ),
+                    const Icon(Icons.arrow_drop_down_sharp)
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _buildAllTypeOfIncidentDialog(List<AllTypeIncidentModel> allTypeIncident) {
+    final allTypeIncidentList = IncidentTypeNotifier(allTypeIncident);
+    return showDialog(
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            shape: const RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(5))),
+            title: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  "Select or search Location",
+                  style:
+                  TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                ),
+                TextFormField(
+                  onChanged: allTypeIncidentList.filterBasedOn,
+                  decoration: const InputDecoration(
+                      hintText: "search here...",
+                      prefixIcon: Icon(
+                        Icons.search,
+                        color: kcLightGrey,
+                      )),
+                )
+              ],
+            ),
+            content: SizedBox(
+                width: 210,
+                height: 800,
+                child:ValueListenableBuilder<List<AllTypeIncidentModel>>(
+                    valueListenable: allTypeIncidentList,
+                    builder: (context, list, widget){
+                      return ListView.builder(
+                          itemCount: list.length,
+                          shrinkWrap: true,
+                          itemBuilder: (context, index) {
+                            return Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                InkWell(
+                                  onTap: () {
+                                    typeOfIncident.value = list[index].description;
+                                    Navigator.pop(context);
+                                  },
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(2.0),
+                                    child: Text(list[index].description,
+                                    ),
+                                  ),
+                                ),
+                                const Padding(
+                                  padding: EdgeInsets.all(8.0),
+                                  child: Divider(
+                                    height: 0.8,
+                                    thickness: 1,
+                                    color: kcDarkGreyColor,
+                                  ),
+                                )
+                              ],
+                            );
+                          });
+                    }
+                )
+            ),
+            actions: [
+              Align(
+                alignment: Alignment.centerRight,
+                child: TextButton(
+                  onPressed: () {
+                    Navigator.pop(context);
+                  },
+                  child: const Text(
+                    "close",
+                    style: TextStyle(color: kcDarkGreyColor, fontSize: 18),
+                  ),
+                ),
+              )
+            ],
+          );
+        }
+    );
+  }
+
+
 
   Widget _buildDateTextField() {
     return Padding(
@@ -805,5 +1071,81 @@ class _MedicalOfficerPageState extends State<MedicalOfficerPage> {
         ),
       ),
     );
+  }
+}
+
+
+class EmployeeDetailListNotifier extends ValueNotifier<List<EmployeeBasicDetailModel>> {
+
+  EmployeeDetailListNotifier(super.value) {
+    initialValue = value;
+  }
+
+  late List<EmployeeBasicDetailModel> initialValue;
+
+  void filterBasedOn(String query) {
+    if (query.isEmpty) {
+      value = initialValue;
+    } else {
+      value = initialValue.where((e) => e.empName.toLowerCase().contains(query.toLowerCase())).toList();
+    }
+    notifyListeners();
+  }
+}
+
+
+class InjuryTypeListNotifier extends ValueNotifier<List<AllNatureInjuryModel>> {
+
+  InjuryTypeListNotifier(super.value) {
+    initialValue = value;
+  }
+
+  late List<AllNatureInjuryModel> initialValue;
+
+  void filterBasedOn(String query) {
+    if (query.isEmpty) {
+      value = initialValue;
+    } else {
+      value = initialValue.where((e) => e.description.toLowerCase().contains(query.toLowerCase())).toList();
+    }
+    notifyListeners();
+  }
+}
+
+
+class BodyPartListNotifier extends ValueNotifier<List<AllBodyPartsModel>> {
+
+  BodyPartListNotifier(super.value) {
+    initialValue = value;
+  }
+
+  late List<AllBodyPartsModel> initialValue;
+
+  void filterBasedOn(String query) {
+    if (query.isEmpty) {
+      value = initialValue;
+    } else {
+      value = initialValue.where((e) => e.description.toLowerCase().contains(query.toLowerCase())).toList();
+    }
+    notifyListeners();
+  }
+}
+
+
+class IncidentTypeNotifier extends ValueNotifier<List<AllTypeIncidentModel>> {
+
+  IncidentTypeNotifier(super.value) {
+    initialValue = value;
+  }
+
+  late List<AllTypeIncidentModel> initialValue;
+
+  void filterBasedOn(String query) {
+    if (query.isEmpty) {
+      value = initialValue;
+    } else {
+      value = initialValue.where((e) => e.description.toLowerCase().contains(query.toLowerCase())).toList();
+    }
+    notifyListeners();
   }
 }

@@ -5,7 +5,6 @@ import 'package:jsaw_limited/pages/change_password_page.dart';
 import 'package:jsaw_limited/pages/dashboardSelection.dart';
 import 'package:jsaw_limited/pages/employee_reporting_page.dart';
 import 'package:jsaw_limited/pages/graph_page.dart';
-import 'package:jsaw_limited/pages/investigation_form.dart';
 import 'package:jsaw_limited/pages/investigation_team_page.dart';
 import 'package:jsaw_limited/pages/medical_Officer_page.dart';
 import 'package:jsaw_limited/pages/observation.dart';
@@ -14,6 +13,7 @@ import 'package:jsaw_limited/pages/register_observation_page.dart';
 import 'package:jsaw_limited/pages/safety_remark_page.dart';
 import 'package:jsaw_limited/pages/suggestion_page.dart';
 import 'package:responsive_builder/responsive_builder.dart';
+import '../pages/allIncidentList_page.dart';
 import '../pages/incident_Reporting_page.dart';
 import '../utils/app_color.dart';
 import 'dart:html' as html;
@@ -111,6 +111,7 @@ class AppDrawer extends StatelessWidget {
       'Graph',
       'Raise Observation',
       'Incident Tracking',
+      'All Incident',
       'Medical Form',
       'Safety Remark Form',
       'Investigation Form',
@@ -142,6 +143,7 @@ class AppDrawer extends StatelessWidget {
       'assets/images/dashboard.png',
       'assets/images/observation.png',
       'assets/images/graph.png',
+      'assets/images/raise_observation.png',
       'assets/images/raise_observation.png',
       'assets/images/raise_observation.png',
       'assets/images/raise_observation.png',
@@ -182,6 +184,7 @@ class AppDrawer extends StatelessWidget {
       const GraphPage(),
       const RegisterObservationPage(),
       const IncidentReportingPage(),
+      const AllincidentlistPage(),
       const MedicalOfficerPage(),
       const SafetyRemarkPage(),
       const InvestigationTeamPage()

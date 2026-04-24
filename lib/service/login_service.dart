@@ -23,6 +23,7 @@ class LoginService {
         window.localStorage['kUserEmail'] = responseBody['model']['email'].toString();
         //window.localStorage['kstatCode'] = responseBody['model']['desgCode'].toString();
         window.localStorage['kstatCode'] = responseBody['model']['statCode'].toString();
+        window.localStorage['kdeptCode'] = responseBody['model']['deptCode'].toString();
         window.localStorage['kDesgnCode'] = responseBody['model']['desgCode'].toString();
         window.localStorage['kGradeCode'] = responseBody['model']['gradeCode'].toString();
         window.localStorage['khseCode'] = responseBody['model']['hseteamAuthorization'].toString();

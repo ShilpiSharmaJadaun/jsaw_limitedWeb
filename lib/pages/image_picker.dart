@@ -108,9 +108,23 @@ class ImagePickerPageState extends State<ImagePickerPage> { // No underscore her
             ),
           ),
         ),
-        ElevatedButton(
+        ElevatedButton.icon(
           onPressed: _pickImage,
-          child: Text('Open Gallery'),
+          icon: const Icon(Icons.photo_library_outlined, size: 20, color: Color(0xFF8B5CF6)),
+          label: const Text(
+            "Open Gallery",
+            style: TextStyle(
+              color: Color(0xFF8B5CF6),
+              fontSize: 15,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: const Color(0xFFEDE9FE),
+            elevation: 0,
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          ),
         ),
       ],
     );
