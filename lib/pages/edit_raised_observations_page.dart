@@ -615,33 +615,6 @@ class _EditRaisedObservationsPageState extends State<EditRaisedObservationsPage>
                       mainAxisAlignment: MainAxisAlignment.start,
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Row(
-                          children: [
-                            Image.asset(
-                              "assets/images/observation.png",
-                              scale: 20,
-                            ),
-                            _buildHeadingText("Corrective Measure :"),
-                            SizedBox(
-                              width: 80.screenWidth,
-                              child: TextFormField(
-                                controller: correctiveMeasureController,
-                                maxLines: 3,
-                                decoration: InputDecoration(
-                                  hintText: "Enter corrective measure",
-                                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                                  contentPadding: const EdgeInsets.all(10),
-                                ),
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.w600,
-                                  fontSize: 14,
-                                  color: Colors.black,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        SizedBox(height: 20,),
                         Container(
                           width: 1000,
                           child: Row(
@@ -679,6 +652,33 @@ class _EditRaisedObservationsPageState extends State<EditRaisedObservationsPage>
 
                             ],
                           ),
+                        ),
+                        SizedBox(height: 20,),
+                        Row(
+                          children: [
+                            Image.asset(
+                              "assets/images/observation.png",
+                              scale: 20,
+                            ),
+                            _buildHeadingText("Corrective Measure :"),
+                            SizedBox(
+                              width: 80.screenWidth,
+                              child: TextFormField(
+                                controller: correctiveMeasureController,
+                                maxLines: 3,
+                                decoration: InputDecoration(
+                                  hintText: "Enter corrective measure",
+                                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                                  contentPadding: const EdgeInsets.all(10),
+                                ),
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 14,
+                                  color: Colors.black,
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                         SizedBox(
                           width: 600,

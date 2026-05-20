@@ -29,10 +29,15 @@ class ExtraLargeDashboardPage extends StatefulWidget {
   const ExtraLargeDashboardPage({super.key});
 
   @override
-  State<ExtraLargeDashboardPage> createState() => _ExtraLargeDashboardPageState();
+  State<ExtraLargeDashboardPage> createState() =>
+      _ExtraLargeDashboardPageState();
 }
 
 class _ExtraLargeDashboardPageState extends State<ExtraLargeDashboardPage> {
+  // Below this width, layout stacks vertically
+  static const double _wideBreakpoint = 1100;
+  // Below this width, stat grid uses 2 columns instead of 3
+  static const double _statNarrowBreakpoint = 720;
 
   TextEditingController startDateInput = TextEditingController();
   TextEditingController endDateInput = TextEditingController();
@@ -41,25 +46,23 @@ class _ExtraLargeDashboardPageState extends State<ExtraLargeDashboardPage> {
   String date = DateFormat('yyyy-MM-dd').format(DateTime.now());
 
   late AllTodayObservationBloc allTodayObservationBloc;
-
   late AllHazardCatBloc allHazardCatBloc;
-
   late ObservationStatusBloc observationStatusBloc;
-
   late Top3HazardBloc top3hazardBloc;
-
   late UpdatePasswordBloc updatePasswordBloc;
 
-  ValueNotifier<String> hazardCategory = ValueNotifier("Select hazard Category");
+  ValueNotifier<String> hazardCategory =
+  ValueNotifier("Select hazard Category");
 
-
+  static const String _hazardPlaceholder = "Select hazard Category";
 
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
-    final dashboardServices = Provider.of<DashboardService>(context, listen: false);
-    final passwordService = Provider.of<PasswordService>(context, listen: false);
+    final dashboardServices =
+    Provider.of<DashboardService>(context, listen: false);
+    final passwordService =
+    Provider.of<PasswordService>(context, listen: false);
     allTodayObservationBloc = AllTodayObservationBloc(dashboardServices);
     allTodayObservationBloc.initState();
     allHazardCatBloc = AllHazardCatBloc(dashboardServices);
@@ -69,11 +72,10 @@ class _ExtraLargeDashboardPageState extends State<ExtraLargeDashboardPage> {
     top3hazardBloc = Top3HazardBloc(dashboardServices);
     top3hazardBloc.initState();
     updatePasswordBloc = UpdatePasswordBloc(passwordService);
-    // Check the employee password status in local storage
-    var empPassStatus = html.window.localStorage['kEmployeePassStatus'].toString();
 
+    var empPassStatus =
+    html.window.localStorage['kEmployeePassStatus'].toString();
     if (empPassStatus == '0') {
-      // If the status is 0, show the password change dialog
       WidgetsBinding.instance.addPostFrameCallback((_) {
         _showPasswordChangeDialog(context);
       });
@@ -83,17 +85,31 @@ class _ExtraLargeDashboardPageState extends State<ExtraLargeDashboardPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        body: _buildObservation()
+      backgroundColor: kcDashboardBg1,
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [kcDashboardBg1, kcDashboardBg2],
+          ),
+        ),
+        child: _buildObservation(),
+      ),
     );
   }
 
-  _buildObservation() {
+  Widget _buildObservation() {
     return BlocConsumer<AllTodayObservationBloc, AllTodayObservationState>(
       bloc: allTodayObservationBloc,
       listener: (_, state) {},
       builder: (_, state) {
         return state.when(
-            loading: (_){return Center(child: Lottie.asset("assets/lottie/loading.json",height: 80, width: 80 ));},
+            loading: (_) {
+              return Center(
+                  child: Lottie.asset("assets/lottie/loading.json",
+                      height: 80, width: 80));
+            },
             content: _buildContent,
             success: _buildContent,
             failed: (form, __) => _buildContent(form));
@@ -101,25 +117,354 @@ class _ExtraLargeDashboardPageState extends State<ExtraLargeDashboardPage> {
     );
   }
 
-  Widget _buildContent(List<AllTodayObservationModel> model){
-    return SingleChildScrollView(
-      scrollDirection: Axis.vertical,
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  Widget _buildContent(List<AllTodayObservationModel> model) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isWide = constraints.maxWidth >= _wideBreakpoint;
+        if (isWide) {
+          // Side-by-side: observations | dashboard widgets
+          return Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                _buildWelcomeHeader(),
+                const SizedBox(height: 16),
+                Expanded(
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(flex: 5, child: _buildLeftColumn(model)),
+                      const SizedBox(width: 16),
+                      Expanded(flex: 4, child: _buildRightColumn()),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          );
+        }
+        // Stacked: dashboard on top, observations below
+        return SingleChildScrollView(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            children: [
+              _buildWelcomeHeader(),
+              const SizedBox(height: 16),
+              _buildRightColumn(),
+              const SizedBox(height: 16),
+              SizedBox(
+                height: 600,
+                child: _buildLeftColumn(model),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildWelcomeHeader() {
+    final dateStr = DateFormat('EEEE, MMM d, y').format(DateTime.now());
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          begin: Alignment.centerLeft,
+          end: Alignment.centerRight,
+          colors: [navyBlue, kcStatBlue],
+        ),
+        borderRadius: BorderRadius.circular(14),
+        boxShadow: [
+          BoxShadow(
+            color: navyBlue.withOpacity(0.15),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.2),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: const Icon(Icons.dashboard_rounded, color: kcWhite, size: 22),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text(
+                  "Safety Dashboard",
+                  style: TextStyle(
+                    color: kcWhite,
+                    fontSize: 18,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  dateStr,
+                  style: TextStyle(
+                    color: Colors.white.withOpacity(0.85),
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ---------------- LEFT COLUMN: Today's Observations ----------------
+
+  Widget _buildLeftColumn(List<AllTodayObservationModel> model) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildFilterBar(),
+        const SizedBox(height: 12),
+        Expanded(
+          child: model.isEmpty
+              ? _buildEmptyState()
+              : ListView.separated(
+            itemCount: model.length,
+            separatorBuilder: (_, __) => const SizedBox(height: 12),
+            itemBuilder: (context, index) =>
+                _buildObservationCard(model[index]),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildEmptyState() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.inbox_outlined,
+              size: 56, color: Colors.grey.shade400),
+          const SizedBox(height: 12),
+          Text(
+            "No observations to show",
+            style: TextStyle(color: Colors.grey.shade600, fontSize: 14),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFilterBar() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey.shade200),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.filter_list_rounded,
+              color: kcHazardViolet, size: 20),
+          const SizedBox(width: 8),
+          Expanded(child: _buildHazardBody()),
+          const SizedBox(width: 8),
+          TextButton.icon(
+            onPressed: () {
+              hazardCategory.value = _hazardPlaceholder;
+              allTodayObservationBloc.initState();
+            },
+            icon: const Icon(Icons.refresh_rounded, size: 18),
+            label: const Text("Refresh"),
+            style: TextButton.styleFrom(
+              foregroundColor: kcStatBlue,
+              textStyle: const TextStyle(fontWeight: FontWeight.w600),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildObservationCard(AllTodayObservationModel item) {
+    final priorityColor = hexToColor(item.priorityStatusColour);
+
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: Colors.grey.shade200),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildTodayCategoryList(model),
-            Column(
+            // ---- Header: image + name + ID + priority pill ----
+            Row(
               crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                SizedBox(height: 3.5.screenHeight,),
-                _buildGridBody(),
-                _buildHeadingText3("Top Categories"),
-                _buildTop3HazardBody(),
-                _buildInfoCard()
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(10),
+                  child: SizedBox(
+                    width: 100,
+                    height: 80,
+                    child: Image.network(
+                      item.imageNumber,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) => Container(
+                        color: Colors.grey.shade100,
+                        alignment: Alignment.center,
+                        child: Icon(Icons.broken_image_outlined,
+                            color: Colors.grey.shade400),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          const CircleAvatar(
+                            backgroundImage: AssetImage(
+                                "assets/images/jindal-saw-logo.png"),
+                            radius: 14,
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  item.observationRaisedBy,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 14,
+                                    color: kcValueDark,
+                                  ),
+                                ),
+                                Text(
+                                  item.uniqueIdentificationNumber,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(
+                                    fontSize: 12,
+                                    color: kcLabelGrey,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          _buildPriorityPill(
+                              item.priorityStatusName, priorityColor),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      // Hazard category line
+                      Row(
+                        children: [
+                          const Icon(Icons.warning_amber_rounded,
+                              color: kcOrange, size: 16),
+                          const SizedBox(width: 4),
+                          Expanded(
+                            child: Text(
+                              "Hazard: ${item.hazardCategory}",
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                                color: kcOrange,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+
+            // ---- Observation text ----
+            Container(
+              width: double.infinity,
+              padding:
+              const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+              decoration: BoxDecoration(
+                color: kcObservationCyan.withOpacity(0.08),
+                borderRadius: BorderRadius.circular(8),
+                border: Border(
+                  left: BorderSide(color: kcObservationCyan, width: 3),
+                ),
+              ),
+              child: Text(
+                item.observationText,
+                maxLines: 3,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  fontWeight: FontWeight.w500,
+                  fontSize: 13,
+                  color: kcValueDark,
+                  height: 1.4,
+                ),
+              ),
+            ),
+            const SizedBox(height: 10),
+
+            // ---- Footer: Assignee | Status | Date ----
+            Wrap(
+              spacing: 16,
+              runSpacing: 8,
+              children: [
+                _buildFooterInfo(
+                  Icons.person_outline_rounded,
+                  Colors.indigo,
+                  "Assignee",
+                  item.responsibility,
+                ),
+                _buildFooterInfo(
+                  Icons.flag_outlined,
+                  Colors.teal,
+                  "Status",
+                  item.status,
+                ),
+                _buildFooterInfo(
+                  Icons.calendar_today_rounded,
+                  Colors.deepOrange,
+                  "Date",
+                  item.raisedDate,
+                ),
               ],
             ),
           ],
@@ -128,298 +473,273 @@ class _ExtraLargeDashboardPageState extends State<ExtraLargeDashboardPage> {
     );
   }
 
-
-  _buildTodayCategoryList(List<AllTodayObservationModel> model){
-    return SizedBox(
-      height: 50.screenHeight,
-      width: 90.screenWidth,
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.start,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _buildHazardContainer(),
-          if(model == null)const Center(child: Text("No Data")),
-          Expanded(
-              child: ListView.builder(
-            itemCount: model.length,
-              shrinkWrap: true,
-              itemBuilder: (BuildContext context, int index){
-                return  Card(
-                  color: kcWhite,
-                  child: Row(
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.all(10),
-                        child: SizedBox(
-                          width: 20.screenWidth,
-                          height: 10.screenHeight,
-                          child: Image.network(
-                            alignment: Alignment.center,
-                           model[index].imageNumber,
-                            fit: BoxFit.cover,
-                            scale: 2,
-                          ),
-                        ),
-                      ),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            children: [
-                              SizedBox(
-                                width:50.screenWidth,
-                                child: Row(
-                                  children: [
-                                    const Padding(
-                                      padding: EdgeInsets.all(8.0),
-                                      child: CircleAvatar(backgroundImage: AssetImage("assets/images/jindal-saw-logo.png"),radius: 12,),
-                                    ),
-                                    _buildNameText2(model[index].observationRaisedBy),
-                                    _buildHeadingText2("-"),
-                                    _buildHeadingText2(model[index].uniqueIdentificationNumber),
-                                  ],
-                                ),
-                              ),
-                              _buildHighlowContainer(model[index].priorityStatusName, hexToColor(model[index].priorityStatusColour)),
-                            ],
-                          ),
-                          _buildLightText2("Hazard : ${model[index].hazardCategory}"),
-                          SizedBox(
-                            width: 60.screenWidth,
-                            child: Padding(
-                              padding: const EdgeInsets.all(10),
-                              child: Text(
-                                model[index].observationText,
-                                maxLines: 3,
-                                overflow: TextOverflow.ellipsis,
-                                style:  TextStyle(fontWeight: FontWeight.w500, fontSize: 1.5.screenWidth,color: kcvoilet),
-                              ),
-                            ),
-                          ),
-                          Container(height: 2,color: kcVeryLightGrey,width: 60.screenWidth,),
-                          SizedBox(
-                            width: 65.screenWidth,
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Column(
-                                  mainAxisAlignment: MainAxisAlignment.start,
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    _buildLightText("Assignee"),
-                                    _buildHeadingText(model[index].responsibility),
-
-                                  ],
-                                ),
-                                Column(
-                                  mainAxisAlignment: MainAxisAlignment.start,
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    _buildLightText("Status"),
-                                    _buildHeadingText(model[index].status),
-                                  ],
-                                ),
-                                Column(
-                                  mainAxisAlignment: MainAxisAlignment.start,
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    _buildLightText("Complaint Date"),
-                                    Row(children: [
-                                      const Padding(
-                                          padding: EdgeInsets.all(1.0),
-                                          child: Icon(Icons.calendar_month)),
-                                      _buildHeadingText(model[index].raisedDate),
-                                    ],)
-
-                                  ],
-                                )
-                              ],
-                            ),
-                          ),
-                        ],
-                      )
-                    ],
-                  ),
-                );
-              })),
+  Widget _buildPriorityPill(String text, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: color,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: color.withOpacity(0.3),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
         ],
+      ),
+      child: Text(
+        text,
+        style: const TextStyle(
+          color: Colors.white,
+          fontSize: 11,
+          fontWeight: FontWeight.w700,
+        ),
       ),
     );
   }
 
-
-  // Hazard List Api Implementation
-
-  _buildHazardContainer() {
+  Widget _buildFooterInfo(
+      IconData icon, Color color, String label, String value) {
     return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      crossAxisAlignment: CrossAxisAlignment.center,
+      mainAxisSize: MainAxisSize.min,
       children: [
-        //_buildHeadingText3("Observations"),
-        _buildHazardBody(),
-        Row(
+        Container(
+          padding: const EdgeInsets.all(5),
+          decoration: BoxDecoration(
+            color: color.withOpacity(0.12),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Icon(icon, size: 14, color: color),
+        ),
+        const SizedBox(width: 6),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.refresh),
-            TextButton(onPressed: (){allTodayObservationBloc.initState();
-            }, child: Text("Refresh", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 2.screenWidth),)),
+            Text(
+              label,
+              style: const TextStyle(
+                  fontSize: 10,
+                  color: kcLabelGrey,
+                  fontWeight: FontWeight.w500),
+            ),
+            Text(
+              value,
+              style: const TextStyle(
+                fontSize: 12,
+                color: kcValueDark,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
           ],
-        )
+        ),
       ],
     );
   }
 
-  _buildHazardBody(){
+  // ---------------- Hazard category dropdown ----------------
+
+  Widget _buildHazardBody() {
     return BlocConsumer<AllHazardCatBloc, AllHazardCatState>(
       bloc: allHazardCatBloc,
-      listener: (_, state){},
-      builder: (_, state){
+      listener: (_, state) {},
+      builder: (_, state) {
         return state.when(
-            loading: (_){return Lottie.asset("assets/lottie/loading.json");},
-            content: _buildhazardContent,
-            success: _buildhazardContent,
-            failed: (form, __) => _buildhazardContent(form));
+            loading: (_) => const SizedBox(
+              height: 36,
+              child: Center(
+                  child: CircularProgressIndicator(strokeWidth: 2)),
+            ),
+            content: _buildHazardContent,
+            success: _buildHazardContent,
+            failed: (form, __) => _buildHazardContent(form));
       },
     );
   }
 
-  Widget _buildhazardContent(List<AllHazardCatModel> model){
-    return Padding(
-      padding: const EdgeInsets.all(10),
-      child: InkWell(
-        onTap: (){
-          _buildhazardListDialog(model);
-        },
-        child: SizedBox(
-          width: 60.screenWidth,
-          height: 2.5.screenHeight,
+  Widget _buildHazardContent(List<AllHazardCatModel> model) {
+    return ValueListenableBuilder<String>(
+      valueListenable: hazardCategory,
+      builder: (context, value, child) {
+        final isPlaceholder = value == _hazardPlaceholder;
+        return InkWell(
+          onTap: () => _buildhazardListDialog(model),
+          borderRadius: BorderRadius.circular(8),
           child: Container(
-            width: double.infinity,
-            decoration: BoxDecoration(borderRadius: BorderRadius.circular(8.0),color: kcWhite),
-            child: ValueListenableBuilder<String>(
-              valueListenable: hazardCategory,
-              builder: (context, value, child) => Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      hazardCategory.value,
-                      textAlign: TextAlign.center,
-                      style: TextStyle(color: (hazardCategory.value == "Select Hazard") ? kcDarkGreyColor : kcLightGrey),
+            height: 36,
+            padding: const EdgeInsets.symmetric(horizontal: 10),
+            decoration: BoxDecoration(
+              color: Colors.grey.shade50,
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: Colors.grey.shade300),
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    value,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      color: isPlaceholder ? Colors.grey : kcValueDark,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
                     ),
-                    const Icon(Icons.arrow_drop_down_sharp)
-                  ],
+                  ),
                 ),
-              ),
+                Icon(Icons.arrow_drop_down_rounded,
+                    color: Colors.grey.shade600),
+              ],
             ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 
   Future<void> _buildhazardListDialog(List<AllHazardCatModel> model) {
     final listNotifier = SearchableListNotifier(model);
     return showDialog(
-        context: context,
-        builder: (context) {
-          return AlertDialog(
-            // actionsPadding: EdgeInsets.all(5.dw),
-            shape: const RoundedRectangleBorder(
-                borderRadius: BorderRadius.all(Radius.circular(10))),
-            // contentPadding: EdgeInsets.all(10.dw),
-            title: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  "Select or search division",
-                  style:
-                  TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          shape: const RoundedRectangleBorder(
+              borderRadius: BorderRadius.all(Radius.circular(12))),
+          title: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text("Select Hazard Category",
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 8),
+              TextFormField(
+                onChanged: listNotifier.filterBasedOn,
+                decoration: const InputDecoration(
+                  hintText: "search here...",
+                  prefixIcon: Icon(Icons.search, color: kcLightGrey),
                 ),
-                TextFormField(
-                  onChanged: listNotifier.filterBasedOn,
-                  decoration: const InputDecoration(
-                      hintText: "search here...",
-                      prefixIcon: Icon(
-                        Icons.search,
-                        color: kcLightGrey,
-                      )),
-                )
-              ],
-            ),
-            content: SizedBox(
-                width: 200,
-                height: 240,
-                child:ValueListenableBuilder<List<AllHazardCatModel>>(
-                    valueListenable: listNotifier,
-                    builder: (context, list, widget){
-                      return ListView.builder(
-                          itemCount: list.length,
-                          shrinkWrap: true,
-                          itemBuilder: (context, index) {
-                            return Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                InkWell(
-                                  onTap: () {
-                                    hazardCategory.value = list[index].hazardCategoryName;
-                                    allTodayObservationBloc.initState(hazardCategory.value);
-                                    Navigator.pop(context);
-                                  },
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(8.0),
-                                    child: Text(list[index].hazardCategoryName,),
-                                  ),
-                                ),
-                                const Padding(
-                                  padding: EdgeInsets.all(8.0),
-                                  child: Divider(
-                                    height: 0.8,
-                                    thickness: 1,
-                                    color: kcDarkGreyColor,
-                                  ),
-                                )
-                              ],
-                            );
-                          });
-                    }
-                )
-            ),
-            actions: [
-              Align(
-                alignment: Alignment.centerRight,
-                child: TextButton(
-                  onPressed: () {
-                    Navigator.pop(context);
-                  },
-                  child: const Text(
-                    "close",
-                    style: TextStyle(color: kcDarkGreyColor, fontSize: 18),
-                  ),
-                ),
-              )
+              ),
             ],
-          );
-        }
+          ),
+          content: SizedBox(
+            width: 300,
+            height: 300,
+            child: ValueListenableBuilder<List<AllHazardCatModel>>(
+              valueListenable: listNotifier,
+              builder: (context, list, _) => ListView.separated(
+                itemCount: list.length,
+                separatorBuilder: (_, __) =>
+                    Divider(height: 1, color: Colors.grey.shade200),
+                itemBuilder: (context, index) {
+                  return InkWell(
+                    onTap: () {
+                      hazardCategory.value = list[index].hazardCategoryName;
+                      allTodayObservationBloc.initState(hazardCategory.value);
+                      Navigator.pop(context);
+                    },
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 12),
+                      child: Text(list[index].hazardCategoryName),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text("close",
+                  style: TextStyle(color: kcDarkGreyColor)),
+            ),
+          ],
+        );
+      },
     );
   }
 
-  //Observation Status Api Implementation
+  // ---------------- RIGHT COLUMN: stats + top + info ----------------
 
-  _buildGridBody() {
+  Widget _buildRightColumn() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildGridBody(),
+        const SizedBox(height: 16),
+        _buildTopCategoriesCard(),
+        const SizedBox(height: 16),
+        _buildInfoCard(),
+      ],
+    );
+  }
+
+  Widget _buildTopCategoriesCard() {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.grey.shade200),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(6),
+                  decoration: BoxDecoration(
+                    color: kcHazardViolet.withOpacity(0.12),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Icon(
+                    Icons.local_fire_department_outlined,
+                    color: kcHazardViolet,
+                    size: 18,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                const Text(
+                  "Top Categories",
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w800,
+                    color: kcValueDark,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 14),
+            _buildTop3HazardBody(),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ---------------- Stats grid ----------------
+
+  Widget _buildGridBody() {
     return BlocConsumer<ObservationStatusBloc, ObservationStatusState>(
       bloc: observationStatusBloc,
-      listener: (_, state) {
-        // Handle any side effects if needed
-      },
+      listener: (_, state) {},
       builder: (_, state) {
         return state.when(
-          loading: (_){return Lottie.asset("assets/lottie/loading.json");},
-          content: (observationModel) => _buildGridViewContent(observationModel),
-          success: (observationModel) => _buildGridViewContent(observationModel),
+          loading: (_) => SizedBox(
+              height: 200,
+              child: Center(
+                  child: Lottie.asset("assets/lottie/loading.json",
+                      height: 60, width: 60))),
+          content: _buildGridViewContent,
+          success: _buildGridViewContent,
           failed: (form, error) => _buildErrorState(error),
         );
       },
@@ -427,119 +747,187 @@ class _ExtraLargeDashboardPageState extends State<ExtraLargeDashboardPage> {
   }
 
   Widget _buildErrorState(String error) {
-    return Center(child: Text('Error: $error'));
+    return Container(
+      padding: const EdgeInsets.all(16),
+      alignment: Alignment.center,
+      child: Text('Error: $error',
+          style: const TextStyle(color: Colors.red, fontSize: 13)),
+    );
   }
 
-  Widget _buildGridViewContent(ObservationStatusModel observationModel) {
-    return SizedBox(
-      width: 70.screenWidth,
-      child: GridView(
-        shrinkWrap: true,
-        gridDelegate:  SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 3, childAspectRatio: 11.screenHeight / 10.screenWidth),
+  Widget _buildGridViewContent(ObservationStatusModel m) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isNarrow = constraints.maxWidth < _statNarrowBreakpoint;
+        return GridView.count(
+          crossAxisCount: isNarrow ? 2 : 3,
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          mainAxisSpacing: 12,
+          crossAxisSpacing: 12,
+          childAspectRatio: 1.4,
+          children: [
+            _buildStatCard("All Observations", "${m.alls}",
+                Icons.assignment_outlined, kcStatBlue),
+            _buildStatCard("Pending", "${m.pending}",
+                Icons.pending_actions_outlined, kcStatRed),
+            _buildStatCard("Closed", "${m.closed}",
+                Icons.check_circle_outline_rounded, kcStatGreen),
+            _buildStatCard("In Progress", "${m.inProgress}",
+                Icons.trending_up_rounded, kcStatPurple),
+            _buildStatCard("Compliance", "${m.compliance}",
+                Icons.verified_outlined, kcStatAmber),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildStatCard(
+      String label, String value, IconData icon, Color color) {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: Colors.grey.shade200),
+        boxShadow: [
+          BoxShadow(
+            color: color.withOpacity(0.08),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Card(
-            color: kcBlue,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.start,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.only(left: 10),
-                  child: Image.asset("assets/images/ticket.png", scale: 14, color: kcBlack,),
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: color.withOpacity(0.12),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Icon(icon, color: color, size: 20),
+          ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                value,
+                style: TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.w800,
+                  color: color,
                 ),
-                Padding(
-                  padding: const EdgeInsets.only(left: 5),
-                  child: Text("All Observations", style: TextStyle(fontWeight: FontWeight.w400, fontSize: 1.5.screenWidth, color: kcBlack),),
+              ),
+              Text(
+                label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: kcLabelGrey,
                 ),
-                Padding(
-                  padding: const EdgeInsets.only(top: 2, left: 5),
-                  child: Text("${observationModel.alls}", style: TextStyle(fontWeight: FontWeight.w400, fontSize: 2.screenWidth, color: kcBlack),),
-                ),
-              ],
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ---------------- Top 3 hazard ----------------
+
+  Widget _buildTop3HazardBody() {
+    return BlocConsumer<Top3HazardBloc, Top3HazardState>(
+      bloc: top3hazardBloc,
+      listener: (_, state) {},
+      builder: (_, state) {
+        return state.when(
+          loading: (_) => const SizedBox(
+              height: 60,
+              child:
+              Center(child: CircularProgressIndicator(strokeWidth: 2))),
+          content: _buildtop3HazardContent,
+          success: _buildtop3HazardContent,
+          failed: (form, error) => _buildErrorState(error),
+        );
+      },
+    );
+  }
+
+  Widget _buildtop3HazardContent(List<Top3HazardModel> top3) {
+    if (top3.isEmpty) {
+      return Container(
+        padding: const EdgeInsets.symmetric(vertical: 16),
+        alignment: Alignment.center,
+        child: Text("No data",
+            style: TextStyle(color: Colors.grey.shade500, fontSize: 13)),
+      );
+    }
+    return Wrap(
+      spacing: 10,
+      runSpacing: 10,
+      children: top3
+          .map((e) =>
+          _buildTopCategoryChip(e.hazardCategory, e.count.toString()))
+          .toList(),
+    );
+  }
+
+  Widget _buildTopCategoryChip(String title, String count) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: Colors.grey.shade200),
+        boxShadow: [
+          BoxShadow(
+            color: kcHazardViolet.withOpacity(0.06),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 140),
+            child: Text(
+              title,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: kcValueDark,
+              ),
             ),
           ),
-          Card(
-            color: kclightRed,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.start,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.only(left: 10, top: 4),
-                  child: Image.asset("assets/images/pendingticket.png", scale: 14, color: kcBlack,),
-                ),
-                Padding(
-                  padding: const EdgeInsets.only(left: 5),
-                  child: Text("Pending Observations", style: TextStyle(fontWeight: FontWeight.w400, fontSize: 1.5.screenWidth, color: kcBlack),),
-                ),
-                Padding(
-                  padding: const EdgeInsets.only(top: 4, left: 5),
-                  child: Text("${observationModel.pending}", style: TextStyle(fontWeight: FontWeight.w400, fontSize: 2.screenWidth, color: kcBlack),),
-                ),
-              ],
+          const SizedBox(width: 8),
+          Container(
+            padding:
+            const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(colors: [
+                kcHazardViolet,
+                kcHazardViolet.withOpacity(0.8),
+              ]),
+              borderRadius: BorderRadius.circular(20),
             ),
-          ),
-          Card(
-            color: kcgreen,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.start,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.only(left: 5, top: 4),
-                  child: Image.asset("assets/images/ticketcomplete.png", scale: 14, color: kcBlack,),
-                ),
-                Padding(
-                  padding: const EdgeInsets.only(left: 5),
-                  child: Text("Closed Observations", style: TextStyle(fontWeight: FontWeight.w400, fontSize: 1.5.screenWidth, color: kcBlack),),
-                ),
-                Padding(
-                  padding: const EdgeInsets.only(top: 4, left: 10),
-                  child: Text("${observationModel.closed}", style: TextStyle(fontWeight: FontWeight.w400, fontSize: 2.screenWidth, color: kcBlack),),
-                ),
-              ],
-            ),
-          ),
-          Card(
-            color: kclightpink,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.start,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.only(left: 5, top: 4),
-                  child: Image.asset("assets/images/cancelticket.png", scale: 14, color: kcBlack,),
-                ),
-                Padding(
-                  padding: const EdgeInsets.only(left: 5),
-                  child: Text("In Progress ", style: TextStyle(fontWeight: FontWeight.w400, fontSize: 1.5.screenWidth, color: kcBlack),),
-                ),
-                Padding(
-                  padding: const EdgeInsets.only(top: 4, left: 5),
-                  child: Text("${observationModel.inProgress}", style: TextStyle(fontWeight: FontWeight.w400, fontSize: 2.screenWidth, color: kcBlack),),
-                ),
-              ],
-            ),
-          ),
-          Card(
-            color: kcYellow,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.start,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.only(left: 5, top: 4),
-                  child: Image.asset("assets/images/complince.png", scale: 16, color: kcBlack,),
-                ),
-                Padding(
-                  padding: const EdgeInsets.only(left: 5),
-                  child: Text("Compliance ", style: TextStyle(fontWeight: FontWeight.w400, fontSize:1.5.screenWidth, color: kcBlack),),
-                ),
-                Padding(
-                  padding: const EdgeInsets.only(top: 4, left: 5),
-                  child: Text("${observationModel.compliance}", style: TextStyle(fontWeight: FontWeight.w400, fontSize: 2.screenWidth, color: kcBlack),),
-                ),
-              ],
+            child: Text(
+              count,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+              ),
             ),
           ),
         ],
@@ -547,126 +935,100 @@ class _ExtraLargeDashboardPageState extends State<ExtraLargeDashboardPage> {
     );
   }
 
-  //Top Categories Api Implementation
+  // ---------------- Info / suggestion card ----------------
 
-  _buildTop3HazardBody() {
-    return BlocConsumer<Top3HazardBloc, Top3HazardState>(
-      bloc: top3hazardBloc,
-      listener: (_, state) {
-        // Handle any side effects if needed
-      },
-      builder: (_, state) {
-        return state.when(
-          loading: (_){return Lottie.asset("assets/lottie/loading.json");},
-          content: (top3HazardModel) => _buildtop3HazardContent(top3HazardModel),
-          success: (top3HazardModel) => _buildtop3HazardContent(top3HazardModel),
-          failed: (form, error) => _buildErrorState(error),
-        );
-      },
-    );
-  }
-
-  Widget _buildtop3HazardContent(List<Top3HazardModel> top3HazardModel){
-    return SizedBox(
-      width: 70.screenWidth,
-      height: 3.screenHeight,
-      child: ListView.builder(
-        scrollDirection: Axis.horizontal,
-          shrinkWrap: true,
-          itemCount: top3HazardModel.length,
-          itemBuilder: (BuildContext context, int index){
-            return _buildTopCategories(top3HazardModel[index].hazardCategory, kcvoilet, top3HazardModel[index].count.toString());
-          }),
-    );
-  }
-
-  _buildTopCategories(String title, Color color, String title2){
-    return Padding(
-      padding: const EdgeInsets.all(5),
-      child: Container(
-        width: 22.screenWidth,
-        decoration:  BoxDecoration(color: kcWhite, borderRadius: BorderRadius.circular(5)),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Padding(
-              padding: const EdgeInsets.all(5),
-              child: SizedBox(
-                width: 10.screenWidth,
-                child: Text(title,
-                  maxLines: 2,
-                  style: TextStyle(fontSize: 1.screenWidth, fontWeight: FontWeight.w500),),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(5),
-              child: Container(
-                width: 8.screenWidth,
-                decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(5)),
-                child: Center(child: Text(title2, style: TextStyle(color: kcWhite, fontSize: 1.5.screenWidth),)),
-              ),
-            )
-          ],
-        ),
+  Widget _buildInfoCard() {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.grey.shade200),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
+          ),
+        ],
       ),
-    );
-  }
-
-  _buildInfoCard(){
-    return Padding(
-      padding: const EdgeInsets.all(5.0),
-      child: Card(
-        color: kcWhite,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
         child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            SizedBox(
-              width: 55.screenWidth,
+            Expanded(
               child: Column(
-                mainAxisAlignment: MainAxisAlignment.start,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 10),
-                    child: Text("Hello", style: TextStyle(fontSize: 2.screenWidth, fontWeight: FontWeight.bold),),
+                  const Text(
+                    "Hello 👋",
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w800,
+                      color: kcValueDark,
+                    ),
                   ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 10),
-                    child: Text("Facing any difficulty while using the Safety Portal app or any Suggetions? Write Us.",
-                      style: TextStyle(fontSize: 2.screenWidth, fontWeight: FontWeight.bold),),
+                  const SizedBox(height: 6),
+                  const Text(
+                    "Facing any difficulty using the Safety Portal app, or have suggestions? Write to us.",
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: kcLabelGrey,
+                      height: 1.4,
+                    ),
                   ),
-                  Padding(
-                    padding: const EdgeInsets.all(10),
-                    child: Container(
-                        decoration: BoxDecoration(gradient: const LinearGradient(colors: [navyBlue,cream, golden]),
-                        borderRadius: BorderRadius.circular(20)
+                  const SizedBox(height: 12),
+                  Container(
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                          colors: [navyBlue, cream, golden]),
+                      borderRadius: BorderRadius.circular(20),
+                      boxShadow: [
+                        BoxShadow(
+                          color: navyBlue.withOpacity(0.25),
+                          blurRadius: 6,
+                          offset: const Offset(0, 3),
                         ),
-                        child: ElevatedButton(onPressed: (){
-                          Navigator.of(context).push(
-                            MaterialPageRoute(builder: (context) => const SuggestionFeedbackPage(),
-                                fullscreenDialog: true),
-                          );
-                        }, style: ElevatedButton.styleFrom(backgroundColor: Colors.transparent,
-                        fixedSize: Size(18.screenWidth, 2.screenHeight)
-                        ), child: Text("Write Us",
-
-                          style: TextStyle(color: kcWhite, fontSize: 2.screenWidth,fontWeight: FontWeight.w600),),)),
-                  )
+                      ],
+                    ),
+                    child: ElevatedButton.icon(
+                      onPressed: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                              builder: (context) =>
+                              const SuggestionFeedbackPage(),
+                              fullscreenDialog: true),
+                        );
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.transparent,
+                        shadowColor: Colors.transparent,
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 20, vertical: 10),
+                      ),
+                      icon: const Icon(Icons.edit_note_rounded,
+                          color: kcWhite, size: 18),
+                      label: const Text(
+                        "Write Us",
+                        style: TextStyle(
+                          color: kcWhite,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                  ),
                 ],
               ),
             ),
-            Padding(
-              padding: const EdgeInsets.all(10),
-              child: Image.asset("assets/images/adhyamLogo.png",scale: 8,),
-            )
+            const SizedBox(width: 12),
+            Image.asset("assets/images/adhyamLogo.png", height: 60),
           ],
         ),
       ),
     );
   }
+
+  // ---------------- Helpers ----------------
 
   Color hexToColor(String hexString) {
     hexString = hexString.replaceFirst('#', '');
@@ -676,223 +1038,170 @@ class _ExtraLargeDashboardPageState extends State<ExtraLargeDashboardPage> {
     return Color(int.parse(hexString, radix: 16));
   }
 
-  _buildHeadingText(String title) {
-    return Padding(
-      padding: const EdgeInsets.all(2.0),
-      child: SizedBox(
-        width: 18.screenWidth,
-        child: Text(
-          title,
-          style: TextStyle(fontWeight: FontWeight.w500, fontSize: 1.5.screenWidth),
-        ),
-      ),
-    );
-  }
-
-  _buildHeadingText2(String title) {
-    return Padding(
-      padding: const EdgeInsets.all(5.0),
-      child: Text(
-        title,
-        maxLines: 4,
-        overflow: TextOverflow.ellipsis,
-        style: TextStyle(fontWeight: FontWeight.w500, fontSize: 1.8.screenWidth),
-      ),
-    );
-  }
-
-  _buildNameText2(String title) {
-    return SizedBox(
-      width: 15.screenWidth,
-      child: Padding(
-        padding: const EdgeInsets.all(5.0),
-        child: Text(
-          title,
-          maxLines: 4,
-          overflow: TextOverflow.ellipsis,
-          style: TextStyle(fontWeight: FontWeight.w500, fontSize: 1.6.screenWidth),
-        ),
-      ),
-    );
-  }
-
-  _buildHeadingText3(String title) {
-    return Padding(
-      padding: const EdgeInsets.all(10.0),
-      child: Text(
-        title,
-        maxLines: 4,
-        overflow: TextOverflow.ellipsis,
-        style: TextStyle(fontWeight: FontWeight.w900, fontSize: 2.screenWidth),
-      ),
-    );
-  }
-
-  _buildLightText(String title) {
-    return Padding(
-      padding: const EdgeInsets.all(2.0),
-      child: SizedBox(
-        width: 20.screenWidth,
-        child: Text(
-          title,
-          style: TextStyle(
-              fontWeight: FontWeight.w600,
-              fontSize: 1.2.screenWidth,
-              color: kcLightGrey),
-        ),
-      ),
-    );
-  }
-
-  _buildLightText2(String title) {
-    return Padding(
-      padding: const EdgeInsets.all(5),
-      child: Text(
-        title,
-        style: TextStyle(
-            fontWeight: FontWeight.w500,
-            fontSize: 1.5.screenWidth,
-            color: kcOrange),
-      ),
-    );
-  }
-
-  _buildHighlowContainer(String title, Color color) {
-    return Container(
-      width: 10.screenWidth,
-      decoration: BoxDecoration(color: color,
-        borderRadius: BorderRadius.circular(5),
-        boxShadow: const [
-          BoxShadow(
-            color: Colors.black,
-            blurRadius: 2.0,
-            spreadRadius: 0.0,
-            offset: Offset(2.0, 2.0), // shadow direction: bottom right
-          )
-        ],
-      ),
-      child: Padding(
-        padding: const EdgeInsets.only(left: 5, right: 5),
-        child: Text(title,
-          textAlign: TextAlign.center,
-          style: TextStyle(color: kcWhite, fontSize:2.screenWidth,fontWeight: FontWeight.w500),),
-      ),
-    );
-  }
+  // ---------------- Password change dialog (unchanged logic) ----------------
 
   Future<void> _showPasswordChangeDialog(BuildContext context) async {
-    // Controllers for the TextFormField
-    final TextEditingController newPasswordController = TextEditingController();
+    final TextEditingController newPasswordController =
+    TextEditingController();
 
     return showDialog<void>(
       context: context,
-      barrierDismissible: false, // Prevents closing the dialog by tapping outside or pressing the back button
+      barrierDismissible: false,
       builder: (BuildContext context) {
         return WillPopScope(
-          onWillPop: () async => false, // Prevents closing the dialog with the back button
+          onWillPop: () async => false,
           child: AlertDialog(
-            contentPadding: EdgeInsets.zero, // Removes default padding
+            contentPadding: EdgeInsets.zero,
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16)),
             content: BlocConsumer<UpdatePasswordBloc, UpdatePasswordState>(
               bloc: updatePasswordBloc,
-              listener: (_, state){
+              listener: (_, state) {
                 state.maybeWhen(
-                    success: (_, message){
-                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message??"Something")));
+                    success: (_, message) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text(message ?? "Something")));
                       Navigator.pop(context);
                     },
-                    failed: (_, message){
-                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
-                    }, orElse:(){});
+                    failed: (_, message) {
+                      ScaffoldMessenger.of(context)
+                          .showSnackBar(SnackBar(content: Text(message)));
+                    },
+                    orElse: () {});
               },
               builder: (context, state) {
                 return state.maybeWhen(
-                    loading: (_){
-                      return const CircularProgressIndicator();
-                    },
-                    orElse: (){
-                      return Padding(
-                        padding: const EdgeInsets.all(10.0),
-                        child: SizedBox(
-                          width: 500,
-                          height: 200, // Adjust height as needed
-                          child: Card(
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              children: [
-                                Container(
-                                  width: MediaQuery.of(context).size.width,
-                                  decoration: const BoxDecoration(gradient: LinearGradient(colors: [navyBlue,cream, golden])),
-                                  child: const Padding(
-                                    padding: EdgeInsets.symmetric(vertical: 10, horizontal: 10),
-                                    child: Text("Change Password", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold,color: kcWhite),),
-                                  ),
+                    loading: (_) =>
+                    const Padding(
+                      padding: EdgeInsets.all(40),
+                      child: CircularProgressIndicator(),
+                    ),
+                    orElse: () {
+                      return SizedBox(
+                        width: 500,
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Container(
+                              width: double.infinity,
+                              decoration: const BoxDecoration(
+                                gradient: LinearGradient(
+                                    colors: [navyBlue, cream, golden]),
+                                borderRadius: BorderRadius.only(
+                                  topLeft: Radius.circular(16),
+                                  topRight: Radius.circular(16),
                                 ),
-                                Padding(
-                                  padding: const EdgeInsets.all(10.0),
-                                  child: TextFormField(
-                                    controller: newPasswordController,
-                                    decoration: const InputDecoration(
-                                      hintText: "Enter New Password",
-                                      border: OutlineInputBorder(), // Define your border here
-                                      errorBorder: OutlineInputBorder(
-                                        borderSide: BorderSide(color: Colors.red), // Error border color
+                              ),
+                              child: const Padding(
+                                padding: EdgeInsets.all(16),
+                                child: Row(
+                                  children: [
+                                    Icon(Icons.lock_outline_rounded,
+                                        color: kcWhite),
+                                    SizedBox(width: 8),
+                                    Text(
+                                      "Change Password",
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
+                                        color: kcWhite,
                                       ),
                                     ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.all(16),
+                              child: TextFormField(
+                                controller: newPasswordController,
+                                obscureText: true,
+                                decoration: InputDecoration(
+                                  hintText: "Enter New Password",
+                                  prefixIcon: const Icon(
+                                      Icons.password_rounded,
+                                      color: kcStatBlue),
+                                  border: OutlineInputBorder(
+                                    borderRadius:
+                                    BorderRadius.circular(8),
+                                  ),
+                                  errorBorder: OutlineInputBorder(
+                                    borderRadius:
+                                    BorderRadius.circular(8),
+                                    borderSide: const BorderSide(
+                                        color: Colors.red),
                                   ),
                                 ),
-                                ElevatedButton(
+                              ),
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.fromLTRB(
+                                  16, 0, 16, 16),
+                              child: SizedBox(
+                                width: double.infinity,
+                                child: ElevatedButton(
                                   onPressed: () {
-                                    // Logic to save password
-                                    String newPassword = newPasswordController.text;
+                                    String newPassword =
+                                        newPasswordController.text;
                                     if (newPassword.isNotEmpty) {
                                       _updatepassword(
-                                          html.window.localStorage['kEmployeeCode'].toString(),
-                                          html.window.localStorage['kEmployeePassStatus'].toString(),
+                                          html.window.localStorage[
+                                          'kEmployeeCode']
+                                              .toString(),
+                                          html.window.localStorage[
+                                          'kEmployeePassStatus']
+                                              .toString(),
                                           newPasswordController.text);
-                                      // Add your password saving logic here
-                                      // After saving, close the dialog
                                       Navigator.pop(context);
-                                      Navigator.pushReplacementNamed(context, '/login');
+                                      Navigator.pushReplacementNamed(
+                                          context, '/login');
                                     } else {
-                                      ScaffoldMessenger.of(context).showSnackBar(
-                                        SnackBar(content: Text("Password cannot be empty")),
-                                      );
+                                      ScaffoldMessenger.of(context)
+                                          .showSnackBar(const SnackBar(
+                                          content: Text(
+                                              "Password cannot be empty")));
                                     }
                                   },
                                   style: ElevatedButton.styleFrom(
-                                    backgroundColor: Colors.blue, // Change the color as per your theme
+                                    backgroundColor: kcStatBlue,
+                                    padding: const EdgeInsets.symmetric(
+                                        vertical: 12),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius:
+                                      BorderRadius.circular(8),
+                                    ),
                                   ),
                                   child: const Text(
                                     "Save Password",
-                                    style: TextStyle(color: Colors.white),
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.w600,
+                                    ),
                                   ),
                                 ),
-                              ],
+                              ),
                             ),
-                          ),
+                          ],
                         ),
                       );
                     });
-
               },
-
-            )
+            ),
           ),
         );
       },
     );
   }
 
-  void _updatepassword(String empUnqId, String empPassStatus, String empNewPass) async {
+  void _updatepassword(
+      String empUnqId, String empPassStatus, String empNewPass) async {
     final data = {
       'empUnqId': empUnqId,
-      'empPassStatus' : "1",
+      'empPassStatus': "1",
       'empNewPass': empNewPass
     };
     await updatePasswordBloc.forgetPassword(data);
   }
-
 }
 
 class SearchableListNotifier extends ValueNotifier<List<AllHazardCatModel>> {
@@ -906,7 +1215,11 @@ class SearchableListNotifier extends ValueNotifier<List<AllHazardCatModel>> {
     if (query.isEmpty) {
       value = initialValue;
     } else {
-      value = initialValue.where((e) => e.hazardCategoryName.toLowerCase().startsWith(query.toLowerCase())).toList();
+      value = initialValue
+          .where((e) => e.hazardCategoryName
+          .toLowerCase()
+          .startsWith(query.toLowerCase()))
+          .toList();
     }
     notifyListeners();
   }

@@ -192,6 +192,7 @@ class _RegisterObservationPageState extends State<RegisterObservationPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: kcDashboardBg1,
       body: Row(
         mainAxisAlignment: MainAxisAlignment.start,
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -212,9 +213,53 @@ class _RegisterObservationPageState extends State<RegisterObservationPage> {
   Widget _buildObservation() {
     return Card(
       color: kcWhite,
-      margin:  const EdgeInsets.all(50),
+      margin: const EdgeInsets.all(32),
+      elevation: 6,
+      shadowColor: Colors.black.withOpacity(0.12),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       child: Column(
         children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(24, 24, 24, 8),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: navyBlue.withOpacity(0.08),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(Icons.add_chart_rounded, color: navyBlue, size: 22),
+                ),
+                const SizedBox(width: 12),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: const [
+                    Text(
+                      "Raise New Observation",
+                      style: TextStyle(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 20,
+                        color: kcValueDark,
+                        letterSpacing: 0.2,
+                      ),
+                    ),
+                    SizedBox(height: 2),
+                    Text(
+                      "Fields marked with * are required",
+                      style: TextStyle(
+                        fontWeight: FontWeight.w500,
+                        fontSize: 12,
+                        color: kcLabelGrey,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          const Divider(height: 1, thickness: 1, color: kcVeryLightGrey, indent: 24, endIndent: 24),
           Padding(
            padding: const EdgeInsets.all(10.0),
            child: Center(
@@ -238,10 +283,7 @@ class _RegisterObservationPageState extends State<RegisterObservationPage> {
                     padding: const EdgeInsets.all(20.0),
                     child: Row(
                       children: [
-                        Image.asset(
-                          "assets/images/plant.png",
-                          scale: 20,
-                        ),
+                        _iconBadge(Icons.factory_rounded, kcStatGreen),
                         const Text(
                           " *", // The red star
                           style: TextStyle(color: Colors.red, fontSize: 20),
@@ -261,10 +303,7 @@ class _RegisterObservationPageState extends State<RegisterObservationPage> {
                     padding: const EdgeInsets.all(20.0),
                     child: Row(
                       children: [
-                        Image.asset(
-                          "assets/images/responsibility.png",
-                          scale: 20,
-                        ),
+                        _iconBadge(Icons.engineering_rounded, kcStatBlue),
                         Text(
                           " *", // The red star
                           style: TextStyle(color: Colors.red, fontSize: 20),
@@ -282,10 +321,7 @@ class _RegisterObservationPageState extends State<RegisterObservationPage> {
                     padding: const EdgeInsets.all(20.0),
                     child: Row(
                       children: [
-                        Image.asset(
-                          "assets/images/observation.png",
-                          scale: 20,
-                        ),
+                        _iconBadge(Icons.flag_rounded, kcStatAmber),
                         Text(
                           " *", // The red star
                           style: TextStyle(color: Colors.red, fontSize: 20),
@@ -303,10 +339,7 @@ class _RegisterObservationPageState extends State<RegisterObservationPage> {
                     padding: const EdgeInsets.all(20.0),
                     child: Row(
                       children: [
-                        Image.asset(
-                          "assets/images/location.png",
-                          scale: 20,
-                        ),
+                        _iconBadge(Icons.location_on_rounded, kcStatRed),
                         Text(
                           " *", // The red star
                           style: TextStyle(color: Colors.red, fontSize: 20),
@@ -324,10 +357,7 @@ class _RegisterObservationPageState extends State<RegisterObservationPage> {
                     padding: const EdgeInsets.all(20.0),
                     child: Row(
                       children: [
-                        Image.asset(
-                          "assets/images/hazard.png",
-                          scale: 20,
-                        ),
+                        _iconBadge(Icons.warning_amber_rounded, kcHazardViolet),
                         Text(
                           " *", // The red star
                           style: TextStyle(color: Colors.red, fontSize: 20),
@@ -346,10 +376,7 @@ class _RegisterObservationPageState extends State<RegisterObservationPage> {
                     padding: const EdgeInsets.all(20.0),
                     child: Row(
                       children: [
-                        Image.asset(
-                          "assets/images/plant.png",
-                          scale: 20,
-                        ),
+                        _iconBadge(Icons.supervisor_account_rounded, kcStatGreen),
                         _buildHeadingText("Plant Head :"),
                         Container(
                             width: 250,
@@ -365,10 +392,7 @@ class _RegisterObservationPageState extends State<RegisterObservationPage> {
                       padding: const EdgeInsets.all(20.0),
                       child: Row(
                         children: [
-                          Image.asset(
-                            "assets/images/plant.png",
-                            scale: 20,
-                          ),
+                          _iconBadge(Icons.troubleshoot_rounded, kcStatPurple),
                           Text(
                             " *", // The red star
                             style: TextStyle(color: Colors.red, fontSize: 20),
@@ -388,10 +412,7 @@ class _RegisterObservationPageState extends State<RegisterObservationPage> {
                     padding: const EdgeInsets.all(20.0),
                     child: Row(
                       children: [
-                        Image.asset(
-                          "assets/images/uniqueid.png",
-                          scale: 20,
-                        ),
+                        _iconBadge(Icons.apartment_rounded, kcStatPurple),
                         Text(
                           " *", // The red star
                           style: TextStyle(color: Colors.red, fontSize: 20),
@@ -409,10 +430,7 @@ class _RegisterObservationPageState extends State<RegisterObservationPage> {
                     padding: const EdgeInsets.all(20.0),
                     child: Row(
                       children: [
-                        Image.asset(
-                          "assets/images/responsibility.png",
-                          scale: 20,
-                        ),
+                        _iconBadge(Icons.manage_accounts_rounded, kcStatBlue),
                         Text(
                           " *", // The red star
                           style: TextStyle(color: Colors.red, fontSize: 20),
@@ -431,10 +449,7 @@ class _RegisterObservationPageState extends State<RegisterObservationPage> {
                     padding: const EdgeInsets.all(20.0),
                     child: Row(
                       children: [
-                        Image.asset(
-                          "assets/images/hazard.png",
-                          scale: 20,
-                        ),
+                        _iconBadge(Icons.report_problem_rounded, kcHazardViolet),
                         Text(
                           " *", // The red star
                           style: TextStyle(color: Colors.red, fontSize: 20),
@@ -453,10 +468,7 @@ class _RegisterObservationPageState extends State<RegisterObservationPage> {
                     padding: const EdgeInsets.all(20.0),
                     child: Row(
                       children: [
-                        Image.asset(
-                          "assets/images/responsibility.png",
-                          scale: 20,
-                        ),
+                        _iconBadge(Icons.visibility_rounded, kcObservationCyan),
                         Text(
                           " *", // The red star
                           style: TextStyle(color: Colors.red, fontSize: 20),
@@ -470,10 +482,7 @@ class _RegisterObservationPageState extends State<RegisterObservationPage> {
                     padding: const EdgeInsets.all(20.0),
                     child: Row(
                       children: [
-                        Image.asset(
-                          "assets/images/responsibility.png",
-                          scale: 20,
-                        ),
+                        _iconBadge(Icons.handyman_rounded, kcStatGreen),
                         Text(
                           " *", // The red star
                           style: TextStyle(color: Colors.red, fontSize: 20),
@@ -505,10 +514,7 @@ class _RegisterObservationPageState extends State<RegisterObservationPage> {
                     padding: const EdgeInsets.all(20.0),
                     child: Row(
                       children: [
-                        Image.asset(
-                          "assets/images/calendar-3.png",
-                          scale: 20,
-                        ),
+                        _iconBadge(Icons.calendar_month_rounded, kcStatAmber),
                         Text(
                           " *", // The red star
                           style: TextStyle(color: Colors.red, fontSize: 20),
@@ -598,8 +604,9 @@ class _RegisterObservationPageState extends State<RegisterObservationPage> {
           orElse: () {
             return Center(
               child: Padding(
-                padding: const EdgeInsets.all(10.0),
-                child: ElevatedButton(
+                padding: const EdgeInsets.fromLTRB(10, 24, 10, 28),
+                child: ElevatedButton.icon(
+                  icon: const Icon(Icons.send_rounded, size: 18, color: Colors.white),
                   onPressed: () async {
                     // Group all validation checks in one block
                     if (priority.value == "Select Priority") {
@@ -698,11 +705,19 @@ class _RegisterObservationPageState extends State<RegisterObservationPage> {
                       clearFormValues();
                     }
                   },
-                  style: ElevatedButton.styleFrom(backgroundColor: kcobservationgreen),
-                  child: const Text(
-                    "Raise Observation",
-                    style: TextStyle(color: Colors.white),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: kcobservationgreen,
+                    foregroundColor: Colors.white,
+                    elevation: 3,
+                    padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 16),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    textStyle: const TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: 0.4,
+                    ),
                   ),
+                  label: const Text("Raise Observation"),
                 ),
               ),
             );
@@ -836,8 +851,8 @@ class _RegisterObservationPageState extends State<RegisterObservationPage> {
   }
 
   _border() => OutlineInputBorder(
-      borderRadius: BorderRadius.circular(5),
-      borderSide:   const BorderSide(color: kcDarkGreyColor,width: 1.5)
+      borderRadius: BorderRadius.circular(8),
+      borderSide: BorderSide(color: kcLightGrey.withOpacity(0.5), width: 1.2)
   );
 
   // All Plant APi Implementation
@@ -2609,13 +2624,31 @@ class _RegisterObservationPageState extends State<RegisterObservationPage> {
 
   _buildHeadingText(String title){
     return Padding(
-      padding: const EdgeInsets.all(5),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
       child: SizedBox(
-        width: 100,
-        child: Text(title, style: const TextStyle( fontWeight: FontWeight.w400,
-            fontSize: 14,
-            color: Colors.black),),
+        width: 110,
+        child: Text(
+          title,
+          style: const TextStyle(
+            fontWeight: FontWeight.w600,
+            fontSize: 13,
+            color: kcValueDark,
+            letterSpacing: 0.2,
+          ),
+        ),
       ),
+    );
+  }
+
+  Widget _iconBadge(IconData icon, Color color) {
+    return Container(
+      padding: const EdgeInsets.all(8),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.15),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: color.withOpacity(0.35), width: 1),
+      ),
+      child: Icon(icon, color: color, size: 20),
     );
   }
 

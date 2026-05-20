@@ -1,5 +1,5 @@
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide VoidCallback;
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 import 'package:jsaw_limited/bloc/all_filter_observation_bloc.dart';
@@ -54,9 +54,30 @@ import '../state/responsibleHOD_state.dart';
 import 'edit_all_observation_page.dart';
 import 'dart:html';
 import 'dart:html' as html;
-
 import 'hseEditObservation_Page.dart';
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Generic SearchableValueNotifier — replaces 9 near-identical classes
+// ─────────────────────────────────────────────────────────────────────────────
+class SearchableValueNotifier<T> extends ValueNotifier<List<T>> {
+  SearchableValueNotifier(super.value, {required this.filter}) {
+    _initial = value;
+  }
+
+  final bool Function(T item, String query) filter;
+  late final List<T> _initial;
+
+  void search(String query) {
+    value = query.isEmpty
+        ? _initial
+        : _initial.where((e) => filter(e, query)).toList();
+    notifyListeners();
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// ObservationPage (tab host) — unchanged logic, just TabBar polish
+// ─────────────────────────────────────────────────────────────────────────────
 class ObservationPage extends StatefulWidget {
   const ObservationPage({super.key});
 
@@ -64,150 +85,68 @@ class ObservationPage extends StatefulWidget {
   State<ObservationPage> createState() => _ObservationPageState();
 }
 
-class _ObservationPageState extends State<ObservationPage> with SingleTickerProviderStateMixin{
-
-  // late final AllObservationBloc allObservationBloc;
+class _ObservationPageState extends State<ObservationPage>
+    with SingleTickerProviderStateMixin {
   late final FilterObservationBloc filterObservationBloc;
-
   late TabController tabController;
 
   @override
   void initState() {
     super.initState();
-    final observationService = Provider.of<ObservationService>(context, listen: false);
-    // allObservationBloc = AllObservationBloc(observationService);
-    // allObservationBloc.initState();
+    final observationService =
+    Provider.of<ObservationService>(context, listen: false);
     filterObservationBloc = FilterObservationBloc(observationService);
     tabController = TabController(length: 4, vsync: this);
-    tabController.addListener(() {
-      setState(() {});
-    });
+    tabController.addListener(() => setState(() {}));
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body:  Row(
-        mainAxisAlignment: MainAxisAlignment.start,
-        crossAxisAlignment: CrossAxisAlignment.start,
+      body: Row(
         children: [
-         // const AppDrawer(),
           Expanded(
             child: Column(
               mainAxisSize: MainAxisSize.min,
-              mainAxisAlignment: MainAxisAlignment.start,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-               // PageHeader(drawerTitles[_selectedDrawerIndex]),
                 TabBar(
                   isScrollable: false,
                   controller: tabController,
-                  indicatorColor: kcOrange,
-                 // indicatorSize: TabBarIndicatorSize.label,
+                  indicatorColor: kcvoilet,
+                  indicatorSize: TabBarIndicatorSize.tab,
+                  indicatorWeight: 3,
+                  labelColor: kcvoilet,
+                  unselectedLabelColor: kcLightGrey,
+                  labelStyle: const TextStyle(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 13,
+                      letterSpacing: 0.2),
+                  unselectedLabelStyle: const TextStyle(
+                      fontWeight: FontWeight.w500,
+                      fontSize: 13,
+                      letterSpacing: 0.2),
+                  dividerColor: kcVeryLightGrey,
                   tabs: [
-                    const Tab(
-                      icon: Icon(
-                        Icons.safety_check,
-                        color: kcMediumGrey,
-                      ),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(
-                            "Received Observation",
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              color:
-                              kcMediumGrey, // Change this to your desired text color
-                            ),
-                            softWrap: true,
-                            maxLines: 2, // Allow up to two lines
-                            overflow: TextOverflow
-                                .ellipsis, // Add ellipsis if text overflows
-                          ),
-                        ],
-                      ),
-                    ),
-                    const Tab(
-                      icon: Icon(
-                        Icons.search_rounded,
-                        color: kcMediumGrey,
-                      ),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(
-                            "Raised Observation",
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              color:
-                              kcMediumGrey, // Change this to your desired text color
-                            ),
-                            softWrap: true,
-                            maxLines: 2, // Allow up to two lines
-                            overflow: TextOverflow
-                                .ellipsis, // Add ellipsis if text overflows
-                          ),
-                        ],
-                      ),
-                    ),
-                    const Tab(
-                      icon: Icon(
-                        Icons.search_rounded,
-                        color: kcMediumGrey,
-                      ),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(
-                            "All Observation",
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              color:
-                              kcMediumGrey, // Change this to your desired text color
-                            ),
-                            softWrap: true,
-                            maxLines: 2, // Allow up to two lines
-                            overflow: TextOverflow
-                                .ellipsis, // Add ellipsis if text overflows
-                          ),
-                        ],
-                      ),
-                    ),
-                    if(html.window.localStorage['khseCode'] == '1')
-                      const Tab(
-                        icon: Icon(
-                          Icons.search_rounded,
-                          color: kcMediumGrey,
-                        ),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(
-                              "Edit Observation",
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                color:
-                                kcMediumGrey, // Change this to your desired text color
-                              ),
-                              softWrap: true,
-                              maxLines: 2, // Allow up to two lines
-                              overflow: TextOverflow
-                                  .ellipsis, // Add ellipsis if text overflows
-                            ),
-                          ],
-                        ),
-                      ),
+                    _tab(Icons.inbox_outlined, 'Received Observation'),
+                    _tab(Icons.add_alert_outlined, 'Raised Observation'),
+                    _tab(Icons.list_alt_outlined, 'All Observation'),
+                    if (html.window.localStorage['khseCode'] == '1')
+                      _tab(Icons.edit_note, 'Edit Observation'),
                   ],
                 ),
                 Expanded(
-                  child: TabBarView(controller: tabController, children: [
-                    ReceivedObservationPage(),
-                    RaisedObservationPage(),
-                    AllObservationPage(),
-                    if(html.window.localStorage['khseCode'] == '1') HseEditObservationPage()
-                  ]),
-                )
+                  child: TabBarView(
+                    controller: tabController,
+                    children: [
+                      ReceivedObservationPage(),
+                      RaisedObservationPage(),
+                      const AllObservationPage(),
+                      if (html.window.localStorage['khseCode'] == '1')
+                        HseEditObservationPage(),
+                    ],
+                  ),
+                ),
               ],
             ),
           ),
@@ -216,9 +155,19 @@ class _ObservationPageState extends State<ObservationPage> with SingleTickerProv
     );
   }
 
+  Tab _tab(IconData icon, String label) => Tab(
+    icon: Icon(icon),
+    child: Text(label,
+        textAlign: TextAlign.center,
+        softWrap: true,
+        maxLines: 2,
+        overflow: TextOverflow.ellipsis),
+  );
 }
 
-
+// ─────────────────────────────────────────────────────────────────────────────
+// AllObservationPage
+// ─────────────────────────────────────────────────────────────────────────────
 class AllObservationPage extends StatefulWidget {
   const AllObservationPage({super.key});
 
@@ -227,2661 +176,1627 @@ class AllObservationPage extends StatefulWidget {
 }
 
 class _AllObservationPageState extends State<AllObservationPage> {
-
   late final AllObservaionTillDateBloc allObservaionTillDateBloc;
-
   late final ObservationbyUniBloc observationbyUniBloc;
-
   late final AllPlantBloc allPlantBloc;
-
   late final AllDepartBloc allDepartBloc;
-
   late final EmployeeResponsibilityBloc employeeResponsibilityBloc;
-
   late final PriorityBloc priorityBloc;
-
   late final LocationBloc locationBloc;
-
   late final AllHazardCatBloc allHazardCatBloc;
-
   late final SaveObservationBloc saveObservationBloc;
-
   late final AllTypeHazardBloc allTypeHazardBloc;
-
   late final ResponsibleHODBloc responsibleHODBloc;
-
-  // late final AllObservationBloc allObservationBloc;
-
   late final FilterObservationBloc filterObservationBloc;
-
   late final AllFilterObservationBloc allFilterObservationBloc;
-
   late final GenerateExcelBloc generateExcelBloc;
-
   late final UniqueIdBloc uniqueIdBloc;
 
-
-  ValueNotifier<String> workGroup = ValueNotifier("Select Work Group");
-  ValueNotifier<String> plant = ValueNotifier("Filter Plant");
-  ValueNotifier<String> stat = ValueNotifier("Filter Department");
-  ValueNotifier<String> responsibility = ValueNotifier("Filter Responsibility");
-  ValueNotifier<String> responsibleHOD = ValueNotifier("Filter Responsible HOD");
-  ValueNotifier<String> priority = ValueNotifier("");
-  ValueNotifier<String> priorityDesc = ValueNotifier("Deadline");
-  ValueNotifier<String> location = ValueNotifier("");
-  ValueNotifier<String> uniqueId = ValueNotifier("");
-  ValueNotifier<String> hazard = ValueNotifier("");
-  ValueNotifier<String> hazardType = ValueNotifier("Select Hazard Type");
-  TextEditingController startDateInput = TextEditingController();
-  TextEditingController endDateInput = TextEditingController();
-  TextEditingController fromDateInput = TextEditingController();
+  // ── Filter state ──────────────────────────────────────────────────────────
+  ValueNotifier<String> workGroup = ValueNotifier('');
+  ValueNotifier<String> plant = ValueNotifier('');
+  ValueNotifier<String> stat = ValueNotifier('');
+  ValueNotifier<String> responsibility = ValueNotifier('');
+  ValueNotifier<String> responsibleHOD = ValueNotifier('');
+  ValueNotifier<String> priority = ValueNotifier('');
+  ValueNotifier<String> priorityDesc = ValueNotifier('Deadline');
+  ValueNotifier<String> location = ValueNotifier('');
+  ValueNotifier<String> uniqueId = ValueNotifier('');
+  ValueNotifier<String> hazard = ValueNotifier('');
+  ValueNotifier<String> hazardType = ValueNotifier('');
+  final TextEditingController startDateInput = TextEditingController();
+  final TextEditingController endDateInput = TextEditingController();
+  final TextEditingController fromDateInput = TextEditingController();
 
   late String employeeName;
   late String employeeCode;
-  late String allObservationSessionID = window.localStorage['kAllSessionID'] ?? "";
-  late String statCode = "";
-  late String departCode = "";
-  late String responsibleCode;
-  late String responsibleHODCode;
-  late String priorityColor = "";
-  late String status = "";
-  late String responsibleEnggDesignationCode = "";
+  late String allObservationSessionID =
+      window.localStorage['kAllSessionID'] ?? '';
+  late String statCode = '';
+  late String departCode = '';
+  late String responsibleCode = '';
+  late String responsibleHODCode = '';
+  late String priorityColor = '';
+  late String status = '';
+  late String responsibleEnggDesignationCode = '';
 
-  String date = DateFormat('yyyy-MM-dd').format(DateTime.now());
-
-  List<String> statusList = ['PENDING', 'CLOSED', 'IN PROGRESS', 'COMPLIANCE'];
-
+  final List<String> statusList = ['PENDING', 'CLOSED', 'IN PROGRESS', 'COMPLIANCE'];
   int currentPage = 0;
-  
-  final int itemsPerPage = 10;
 
-
-  void _nextPage() {
-    setState(() {
-      currentPage++;
-      allFilterObservationBloc.initState(currentPage,"", "", "", "", "", "", "", "", "", allObservationSessionID,"");
-    });
-  }
+  // ── Pagination ────────────────────────────────────────────────────────────
+  void _nextPage() => setState(() {
+    currentPage++;
+    allFilterObservationBloc.initState(currentPage, '', '', '', '', '', '',
+        '', '', '', allObservationSessionID, '');
+  });
 
   void _previousPage() {
     if (currentPage > 0) {
       setState(() {
         currentPage--;
-        allFilterObservationBloc.initState(currentPage,"", "", "", "", "", "", "", "", "", allObservationSessionID,"");
+        allFilterObservationBloc.initState(currentPage, '', '', '', '', '', '',
+            '', '', '', allObservationSessionID, '');
       });
     }
   }
 
+  // ── Lifecycle ─────────────────────────────────────────────────────────────
   @override
   void initState() {
     super.initState();
-    final observationService = Provider.of<ObservationService>(context, listen: false);
-    final dashboardService = Provider.of<DashboardService>(context, listen: false);
+    final observationService =
+    Provider.of<ObservationService>(context, listen: false);
+    final dashboardService =
+    Provider.of<DashboardService>(context, listen: false);
     generateExcelBloc = GenerateExcelBloc(observationService);
     allObservaionTillDateBloc = AllObservaionTillDateBloc(observationService);
-    //allObservaionTillDateBloc.initState();
-    // allObservationBloc = AllObservationBloc(observationService);
-    filterObservationBloc= FilterObservationBloc(observationService);
+    filterObservationBloc = FilterObservationBloc(observationService);
     allFilterObservationBloc = AllFilterObservationBloc(observationService);
-    // allObservationBloc.initState();
-   // filterObservationBloc.initState(currentPage,"", "", "", "", "", "", "", "", "");
-    allFilterObservationBloc.initState(currentPage,"", "", "", "", "", "", "", "", "", "","");
-    allPlantBloc = AllPlantBloc(observationService);
-    allPlantBloc.initState();
+    allFilterObservationBloc.initState(currentPage, '', '', '', '', '', '', '', '', '', '', '');
+    allPlantBloc = AllPlantBloc(observationService)..initState();
     allDepartBloc = AllDepartBloc(observationService);
     employeeResponsibilityBloc = EmployeeResponsibilityBloc(observationService);
-    employeeName = window.localStorage['kEmployeename'] ?? "";
-    employeeCode = window.localStorage['kEmployeeCode'] ?? "";
-    priorityBloc = PriorityBloc(observationService);
-    priorityBloc.initState();
+    employeeName = window.localStorage['kEmployeename'] ?? '';
+    employeeCode = window.localStorage['kEmployeeCode'] ?? '';
+    priorityBloc = PriorityBloc(observationService)..initState();
     locationBloc = LocationBloc(observationService);
-    allHazardCatBloc = AllHazardCatBloc(dashboardService);
-    allHazardCatBloc.initState();
-    allTypeHazardBloc = AllTypeHazardBloc(observationService);
-    allTypeHazardBloc.initState();
+    allHazardCatBloc = AllHazardCatBloc(dashboardService)..initState();
+    allTypeHazardBloc = AllTypeHazardBloc(observationService)..initState();
     uniqueIdBloc = UniqueIdBloc(observationService);
     saveObservationBloc = SaveObservationBloc(observationService);
     responsibleHODBloc = ResponsibleHODBloc(observationService);
-    startDateInput.text = "";
-    endDateInput.text = "";
-    fromDateInput.text = "";
   }
 
-
+  // ─────────────────────────────────────────────────────────────────────────
+  // Build
+  // ─────────────────────────────────────────────────────────────────────────
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: SingleChildScrollView(
-        child:  _buildObservation(),
-      )
+      body: SingleChildScrollView(child: _buildObservation()),
     );
   }
 
-  _buildObservation() {
+  Widget _buildObservation() {
     return BlocConsumer<AllFilterObservationBloc, AllFilterObservationState>(
       bloc: allFilterObservationBloc,
-      listener: (_, state) {},
-      builder: (_, state) {
-        return state.when(
-            loading:(_){return Center(child: Lottie.asset("assets/lottie/loading.json",height: 80, width: 80 ));},
-            content: _buildContent,
-            success: _buildContent,
-            failed: (form, __) => _buildContent(form));
-      },
+      listener: (_, __) {},
+      builder: (_, state) => state.when(
+        loading: (_) => Center(
+            child: Lottie.asset('assets/lottie/loading.json',
+                height: 80, width: 80)),
+        content: _buildContent,
+        success: _buildContent,
+        failed: (form, __) => _buildContent(form),
+      ),
     );
   }
 
+  // ─────────────────────────────────────────────────────────────────────────
+  // Toolbar
+  // ─────────────────────────────────────────────────────────────────────────
+  Widget _buildToolbar(String sessionID) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      decoration: const BoxDecoration(
+        color: kcWhite,
+        border: Border(bottom: BorderSide(color: kcVeryLightGrey, width: 1)),
+      ),
+      child: Row(
+        children: [
+          // Refresh
+          _toolbarIconButton(
+            icon: Icons.refresh_rounded,
+            tooltip: 'Refresh',
+            color: kcgreen,
+            onPressed: () {
+              setState(() => currentPage = 0);
+              allFilterObservationBloc.initState(
+                  0, '', '', '', '', '', '', '', '', '', '', '');
+            },
+          ),
+          const SizedBox(width: 10),
+          // Filter
+          ElevatedButton.icon(
+            onPressed: () {
+              uniqueIdBloc.initState();
+              _openFilterDialog();
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: kcvoilet,
+              foregroundColor: kcWhite,
+              fixedSize: const Size(140, 38),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8)),
+              elevation: 0,
+            ),
+            icon: const Icon(Icons.filter_alt_outlined, size: 16),
+            label: const Text('Filter',
+                style:
+                TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
+          ),
+          const SizedBox(width: 10),
+          // Export
+          _buildDownloadExcel(sessionID),
+        ],
+      ),
+    );
+  }
+
+  Widget _toolbarIconButton({
+    required IconData icon,
+    required String tooltip,
+    required Color color,
+    required VoidCallback onPressed,
+  }) {
+    return Tooltip(
+      message: tooltip,
+      child: InkWell(
+        onTap: onPressed,
+        borderRadius: BorderRadius.circular(8),
+        child: Container(
+          width: 38,
+          height: 38,
+          decoration: BoxDecoration(
+            color: color.withValues(alpha: 0.12),
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: color.withValues(alpha: 0.3), width: 1),
+          ),
+          child: Icon(icon, color: color, size: 20),
+        ),
+      ),
+    );
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // Pagination bar
+  // ─────────────────────────────────────────────────────────────────────────
+  Widget _buildPaginationBar(AllFilterObservationModel model) {
+    final hasPrev = currentPage > 0;                          // ✅ fixed: was currentPage < totalPages
+    final hasNext = currentPage < model.totalPages - 1;       // ✅ fixed
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          // Prev
+          _pageButton(
+            icon: Icons.chevron_left_rounded,
+            label: 'Prev',
+            enabled: hasPrev,
+            onPressed: _previousPage,
+          ),
+          const SizedBox(width: 16),
+          // Page indicator
+          Container(
+            padding:
+            const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            decoration: BoxDecoration(
+              color: kcvoilet.withValues(alpha: 0.06),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                  color: kcvoilet.withValues(alpha: 0.15), width: 1),
+            ),
+            child: Text(
+              'Page ${currentPage + 1} of ${model.totalPages}',
+              style: const TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: kcvoilet,
+              ),
+            ),
+          ),
+          const SizedBox(width: 16),
+          // Next
+          _pageButton(
+            icon: Icons.chevron_right_rounded,
+            label: 'Next',
+            enabled: hasNext,
+            onPressed: _nextPage,
+            iconAfter: true,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _pageButton({
+    required IconData icon,
+    required String label,
+    required bool enabled,
+    required VoidCallback onPressed,
+    bool iconAfter = false,
+  }) {
+    return AnimatedOpacity(
+      opacity: enabled ? 1.0 : 0.35,
+      duration: const Duration(milliseconds: 200),
+      child: ElevatedButton(
+        onPressed: enabled ? onPressed : null,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: kcvoilet,
+          foregroundColor: kcWhite,
+          disabledBackgroundColor: kcLightGrey,
+          shape:
+          RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          padding:
+          const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+          elevation: 0,
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: iconAfter
+              ? [
+            Text(label,
+                style: const TextStyle(
+                    fontWeight: FontWeight.w600, fontSize: 13)),
+            const SizedBox(width: 4),
+            Icon(icon, size: 18),
+          ]
+              : [
+            Icon(icon, size: 18),
+            const SizedBox(width: 4),
+            Text(label,
+                style: const TextStyle(
+                    fontWeight: FontWeight.w600, fontSize: 13)),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // Main content
+  // ─────────────────────────────────────────────────────────────────────────
   Widget _buildContent(AllFilterObservationModel model) {
     return Column(
       children: [
-        Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: SizedBox(
-            width: 800,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                TextButton(onPressed: (){
-                  setState(() {
-                    currentPage = 0;
-                  });
-                  allFilterObservationBloc.initState(0,"", "", "", "", "", "", "", "", "","","");
-                }, child: const Row(
-                  children: [
-                    Text("Refresh"),
-                    Icon(Icons.refresh)
-                  ],
-                )
-                ),
-                ElevatedButton(onPressed: (){
-                  uniqueIdBloc.initState();
-                  //allFilterObservationBloc.initState(currentPage,"", "", "", "", "", "", "",window.localStorage['kEmployeeCode'] ?? "", "","");
-                  openFilterDialog();
-                },
-                    style: ElevatedButton.styleFrom(backgroundColor: kcRed, fixedSize: const Size(200, 40)),
-                    child: const Text("Filter", style: TextStyle(color: kcWhite),)),
-                _buildDownloadExcel(model.sessionID),
-
-              ],
-            ),
-          ),
-        ),
-        const Divider(),
-        Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              if(currentPage < model.totalPages)
-              ElevatedButton(onPressed: _previousPage, child: const Text("Previous", style: TextStyle(fontWeight: FontWeight.w600, color: kcWhite),), style: ElevatedButton.styleFrom(backgroundColor: kcmegenta),),
-              Row(
-                children: [
-                  Text("Page $currentPage"),
-                  Text(" Out of Total Pages " + model.totalPages.toString()),
-                ],
-              ),
-              if(currentPage < model.totalPages)
-              ElevatedButton(onPressed: _nextPage, child: Text("Next", style: TextStyle(fontWeight: FontWeight.w600, color: kcWhite),), style: ElevatedButton.styleFrom(backgroundColor: kcmegenta)),
-            ],
-          ),
-        ),
+        _buildToolbar(model.sessionID),
+        _buildPaginationBar(model),
+        const Divider(height: 1),
         ListView.builder(
+          padding:
+          const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           physics: const NeverScrollableScrollPhysics(),
           shrinkWrap: true,
-            itemCount: model.model.length,
-            itemBuilder: (BuildContext context, int index) {
-              return Card(
-                  color: kcWhite,
-                  elevation: 8,
-                  child: SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: Row(
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.all(8),
-                          child: SizedBox(
-                            width: 40.screenWidth,
-                            height: 20.screenHeight,
-                            child: FadeInImage(
-                              placeholder: NetworkImage(model.model[index].lowQualityImageUrl), // Low-quality image
-                              image: NetworkImage(model.model[index].imageNumber), // High-quality image
-                              fadeInDuration: const Duration(milliseconds: 300), // Fade duration for transition
-                              fadeOutDuration: const Duration(milliseconds: 300), // Fade out duration for the placeholder
-                              fit: BoxFit.cover, // Image fit mode
-                              imageErrorBuilder: (context, error, stackTrace) {
-                                return const Icon(Icons.error); // Handle any error loading the image
-                              },
-                            ),
-
-                            // Image.network(
-                            //   alignment: Alignment.center,
-                            //   model[index].lowQualityImageUrl,
-                            //   loadingBuilder: (BuildContext context, Widget child,
-                            //       ImageChunkEvent? loadingProgress) {
-                            //     if (loadingProgress == null) return child;
-                            //     return Center(
-                            //       child: CircularProgressIndicator(
-                            //         value: loadingProgress.expectedTotalBytes != null
-                            //             ? loadingProgress.cumulativeBytesLoaded /
-                            //             loadingProgress.expectedTotalBytes!
-                            //             : null,
-                            //       ),
-                            //     );
-                            //   },
-                            //   //fit: BoxFi,
-                            // ),
-                          ),
-                        ),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisAlignment: MainAxisAlignment.start,
-                          children: [
-                            SizedBox(
-                              width: 100.screenWidth,
-                              child: Row(
-                                mainAxisAlignment:
-                                MainAxisAlignment.spaceBetween,
-                                crossAxisAlignment:
-                                CrossAxisAlignment.center,
-                                children: [
-                                  Column(
-                                    children: [
-                                      Column(
-                                        mainAxisAlignment:
-                                        MainAxisAlignment.start,
-                                        children: [
-                                          Row(
-                                            children: [
-                                              Image.asset(
-                                                "assets/images/raisedby.png",
-                                                scale: 20,
-                                              ),
-                                              _buildHeadingText(
-                                                  "Observation Raised By :"),
-                                            ],
-                                          ),
-                                          _buildTextBox(
-                                              model.model[index].observationRaisedBy,
-                                              kcDarkGreyColor),
-                                        ],
-                                      ),
-                                      Column(
-                                        mainAxisAlignment:
-                                        MainAxisAlignment.start,
-                                        children: [
-                                          Row(
-                                            children: [
-                                              Image.asset(
-                                                "assets/images/plant.png",
-                                                scale: 20,
-                                              ),
-                                              _buildHeadingText(
-                                                  "Plant / Dept :"),
-                                            ],
-                                          ),
-                                          _buildTextBox(model.model[index].plantDept,
-                                              Colors.black)
-                                        ],
-                                      ),
-                                    ],
-                                  ),
-                                  Column(
-                                    children: [
-                                      Column(
-                                        children: [
-                                          Row(
-                                            children: [
-                                              Image.asset(
-                                                "assets/images/uniqueid.png",
-                                                scale: 20,
-                                              ),
-                                              _buildHeadingText(
-                                                  "Unique ID No. :"),
-                                            ],
-                                          ),
-                                          _buildTextBox(
-                                              model.model[index]
-                                                  .uniqueIdentificationNumber,
-                                              kcDarkGreyColor),
-                                        ],
-                                      ),
-                                      Column(
-                                        mainAxisAlignment:
-                                        MainAxisAlignment.start,
-                                        children: [
-                                          Row(
-                                            children: [
-                                              Image.asset(
-                                                "assets/images/location.png",
-                                                scale: 20,
-                                              ),
-                                              _buildHeadingText("Location :"),
-                                            ],
-                                          ),
-                                          _buildTextBox(model.model[index].location,
-                                              Colors.black)
-                                        ],
-                                      ),
-                                    ],
-                                  ),
-                                  Column(
-                                    children: [
-                                      Column(
-                                        children: [
-                                          Row(
-                                            children: [
-                                              Image.asset(
-                                                "assets/images/date.png",
-                                                scale: 20,
-                                              ),
-                                              _buildHeadingText("Date :"),
-                                            ],
-                                          ),
-                                          _buildTextBox(
-                                              model.model[index].raisedDate, kcRed)
-                                        ],
-                                      ),
-                                      Column(
-                                        mainAxisAlignment:
-                                        MainAxisAlignment.start,
-                                        children: [
-                                          Row(
-                                            children: [
-                                              Image.asset(
-                                                "assets/images/responsibility.png",
-                                                scale: 20,
-                                              ),
-                                              _buildHeadingText(
-                                                  "Responsibility"),
-                                            ],
-                                          ),
-                                          _buildTextBox(
-                                              model.model[index].responsibility,
-                                              kcmegenta)
-                                        ],
-                                      ),
-                                    ],
-                                  )
-                                ],
-                              ),
-                            ),
-                            Center(
-                                child: Container(
-                                  height: 2,
-                                  alignment: Alignment.center,
-                                  color: kcVeryLightGrey,
-                                  width: 800,
-                                )),
-                            SizedBox(
-                              width: 600,
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Row(
-                                    children: [
-                                      Row(
-                                        children: [
-                                          Image.asset(
-                                            "assets/images/suggestions.png",
-                                            scale: 20,
-                                          ),
-                                          _buildHeadingText("Status :"),
-                                        ],
-                                      ),
-                                      Container(
-                                        decoration: const BoxDecoration(
-                                            boxShadow: [
-                                              BoxShadow(
-                                                color: Colors.black,
-                                                blurRadius: 2.0,
-                                                spreadRadius: 0.0,
-                                                offset: Offset(2.0, 2.0), // shadow direction: bottom right
-                                              )
-                                            ],
-                                            color: kcRed),
-                                        child: Padding(
-                                          padding: const EdgeInsets.only(
-                                              left: 1,
-                                              right: 1),
-                                          child: Text(
-                                            model.model[index].status,
-                                            style:  const TextStyle(
-                                                color: kcWhite,
-                                                fontWeight: FontWeight.w500),
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                  Row(
-                                    children: [
-                                      Row(
-                                        children: [
-                                          Image.asset(
-                                            "assets/images/observation.png",
-                                            scale: 20,
-                                          ),
-                                          _buildHeadingText("Priority :"),
-                                        ],
-                                      ),
-                                      Padding(
-                                        padding: const EdgeInsets.only(left: 8.0),
-                                        child: Container(
-                                          decoration: BoxDecoration(
-                                              boxShadow: const [
-                                                BoxShadow(
-                                                  color: Colors.black,
-                                                  blurRadius: 2.0,
-                                                  spreadRadius: 0.0,
-                                                  offset: Offset(2.0, 2.0), // shadow direction: bottom right
-                                                )
-                                              ],
-                                              color: hexToColor(model.model[index].priorityStatusColour,
-                                              )),
-                                          child: Padding(
-                                            padding: EdgeInsets.only(
-                                                left: 1.screenWidth,
-                                                right: 1.screenWidth),
-                                            child: Text(
-                                              model.model[index].priorityStatusName,
-                                              style: const TextStyle(
-                                                  color: kcWhite,
-                                                  fontWeight: FontWeight.w500),
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  )
-                                ],
-                              ),
-                            ),
-                            SizedBox(
-                              width: 700,
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Row(
-                                    children: [
-                                      Row(
-                                        children: [
-                                          Image.asset(
-                                            "assets/images/tagetdate.png",
-                                            scale: 20,
-                                          ),
-                                          _buildHeadingText("Target Date :"),
-                                        ],
-                                      ),
-                                      Container(
-
-                                        child: Padding(
-                                          padding: const EdgeInsets.only(
-                                              left: 1,
-                                              right: 1),
-                                          child: Text(
-                                            model.model[index].observationCompletionTargetDate,
-                                            style:  const TextStyle(
-                                                color: kcBlack,
-                                                fontWeight: FontWeight.w500),
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                  Row(
-                                    children: [
-                                      Row(
-                                        children: [
-                                          Image.asset(
-                                            "assets/images/tagetdate.png",
-                                            scale: 20,
-                                          ),
-                                          _buildHeadingText("Compliance Date :"),
-                                        ],
-                                      ),
-                                      Container(
-
-                                        child: Padding(
-                                          padding: const EdgeInsets.only(
-                                              left: 1,
-                                              right: 1),
-                                          child: Text(
-                                            model.model[index].complianceDate,
-                                            style:  const TextStyle(
-                                                color: kcBlack,
-                                                fontWeight: FontWeight.w500),
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ],
-                              ),
-                            ),
-                            Row(
-                              children: [
-                                Row(
-                                  children: [
-                                    Image.asset(
-                                      "assets/images/observation.png",
-                                      scale: 20,
-                                    ),
-                                    _buildHeadingText("Observations :"),
-                                  ],
-                                ),
-                                SizedBox(
-                                  width: 500,
-                                  child: Padding(
-                                    padding:
-                                    EdgeInsets.all(1.0.screenWidth),
-                                    child: Text(
-                                      model.model[index].observationText,
-                                      maxLines: 3,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: TextStyle(
-                                          fontWeight: FontWeight.w600,
-                                          fontSize: 2.screenWidth,
-                                          color: Colors.black),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                            Row(
-                              children: [
-                                Row(
-                                  children: [
-                                    Image.asset(
-                                      "assets/images/suggestions.png",
-                                      scale: 20,
-                                    ),
-                                    _buildHeadingText("Corrective Measure"),
-                                  ],
-                                ),
-                                SizedBox(
-                                  width: 500,
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(10),
-                                    child: Text(
-                                      model.model[index].correctiveMeasure,
-                                      maxLines: 5,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: const TextStyle(
-                                          fontWeight: FontWeight.w600,
-                                          fontSize: 14,
-                                          color: Colors.black),
-                                    ),
-                                  ),
-                                ),
-                                IconButton(
-                                    onPressed: () {
-                                      Navigator.of(context).push(
-                                        MaterialPageRoute(builder: (context) => EditAllObservationPage(
-                                          uniqueId: model.model[index].uniqueIdentificationNumber,
-                                          raisedBy: model.model[index].observationRaisedBy,
-                                          wrkGrp: model.model[index].wrkGrp,
-                                          stationName: model.model[index].stationName,
-                                          stateCode: model.model[index].stationCode,
-                                          plant: model.model[index].plantDept,
-                                          location: model.model[index].location,
-                                          resHod: model.model[index].responsibilityHODName,
-                                          priority: model.model[index].priorityStatusName,
-                                          hazard: model.model[index].hazardCategory,
-                                          observation: model.model[index].observationText,
-                                          name: model.model[index].responsibility,
-                                          raisedDate: model.model[index].raisedDate,
-                                          raisedByEmpID: model.model[index].observationRaisedByEmpUnqId,
-                                          status: model.model[index].status,
-                                        correctiveMeasure: model.model[index].correctiveMeasure,
-                                          image: model.model[index].imageNumber,
-                                          targetDate: model.model[index].observationCompletionTargetDate,
-                                          complianceDate: model.model[index].complianceDate,
-                                        ), fullscreenDialog: true),
-                                      );
-
-                                      // context.push(
-                                      //   '/edit_observation?uniqueId=${model[index].uniqueIdentificationNumber}&raisedBy=${model[index].observationRaisedByEmpUnqId}&wrkGrp=${model[index].wrkGrp}
-                                      //   &deptCode=${model[index].deptCode}&stateCode=${model[index].station_Code}',
-                                      // );
-
-                                    },
-                                    icon: const Icon(
-                                        Icons.arrow_forward_ios_sharp)),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ));
-            }),
+          itemCount: model.model.length,
+          itemBuilder: (context, index) =>
+              _ObservationCard(item: model.model[index]),
+        ),
+        _buildPaginationBar(model), // bottom pagination
+        const SizedBox(height: 16),
       ],
     );
   }
 
-  _buildHeadingText(String title) {
-    return Padding(
-      padding: EdgeInsets.all(1.screenWidth),
-      child: Text(
-        title,
-        style: TextStyle(
-            fontSize: 2.2.screenWidth,
-            fontWeight: FontWeight.w500,
-            color: Colors.grey.shade600),
-      ),
-    );
-  }
-
-  _buildTextBox(String title, Color color) {
-    return Padding(
-      padding: EdgeInsets.all(1.screenWidth),
-      child: SizedBox(
-        width: 30.screenWidth,
-        height: 4.screenHeight,
-        child: Card(
-          elevation: 8,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-          color: kcWhite,
-          child: Center(
-            child: Padding(
-              padding: EdgeInsets.only(
-                  left: 3.screenWidth,
-                  right: 3.screenWidth,
-                  top: 0.2.screenHeight,
-                  bottom: 0.2.screenHeight),
-              child: Text(
-                title,
-                maxLines: 4,
-                textAlign: TextAlign.center,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                    fontWeight: FontWeight.w500,
-                    fontSize: 2.screenWidth,
-                    color: color),
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  _buildDownloadExcel(String sessionID){
-    return BlocConsumer<GenerateExcelBloc, GenerateExcelState>(
-        bloc: generateExcelBloc,
-        listener: (_, state) {
-          state.maybeWhen(
-              success: (_, url) {
-                launchUrl(Uri.parse(url!));
-              },
-              failed: (_, message) {
-                ScaffoldMessenger.of(context)
-                    .showSnackBar(SnackBar(content: Text(message)));
-              },
-              orElse: () {});
+  // ─────────────────────────────────────────────────────────────────────────
+  // Filter Dialog — polished, grouped
+  // ─────────────────────────────────────────────────────────────────────────
+  Future<void> _openFilterDialog() async {
+    final empCode = window.localStorage['kEmployeeCode'] ?? '';
+    await showDialog(
+      context: context,
+      builder: (dialogContext) => _FilterDialog(
+        startDateInput: startDateInput,
+        endDateInput: endDateInput,
+        fromDateInput: fromDateInput,
+        plantWidget: _buildPlant(),
+        departWidget: _buildDepartment(),
+        statusWidget: _buildStatusContent(statusList),
+        locationWidget: _buildLocation(),
+        hazardWidget: _buildHazard(),
+        uniqueIdWidget: _buildUniqueId(),
+        onClear: () {
+          _clearFormValues();
+          Navigator.pop(dialogContext);
         },
-        builder: (context, state) {
-          return state.maybeWhen(loading: (_) {
-
-            return const Center(child: CircularProgressIndicator());
-          }, orElse: () {
-            return ElevatedButton(
-                onPressed: () async {
-                  // allFilterObservationBloc.initState(currentPage,"", "", "", "", "", "", "", "", "");
-                  generateExcelBloc.initState(sessionID);
-                },
-                style: ElevatedButton.styleFrom(
-                    backgroundColor: kcobservationgreen,
-                    fixedSize: const Size(200, 40)
-                ),
-                child: const Text("Download Excel", style: TextStyle(color: kcWhite, fontSize: 16),));
-          });
-        });
-  }
-
-  Color hexToColor(String hexString) {
-    hexString = hexString.replaceFirst('#', '');
-    if (hexString.length == 6) {
-      hexString = 'FF$hexString';
-    }
-    return Color(int.parse(hexString, radix: 16));
-  }
-
-  Future<void> openFilterDialog() async {
-    final employeeCode = window.localStorage['kEmployeeCode'] ?? "";  // Retrieve value before dialog
-    await _buildFilterDialog(context, employeeCode);  // Pass employeeCode to the dialog
-  }
-
-  Future<void> _buildFilterDialog(BuildContext dialogContext, String employeeCode) {
-    return showDialog(
-        context: dialogContext,
-        builder: (context) {
-          return AlertDialog(
-            shape: const RoundedRectangleBorder(
-                borderRadius: BorderRadius.all(Radius.circular(10))),
-            contentPadding: const EdgeInsets.all(8.0),
-            content: SizedBox(
-              height: 600,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  const Text("SELECT FILTERS", style: TextStyle(fontWeight: FontWeight.bold),),
-                  _buildDateRangeContainer("Start Date", startDateInput),
-                  _buildDateRangeContainer("End Date", endDateInput),
-                  _buildPlant(),
-                  _buildDepartment(),
-                  _buildStatusContent(statusList),
-                  _buildLocation(),
-                  _buildHazard(),
-                  _buildUniqueId()
-
-                ],
-              ),
-            ),
-            actions: [
-              ElevatedButton(
-                onPressed: () {
-                  clearFormValues();
-                  Navigator.pop(context);
-                },
-                style: ElevatedButton.styleFrom(backgroundColor: kcRed),
-                child: const Text("Cancel", style: TextStyle(color: kcWhite),),
-              ),
-              ElevatedButton(
-                onPressed: () {
-                  print(window.localStorage['kEmployeeCode']!);
-
-                  allFilterObservationBloc.initState(0,statCode, fromDateInput.text, endDateInput.text,
-                      location.value, departCode, priority.value,
-                      hazard.value, "", '',"",uniqueId.value);
-                  setState(() {
-                    currentPage = 0;
-                  });
-                  html.window.localStorage.remove('kAllSessionID');
-                  startDateInput.clear();
-                  endDateInput.clear();
-                  clearFormValues();
-                  Navigator.of(dialogContext).pop();
-                },
-                style: ElevatedButton.styleFrom(backgroundColor: kcobservationgreen),
-                child: const Text("Apply Filters", style: TextStyle(color: kcWhite),),
-              ),
-            ],
+        onApply: () {
+          allFilterObservationBloc.initState(
+            0,
+            statCode,
+            fromDateInput.text,
+            endDateInput.text,
+            location.value,
+            departCode,
+            priority.value,
+            hazard.value,
+            '',
+            '',
+            '',
+            uniqueId.value,
           );
-        });
+          setState(() => currentPage = 0);
+          html.window.localStorage.remove('kAllSessionID');
+          startDateInput.clear();
+          endDateInput.clear();
+          _clearFormValues();
+          Navigator.of(dialogContext).pop();
+        },
+      ),
+    );
   }
 
-  void clearFormValues() {
-    // Reset ValueNotifier values
-    workGroup.value = "";
-    plant.value = "";
-    stat.value = "";
-    responsibility.value = "";
-    responsibleHOD.value = "";
-    priority.value = "";
-    priorityDesc.value = "";
-    location.value = "";
-    hazard.value = "";
-    hazardType.value = "";
-
-    // Clear TextEditingControllers
+  void _clearFormValues() {
+    workGroup.value = '';
+    plant.value = '';
+    stat.value = '';
+    responsibility.value = '';
+    responsibleHOD.value = '';
+    priority.value = '';
+    priorityDesc.value = '';
+    location.value = '';
+    hazard.value = '';
+    hazardType.value = '';
     startDateInput.clear();
     endDateInput.clear();
     fromDateInput.clear();
-
-    // Reset late-initialized String values
-    employeeName = "";
-    employeeCode = "";
-    statCode = "";
-    departCode = "";
-    responsibleCode = "";
-    responsibleHODCode = "";
-    priorityColor = "";
-    status="";
+    statCode = '';
+    departCode = '';
+    responsibleCode = '';
+    responsibleHODCode = '';
+    priorityColor = '';
+    status = '';
   }
 
-
-  //date
-
-  _buildDateRangeContainer(String hintText, TextEditingController controller,) {
+  // ─────────────────────────────────────────────────────────────────────────
+  // Date range field
+  // ─────────────────────────────────────────────────────────────────────────
+  Widget _buildDateRangeContainer(
+      String hintText, TextEditingController controller) {
     return SizedBox(
-      width: 300,
-      height: 40,
+      height: 44,
       child: TextFormField(
-        controller: controller,  // Use the existing startController
+        controller: controller,
+        style: const TextStyle(fontSize: 14, color: kcValueDark),
         decoration: InputDecoration(
-          contentPadding: const EdgeInsets.all(8),
-          hintText: hintText, // Hint text to show before selection
+          contentPadding:
+          const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          hintText: hintText,
+          hintStyle: const TextStyle(color: kcLightGrey, fontSize: 14),
           fillColor: kcWhite,
-          suffixIcon: const Icon(
-            Icons.calendar_month, size: 20.0,
-          ),
           filled: true,
-          enabledBorder: _border(),
-          focusedBorder: _border(),
+          prefixIcon: const Icon(Icons.calendar_month_outlined,
+              size: 18, color: kcLightGrey),
+          enabledBorder: _inputBorder(),
+          focusedBorder: _focusedInputBorder(),
         ),
         readOnly: true,
         onTap: () async {
-          // Open a date range picker for selecting the start and end dates
-          DateTimeRange? pickedDateRange = await showDateRangePicker(
+          final picked = await showDateRangePicker(
             context: context,
             firstDate: DateTime(2000),
             lastDate: DateTime.now(),
-            initialDateRange: startDateInput.text.isNotEmpty && endDateInput.text.isNotEmpty
-                ? DateTimeRange(
-              start: DateTime.parse(startDateInput.text),
-              end: DateTime.parse(endDateInput.text),
-            )
-                : DateTimeRange(
-              start: DateTime.now().subtract(const Duration(days: 7)),
-              end: DateTime.now(),
+            builder: (ctx, child) => Theme(
+              data: Theme.of(ctx).copyWith(
+                colorScheme: Theme.of(ctx)
+                    .colorScheme
+                    .copyWith(primary: kcvoilet, onPrimary: kcWhite),
+              ),
+              child: child!,
             ),
+            initialDateRange: startDateInput.text.isNotEmpty &&
+                endDateInput.text.isNotEmpty
+                ? DateTimeRange(
+                start: DateTime.parse(startDateInput.text),
+                end: DateTime.parse(endDateInput.text))
+                : DateTimeRange(
+                start:
+                DateTime.now().subtract(const Duration(days: 7)),
+                end: DateTime.now()),
           );
-
-          if (pickedDateRange != null) {
-            String formattedStartDate = DateFormat('yyyy-MM-dd').format(pickedDateRange.start);
-            String formattedEndDate = DateFormat('yyyy-MM-dd').format(pickedDateRange.end);
-
+          if (picked != null) {
+            final fmt = DateFormat('yyyy-MM-dd');
             setState(() {
-              // Set the start and end date inputs
-              startDateInput.text = formattedStartDate;
-              fromDateInput.text = formattedStartDate;// Display as "start to end"
-              endDateInput.text = formattedEndDate; // Optionally, save end date separately if needed
+              startDateInput.text = fmt.format(picked.start);
+              fromDateInput.text = fmt.format(picked.start);
+              endDateInput.text = fmt.format(picked.end);
             });
           }
         },
       ),
     );
-  } _border() => OutlineInputBorder(
+  }
+
+  OutlineInputBorder _inputBorder() => OutlineInputBorder(
       borderRadius: BorderRadius.circular(8),
-      borderSide: const BorderSide(width: 2, color: kcWhite));
+      borderSide: const BorderSide(width: 1, color: kcVeryLightGrey));
 
-  //status
+  OutlineInputBorder _focusedInputBorder() => OutlineInputBorder(
+      borderRadius: BorderRadius.circular(8),
+      borderSide: const BorderSide(width: 1.5, color: kcvoilet));
 
-  Widget _buildStatusContent(List<String> statusList) {
-    return Padding(
-      padding: const EdgeInsets.all(2),
-      child: InkWell(
-        onTap: (){
-          _buildStatusDialog(statusList);  // Call the status dialog
-        },
-        child: SizedBox(
-          width: 180,
-          height: 40,
-          child: Container(
-            decoration: BoxDecoration(borderRadius: BorderRadius.circular(8.0), color: kcWhite),
-            child: ValueListenableBuilder<String>(
-              valueListenable: priority, // Assuming priority stores the selected status
-              builder: (context, value, child) => Padding(
-                padding: const EdgeInsets.all(2.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    SizedBox(
-                      child: Text(
-                        value.isEmpty ? "Filter Status" : priority.value,
-                        textAlign: TextAlign.center,
-                        maxLines: 4,
-                        style: TextStyle(color: (priority.value == "Filter Status") ? kcDarkGreyColor : kcLightGrey),
-                      ),
-                    ),
-                    const Icon(Icons.arrow_drop_down_sharp)
-                  ],
+  // ─────────────────────────────────────────────────────────────────────────
+  // Reusable: dropdown trigger chip
+  // ─────────────────────────────────────────────────────────────────────────
+  Widget _buildDropdownChip({
+    required ValueNotifier<String> notifier,
+    required String placeholder,
+    required VoidCallback onTap,
+    double width = double.infinity,
+  }) {
+    return ValueListenableBuilder<String>(
+      valueListenable: notifier,
+      builder: (_, value, __) => InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(8),
+        child: Container(
+          width: width,
+          height: 44,
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          decoration: BoxDecoration(
+            color: kcWhite,
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: kcVeryLightGrey, width: 1),
+          ),
+          child: Row(
+            children: [
+              Expanded(
+                child: Text(
+                  value.isEmpty ? placeholder : value,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: value.isEmpty ? kcLightGrey : kcValueDark,
+                  ),
                 ),
               ),
-            ),
+              const Icon(Icons.keyboard_arrow_down_rounded,
+                  size: 20, color: kcLightGrey),
+            ],
           ),
         ),
       ),
     );
   }
 
-  Future<void> _buildStatusDialog(List<String> statusList) {
-    final statusListNotifier = ValueNotifier<List<String>>(statusList);
-
+  // ─────────────────────────────────────────────────────────────────────────
+  // Reusable: searchable picker dialog
+  // ─────────────────────────────────────────────────────────────────────────
+  Future<void> _showPickerDialog<T>({
+    required BuildContext ctx,
+    required String title,
+    required List<T> items,
+    required String Function(T) label,
+    required void Function(T) onSelect,
+    required bool Function(T, String) filter,
+    String? subtitle,
+  }) {
+    final notifier =
+    SearchableValueNotifier<T>(items, filter: filter);
     return showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          shape: const RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(5))),
-          title: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+      context: ctx,
+      builder: (context) => Dialog(
+        shape:
+        RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        child: SizedBox(
+          width: 340,
+          height: 520,
+          child: Column(
             children: [
-              const Text(
-                "Select or search Status",
-                style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-              ),
-              TextFormField(
-                onChanged: (value) {
-                  // Filter the list based on user input
-                  List<String> filteredList = statusList.where((status) => status.toLowerCase().contains(value.toLowerCase())).toList();
-                  statusListNotifier.value = filteredList;
-                },
-                decoration: const InputDecoration(
-                  hintText: "Search here...",
-                  prefixIcon: Icon(Icons.search, color: kcLightGrey),
+              // Header
+              Container(
+                padding: const EdgeInsets.fromLTRB(20, 16, 16, 16),
+                decoration: BoxDecoration(
+                  color: kcvoilet,
+                  borderRadius: const BorderRadius.vertical(
+                      top: Radius.circular(16)),
                 ),
-              )
+                child: Row(
+                  children: [
+                    const Icon(Icons.search, color: kcWhite, size: 18),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(title,
+                          style: const TextStyle(
+                              color: kcWhite,
+                              fontSize: 15,
+                              fontWeight: FontWeight.w600)),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.close, color: kcWhite, size: 18),
+                      onPressed: () => Navigator.pop(context),
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(),
+                    ),
+                  ],
+                ),
+              ),
+              // Search field
+              Padding(
+                padding: const EdgeInsets.fromLTRB(12, 12, 12, 4),
+                child: TextField(
+                  onChanged: notifier.search,
+                  autofocus: true,
+                  decoration: InputDecoration(
+                    hintText: 'Search…',
+                    hintStyle:
+                    const TextStyle(color: kcLightGrey, fontSize: 14),
+                    prefixIcon: const Icon(Icons.search,
+                        color: kcLightGrey, size: 18),
+                    contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 12, vertical: 10),
+                    filled: true,
+                    fillColor: kcVeryLightGrey,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide.none,
+                    ),
+                  ),
+                ),
+              ),
+              // List
+              Expanded(
+                child: ValueListenableBuilder<List<T>>(
+                  valueListenable: notifier,
+                  builder: (_, list, __) => list.isEmpty
+                      ? const Center(
+                      child: Text('No results',
+                          style: TextStyle(color: kcLightGrey)))
+                      : ListView.separated(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 12, vertical: 8),
+                    itemCount: list.length,
+                    separatorBuilder: (_, __) =>
+                    const Divider(height: 1),
+                    itemBuilder: (_, i) => ListTile(
+                      dense: true,
+                      contentPadding:
+                      const EdgeInsets.symmetric(horizontal: 8),
+                      title: Text(label(list[i]),
+                          style: const TextStyle(
+                              fontSize: 14, color: kcValueDark)),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(6)),
+                      hoverColor:
+                      kcvoilet.withValues(alpha: 0.06),
+                      onTap: () {
+                        onSelect(list[i]);
+                        Navigator.pop(context);
+                      },
+                    ),
+                  ),
+                ),
+              ),
             ],
           ),
-          content: SizedBox(
-            width: 210,
-            height: 300,
-            child: ValueListenableBuilder<List<String>>(
-              valueListenable: statusListNotifier,
-              builder: (context, list, widget) {
-                return ListView.builder(
-                  itemCount: list.length,
-                  shrinkWrap: true,
-                  itemBuilder: (context, index) {
-                    return Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        InkWell(
-                          onTap: () {
-                            priority.value = list[index]; // Update selected status
-                            Navigator.pop(context);
-                          },
-                          child: Padding(
-                            padding: const EdgeInsets.all(2.0),
-                            child: Text(list[index]),
-                          ),
-                        ),
-                        const Padding(
-                          padding: EdgeInsets.all(8.0),
-                          child: Divider(
-                            height: 0.8,
-                            thickness: 1,
-                            color: kcDarkGreyColor,
-                          ),
-                        )
-                      ],
-                    );
-                  },
-                );
-              },
-            ),
-          ),
-          actions: [
-            Align(
-              alignment: Alignment.centerRight,
-              child: TextButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                },
-                child: const Text(
-                  "Close",
-                  style: TextStyle(color: kcDarkGreyColor, fontSize: 18),
-                ),
-              ),
-            )
-          ],
+        ),
+      ),
+    );
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // Status filter
+  // ─────────────────────────────────────────────────────────────────────────
+  Widget _buildStatusContent(List<String> list) => _buildDropdownChip(
+    notifier: priority,
+    placeholder: 'Filter Status',
+    onTap: () => _showPickerDialog<String>(
+      ctx: context,
+      title: 'Select Status',
+      items: list,
+      label: (s) => s,
+      filter: (s, q) =>
+          s.toLowerCase().contains(q.toLowerCase()),
+      onSelect: (s) => priority.value = s,
+    ),
+  );
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // Plant
+  // ─────────────────────────────────────────────────────────────────────────
+  Widget _buildPlant() => BlocConsumer<AllPlantBloc, AllPlantState>(
+    bloc: allPlantBloc,
+    listener: (_, __) {},
+    builder: (_, state) => state.when(
+      loading: (_) => const _LoadingChip(),
+      content: _plantChip,
+      success: _plantChip,
+      failed: (m, __) => _plantChip(m),
+    ),
+  );
+
+  Widget _plantChip(List<AllPlantModel> model) => _buildDropdownChip(
+    notifier: plant,
+    placeholder: 'Filter Plant',
+    onTap: () => _showPickerDialog<AllPlantModel>(
+      ctx: context,
+      title: 'Select Plant',
+      items: model,
+      label: (m) => m.deptName,
+      filter: (m, q) =>
+          m.deptName.toLowerCase().contains(q.toLowerCase()),
+      onSelect: (m) {
+        plant.value = m.deptName;
+        departCode = m.deptCode;
+        allDepartBloc.initState(departCode);
+        locationBloc.initState(departCode);
+      },
+    ),
+  );
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // Department
+  // ─────────────────────────────────────────────────────────────────────────
+  Widget _buildDepartment() =>
+      BlocConsumer<AllDepartBloc, AllDepartState>(
+        bloc: allDepartBloc,
+        listener: (_, __) {},
+        builder: (_, state) => state.when(
+          loading: (_) => const _LoadingChip(),
+          content: _deptChip,
+          success: _deptChip,
+          failed: (m, __) => _deptChip(m),
+        ),
+      );
+
+  Widget _deptChip(List<AllDepartmentModel> model) =>
+      _buildDropdownChip(
+        notifier: stat,
+        placeholder: 'Filter Department',
+        onTap: () {
+          if (departCode.isEmpty) {
+            ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Please select a plant first')));
+            return;
+          }
+          _showPickerDialog<AllDepartmentModel>(
+            ctx: context,
+            title: 'Select Department',
+            items: model,
+            label: (m) => m.statName,
+            filter: (m, q) =>
+                m.statName.toLowerCase().contains(q.toLowerCase()),
+            onSelect: (m) {
+              stat.value = m.statName;
+              statCode = m.statCode;
+              employeeResponsibilityBloc.initState(
+                  departCode,
+                  statCode,
+                  window.localStorage['kDesgnCode']!);
+            },
+          );
+        },
+      );
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // Location
+  // ─────────────────────────────────────────────────────────────────────────
+  Widget _buildLocation() =>
+      BlocConsumer<LocationBloc, LocationState>(
+        bloc: locationBloc,
+        listener: (_, __) {},
+        builder: (_, state) => state.when(
+          loading: (_) => const _LoadingChip(),
+          content: _locationChip,
+          success: _locationChip,
+          failed: (m, __) => _locationChip(m),
+        ),
+      );
+
+  Widget _locationChip(List<LocationModel> model) =>
+      _buildDropdownChip(
+        notifier: location,
+        placeholder: 'Filter Location',
+        onTap: () => _showPickerDialog<LocationModel>(
+          ctx: context,
+          title: 'Select Location',
+          items: model,
+          label: (m) => m.locations,
+          filter: (m, q) =>
+              m.locations.toLowerCase().contains(q.toLowerCase()),
+          onSelect: (m) => location.value = m.locations,
+        ),
+      );
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // Hazard
+  // ─────────────────────────────────────────────────────────────────────────
+  Widget _buildHazard() =>
+      BlocConsumer<AllHazardCatBloc, AllHazardCatState>(
+        bloc: allHazardCatBloc,
+        listener: (_, __) {},
+        builder: (_, state) => state.when(
+          loading: (_) => const _LoadingChip(),
+          content: _hazardChip,
+          success: _hazardChip,
+          failed: (m, __) => _hazardChip(m),
+        ),
+      );
+
+  Widget _hazardChip(List<AllHazardCatModel> model) =>
+      _buildDropdownChip(
+        notifier: hazard,
+        placeholder: 'Filter Hazard Category',
+        onTap: () => _showPickerDialog<AllHazardCatModel>(
+          ctx: context,
+          title: 'Select Hazard Category',
+          items: model,
+          label: (m) => m.hazardCategoryName,
+          filter: (m, q) => m.hazardCategoryName
+              .toLowerCase()
+              .contains(q.toLowerCase()),
+          onSelect: (m) => hazard.value = m.hazardCategoryName,
+        ),
+      );
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // Unique ID
+  // ─────────────────────────────────────────────────────────────────────────
+  Widget _buildUniqueId() =>
+      BlocConsumer<UniqueIdBloc, UniqueIdState>(
+        bloc: uniqueIdBloc,
+        listener: (_, __) {},
+        builder: (_, state) => state.when(
+          loading: (_) => const _LoadingChip(),
+          content: _uniqueIdChip,
+          success: _uniqueIdChip,
+          failed: (m, __) => _uniqueIdChip(m),
+        ),
+      );
+
+  Widget _uniqueIdChip(List<UniqueIdModel> model) =>
+      _buildDropdownChip(
+        notifier: uniqueId,
+        placeholder: 'Filter Unique ID',
+        onTap: () {
+          uniqueIdBloc.initState();
+          _showPickerDialog<UniqueIdModel>(
+            ctx: context,
+            title: 'Select Observation ID',
+            items: model,
+            label: (m) => m.uniqueIdentificationNumber,
+            filter: (m, q) => m.uniqueIdentificationNumber
+                .toLowerCase()
+                .contains(q.toLowerCase()),
+            onSelect: (m) =>
+            uniqueId.value = m.uniqueIdentificationNumber,
+          );
+        },
+      );
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // Excel download
+  // ─────────────────────────────────────────────────────────────────────────
+  Widget _buildDownloadExcel(String sessionID) {
+    return BlocConsumer<GenerateExcelBloc, GenerateExcelState>(
+      bloc: generateExcelBloc,
+      listener: (_, state) {
+        state.maybeWhen(
+          success: (_, url) => launchUrl(Uri.parse(url!)),
+          failed: (_, msg) => ScaffoldMessenger.of(context)
+              .showSnackBar(SnackBar(content: Text(msg))),
+          orElse: () {},
         );
       },
+      builder: (_, state) => state.maybeWhen(
+        loading: (_) =>
+        const SizedBox(width: 38, height: 38, child: CircularProgressIndicator(strokeWidth: 2)),
+        orElse: () => ElevatedButton.icon(
+          onPressed: () => generateExcelBloc.initState(sessionID),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: kcWhite,
+            foregroundColor: kcobservationgreen,
+            elevation: 0,
+            side: const BorderSide(color: kcobservationgreen, width: 1.2),
+            fixedSize: const Size(160, 38),
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8)),
+          ),
+          icon: Image.asset('assets/images/excelicon.png',
+              width: 16, height: 16),
+          label: const Text('Export Excel',
+              style: TextStyle(
+                  fontSize: 13, fontWeight: FontWeight.w600)),
+        ),
+      ),
     );
   }
 
-
-// All Plant APi Implementation
-
-  Widget _buildPlant(){
-    return  BlocConsumer<AllPlantBloc, AllPlantState>(
-      bloc: allPlantBloc,
-      listener: (_, state){},
-      builder: (_, state){
-        return state.when(
-            loading: _buildLoading1,
-            content: _buildContent1,
-            success: _buildContent1,
-            failed: (form, __) => _buildContent1(form));
-      },
-    );
+  Color hexToColor(String hexString) {
+    hexString = hexString.replaceFirst('#', '');
+    if (hexString.length == 6) hexString = 'FF$hexString';
+    return Color(int.parse(hexString, radix: 16));
   }
+}
 
-  Widget _buildLoading1(List<AllPlantModel> model){
-    return const CircularProgressIndicator();
-  }
+// ─────────────────────────────────────────────────────────────────────────────
+// Filter Dialog — extracted widget for cleanliness
+// ─────────────────────────────────────────────────────────────────────────────
+class _FilterDialog extends StatelessWidget {
+  final TextEditingController startDateInput;
+  final TextEditingController endDateInput;
+  final TextEditingController fromDateInput;
+  final Widget plantWidget;
+  final Widget departWidget;
+  final Widget statusWidget;
+  final Widget locationWidget;
+  final Widget hazardWidget;
+  final Widget uniqueIdWidget;
+  final VoidCallback onClear;
+  final VoidCallback onApply;
 
-  Widget _buildContent1(List<AllPlantModel> model){
-    return Padding(
-      padding: const EdgeInsets.all(5),
-      child: InkWell(
-        onTap: (){
-          _buildallPlantListDialog(model);
-        },
-        child: SizedBox(
-          width: 200,
-          height: 40,
-          child: Container(
-            // width: 80,
-            decoration: BoxDecoration(borderRadius: BorderRadius.circular(8.0),color: kcWhite),
-            child: ValueListenableBuilder<String>(
-              valueListenable: plant,
-              builder: (context, value, child) => Padding(
-                padding: const EdgeInsets.all(2.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    SizedBox(
-                      // width: 100,
-                      child: Text(
-                        value.isEmpty ? "Select Plant" : plant.value,
-                        textAlign: TextAlign.center,
-                        maxLines: 4,
-                        style: TextStyle(color: (plant.value == "Select Plant") ? kcDarkGreyColor : kcLightGrey),
-                      ),
+  const _FilterDialog({
+    required this.startDateInput,
+    required this.endDateInput,
+    required this.fromDateInput,
+    required this.plantWidget,
+    required this.departWidget,
+    required this.statusWidget,
+    required this.locationWidget,
+    required this.hazardWidget,
+    required this.uniqueIdWidget,
+    required this.onClear,
+    required this.onApply,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      shape:
+      RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      insetPadding:
+      const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+      child: SizedBox(
+        width: 380,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // ── Header ────────────────────────────────────────────────────
+            Container(
+              padding: const EdgeInsets.fromLTRB(20, 16, 16, 16),
+              decoration: const BoxDecoration(
+                color: kcvoilet,
+                borderRadius:
+                BorderRadius.vertical(top: Radius.circular(16)),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.filter_alt_outlined,
+                      color: kcWhite, size: 20),
+                  const SizedBox(width: 10),
+                  const Expanded(
+                    child: Text(
+                      'Filter Observations',
+                      style: TextStyle(
+                          color: kcWhite,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600),
                     ),
-                    const Icon(Icons.arrow_drop_down_sharp)
+                  ),
+                  IconButton(
+                    icon:
+                    const Icon(Icons.close, color: kcWhite, size: 20),
+                    onPressed: () => Navigator.pop(context),
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                  ),
+                ],
+              ),
+            ),
+            // ── Body ──────────────────────────────────────────────────────
+            Flexible(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _filterSection('Date Range', [
+                      _buildDateField(
+                          context, 'Start Date', startDateInput),
+                      const SizedBox(height: 8),
+                      _buildDateField(
+                          context, 'End Date', endDateInput),
+                    ]),
+                    _filterSection('Location', [plantWidget, const SizedBox(height: 8), departWidget, const SizedBox(height: 8), locationWidget]),
+                    _filterSection('Classification', [statusWidget, const SizedBox(height: 8), hazardWidget]),
+                    _filterSection('Observation ID', [uniqueIdWidget]),
                   ],
                 ),
               ),
             ),
-          ),
+            // ── Actions ───────────────────────────────────────────────────
+            Container(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+              decoration: BoxDecoration(
+                border: Border(
+                    top: BorderSide(color: kcVeryLightGrey, width: 1)),
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: onClear,
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: kcLightGrey,
+                        side:
+                        const BorderSide(color: kcVeryLightGrey),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8)),
+                        padding:
+                        const EdgeInsets.symmetric(vertical: 12),
+                      ),
+                      icon: const Icon(Icons.clear_all_rounded,
+                          size: 16),
+                      label: const Text('Clear',
+                          style: TextStyle(fontWeight: FontWeight.w600)),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    flex: 2,
+                    child: ElevatedButton.icon(
+                      onPressed: onApply,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: kcvoilet,
+                        foregroundColor: kcWhite,
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8)),
+                        padding:
+                        const EdgeInsets.symmetric(vertical: 12),
+                      ),
+                      icon: const Icon(Icons.check_rounded, size: 16),
+                      label: const Text('Apply Filters',
+                          style: TextStyle(
+                              fontWeight: FontWeight.w600,
+                              fontSize: 14)),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
       ),
     );
-
   }
 
-  Future<void> _buildallPlantListDialog(List<AllPlantModel> model) {
-    final listNotifier = SearchableListNotifier(model);
-    return showDialog(
-        context: context,
-        builder: (context) {
-          return AlertDialog(
-            // actionsPadding: EdgeInsets.all(5.dw),
-            shape: const RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(5))),
-            // contentPadding: EdgeInsets.all(10.dw),
-            title: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  "Select or search plant",
-                  style:
-                  TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-                ),
-                TextFormField(
-                  onChanged: listNotifier.filterBasedOn,
-                  decoration: const InputDecoration(
-                      hintText: "search here...",
-                      prefixIcon: Icon(
-                        Icons.search,
-                        color: kcLightGrey,
-                      )),
-                )
-              ],
-            ),
-            content: SizedBox(
-                width: 200,
-                height: 800,
-                child:ValueListenableBuilder<List<AllPlantModel>>(
-                    valueListenable: listNotifier,
-                    builder: (context, list, widget){
-                      return ListView.builder(
-                          itemCount: list.length,
-                          shrinkWrap: true,
-                          itemBuilder: (context, index) {
-                            return Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                InkWell(
-                                  onTap: () {
-                                    plant.value = list[index].deptName;
-                                    departCode = list[index].deptCode;
-                                    allDepartBloc.initState(departCode);
-                                    locationBloc.initState(departCode);
-                                    // filterObservationBloc.initState("", "", "", "", departCode, "", "", "", "");
-                                    Navigator.pop(context);
-                                  },
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(2.0),
-                                    child: Text(list[index].deptName,),
-                                  ),
-                                ),
-                                const Padding(
-                                  padding: EdgeInsets.all(8.0),
-                                  child: Divider(
-                                    height: 0.8,
-                                    thickness: 1,
-                                    color: kcDarkGreyColor,
-                                  ),
-                                )
-                              ],
-                            );
-                          });
-                    }
-                )
-            ),
-            actions: [
-              Align(
-                alignment: Alignment.centerRight,
-                child: TextButton(
-                  onPressed: () {
-                    Navigator.pop(context);
-                  },
-                  child: const Text(
-                    "close",
-                    style: TextStyle(color: kcDarkGreyColor, fontSize: 18),
-                  ),
-                ),
-              )
-            ],
-          );
-        }
-    );
-  }
-
-
-  // //ALl Work Group
-  //
-  // Widget _buildWorkGroup(){
-  //   return  BlocConsumer<AllWorkGroupBloc, AllWorkGroupState>(
-  //     bloc: allWorkGroupBloc,
-  //     listener: (_, state){},
-  //     builder: (_, state){
-  //       return state.when(
-  //           loading: _buildLoading2,
-  //           content: _buildContent2,
-  //           success: _buildContent2,
-  //           failed: (form, __) => _buildContent2(form));
-  //     },
-  //   );
-  // }
-  //
-  // Widget _buildLoading2(List<AllWorkGroupModel> model){
-  //   return const CircularProgressIndicator();
-  // }
-  //
-  // Widget _buildContent2(List<AllWorkGroupModel> workModel){
-  //   return Padding(
-  //     padding: const EdgeInsets.all(5),
-  //     child: InkWell(
-  //       onTap: (){
-  //         _buildallWorkGroupListDialog(workModel);
-  //       },
-  //       child: SizedBox(
-  //         width: 150,
-  //         height: 30,
-  //         child: Container(
-  //           width: 80,
-  //           decoration: BoxDecoration(borderRadius: BorderRadius.circular(8.0),color: kcWhite),
-  //           child: ValueListenableBuilder<String>(
-  //             valueListenable: workGroup,
-  //             builder: (context, value, child) => Padding(
-  //               padding: const EdgeInsets.all(2.0),
-  //               child: Row(
-  //                 mainAxisAlignment: MainAxisAlignment.center,
-  //                 children: [
-  //                   SizedBox(
-  //                     width: 100,
-  //                     child: Text(
-  //                       workGroup.value,
-  //                       textAlign: TextAlign.center,
-  //                       maxLines: 4,
-  //                       style: TextStyle(color: (workGroup.value == "Select Work Group") ? kcDarkGreyColor : kcLightGrey),
-  //                     ),
-  //                   ),
-  //                   const Icon(Icons.arrow_drop_down_sharp)
-  //                 ],
-  //               ),
-  //             ),
-  //           ),
-  //         ),
-  //       ),
-  //     ),
-  //   );
-  //
-  // }
-  //
-  // Future<void> _buildallWorkGroupListDialog(List<AllWorkGroupModel> workModel) {
-  //   final listNotifier = WorkGroupSearchableListNotifier(workModel);
-  //   return showDialog(
-  //       context: context,
-  //       builder: (context) {
-  //         return AlertDialog(
-  //           // actionsPadding: EdgeInsets.all(5.dw),
-  //           shape: const RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(5))),
-  //           // contentPadding: EdgeInsets.all(10.dw),
-  //           title: Column(
-  //             crossAxisAlignment: CrossAxisAlignment.start,
-  //             children: [
-  //               const Text(
-  //                 "Select or search Work Group",
-  //                 style:
-  //                 TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-  //               ),
-  //               TextFormField(
-  //                 onChanged: listNotifier.filterBasedOn,
-  //                 decoration: const InputDecoration(
-  //                     hintText: "search here...",
-  //                     prefixIcon: Icon(
-  //                       Icons.search,
-  //                       color: kcLightGrey,
-  //                     )),
-  //               )
-  //             ],
-  //           ),
-  //           content: SizedBox(
-  //               width: 200,
-  //               height: 800,
-  //               child:ValueListenableBuilder<List<AllWorkGroupModel>>(
-  //                   valueListenable: listNotifier,
-  //                   builder: (context, list, widget){
-  //                     return ListView.builder(
-  //                         itemCount: list.length,
-  //                         shrinkWrap: true,
-  //                         itemBuilder: (context, index) {
-  //                           return Column(
-  //                             crossAxisAlignment: CrossAxisAlignment.start,
-  //                             children: [
-  //                               InkWell(
-  //                                 onTap: () {
-  //
-  //                                   allPlantBloc.initState();
-  //                                   Navigator.pop(context);
-  //                                 },
-  //                                 child: Padding(
-  //                                   padding: const EdgeInsets.all(2.0),
-  //                                   child: Text(list[index].wrkGrp,),
-  //                                 ),
-  //                               ),
-  //                               const Padding(
-  //                                 padding: EdgeInsets.all(8.0),
-  //                                 child: Divider(
-  //                                   height: 0.8,
-  //                                   thickness: 1,
-  //                                   color: kcDarkGreyColor,
-  //                                 ),
-  //                               )
-  //                             ],
-  //                           );
-  //                         });
-  //                   }
-  //               )
-  //           ),
-  //           actions: [
-  //             Align(
-  //               alignment: Alignment.centerRight,
-  //               child: TextButton(
-  //                 onPressed: () {
-  //                   Navigator.pop(context);
-  //                 },
-  //                 child: const Text(
-  //                   "close",
-  //                   style: TextStyle(color: kcDarkGreyColor, fontSize: 18),
-  //                 ),
-  //               ),
-  //             )
-  //           ],
-  //         );
-  //       }
-  //   );
-  // }
-
-  // _buildObservationCard() {
-  //   return Card(
-  //     elevation: 2,
-  //     color: kcWhite,
-  //     child: SingleChildScrollView(
-  //       scrollDirection: Axis.horizontal,
-  //       child: Column(
-  //         mainAxisAlignment: MainAxisAlignment.start,
-  //         crossAxisAlignment: CrossAxisAlignment.start,
-  //         children: [
-  //           Row(
-  //             mainAxisAlignment: MainAxisAlignment.start,
-  //             crossAxisAlignment: CrossAxisAlignment.start,
-  //             children: [
-  //               Column(
-  //                 // mainAxisAlignment: MainAxisAlignment.start,
-  //                 // crossAxisAlignment: CrossAxisAlignment.start,
-  //                 children: [
-  //                   Padding(
-  //                     padding: EdgeInsets.all(1.screenWidth),
-  //                     child: Image.asset(
-  //                       alignment: Alignment.center,
-  //                       "assets/images/peopleimage.jpg",
-  //                       //fit: BoxFit.cover,
-  //                       scale: 1.5.screenWidth,
-  //                     ),
-  //                   ),
-  //                 ],
-  //               ),
-  //               Column(
-  //                 mainAxisAlignment: MainAxisAlignment.start,
-  //                 crossAxisAlignment: CrossAxisAlignment.start,
-  //                 children: [
-  //                   Row(
-  //                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
-  //                     crossAxisAlignment: CrossAxisAlignment.start,
-  //                     children: [
-  //                       Row(
-  //                         children: [
-  //                           _buildHeadingText("Raised By"),
-  //                           _buildHeadingText("-"),
-  //                           _buildRaisedByTypeDropDown()
-  //                         ],
-  //                       ),
-  //                       SizedBox(width: 200),
-  //                       Row(
-  //                         children: [
-  //                           _buildHeadingText("Unique Identification no."),
-  //                           _buildHeadingText("-"),
-  //                           _buildTextBox("HSM/SO/3/2024", Colors.black),
-  //                         ],
-  //                       ),
-  //                     ],
-  //                   ),
-  //                   Row(
-  //                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
-  //                     children: [
-  //                       Row(
-  //                         children: [
-  //                           _buildHeadingText("Date"),
-  //                           _buildHeadingText("-"),
-  //                           _buildTextBox("04.03.2024", kcRed),
-  //                         ],
-  //                       ),
-  //                       SizedBox(width: 260),
-  //                       Row(
-  //                         children: [
-  //                           _buildHeadingText("Responsibility"),
-  //                           _buildHeadingText("-"),
-  //                           _buildTextBox("Mr. M Narayana", kcmegenta),
-  //                         ],
-  //                       ),
-  //                     ],
-  //                   ),
-  //                   Row(
-  //                     children: [
-  //                       _buildHeadingText("Location"),
-  //                       _buildHeadingText("-"),
-  //                       _buildLocationTypeDropDown(),
-  //                       SizedBox(width: 205),
-  //                       Row(
-  //                         children: [
-  //                           _buildHeadingText("Plant / Dept"),
-  //                           _buildHeadingText("-"),
-  //                           _buildPlantTypeDropDown(),
-  //
-  //                         ],
-  //                       ),
-  //                     ],
-  //                   ),
-  //                   Row(
-  //                     children: [
-  //                       _buildHeadingText("Category"),
-  //                       _buildHeadingText("-"),
-  //                       _buildCategoryTypeDropDown(),
-  //                     ],
-  //                   ),
-  //                   Center(child: Container(height: 0.1.screenHeight,alignment: Alignment.center,color: kcVeryLightGrey,width: 140.screenWidth,)),
-  //
-  //                 ],
-  //               ),
-  //
-  //             ],
-  //           ),
-  //           Row(
-  //             children: [
-  //               _buildHeadingText("Observation"),
-  //               SizedBox(
-  //                 width: 100.screenWidth,
-  //                 child: Padding(
-  //                   padding: EdgeInsets.all(1.0.screenWidth),
-  //                   child: Text(
-  //                     "Oil spillage was found at gas regulating valve 1 area, at BF stove",
-  //                     maxLines: 3,
-  //                     overflow: TextOverflow.ellipsis,
-  //                     style: TextStyle(fontWeight: FontWeight.w600, fontSize: 1.8.screenWidth,color: kcvoilet),
-  //                   ),
-  //                 ),
-  //               ),
-  //             ],
-  //           ),
-  //           Row(
-  //             children: [
-  //               _buildHeadingText("Corrective Action Taken/Suggested"),
-  //               SizedBox(
-  //                 width: 100.screenWidth,
-  //                 child: Padding(
-  //                   padding: EdgeInsets.all(1.0.screenWidth),
-  //                   child: Text(
-  //                     "it should be cleaned, to avoid slip & trip hazard",
-  //                     maxLines: 3,
-  //                     overflow: TextOverflow.ellipsis,
-  //                     style: TextStyle(fontWeight: FontWeight.w600, fontSize: 1.8.screenWidth,color: kcvoilet),
-  //                   ),
-  //                 ),
-  //               ),
-  //             ],
-  //           ),
-  //         ],
-  //       ),
-  //     ),
-  //   );
-  // }
-
-  // Department APi Implementation
-
-  //All Department
-
-  Widget _buildDepartment(){
-    return  BlocConsumer<AllDepartBloc, AllDepartState>(
-      bloc: allDepartBloc,
-      listener: (_, state){},
-      builder: (_, state){
-        return state.when(
-            loading: _buildLoading4,
-            content: _buildContent4,
-            success: _buildContent4,
-            failed: (form, __) => _buildContent4(form));
-      },
-    );
-  }
-
-  Widget _buildLoading4(List<AllDepartmentModel> departModel){
-    return const CircularProgressIndicator();
-  }
-
-  Widget _buildContent4(List<AllDepartmentModel> departModel){
+  Widget _filterSection(String label, List<Widget> children) {
     return Padding(
-      padding: const EdgeInsets.all(2),
-      child: InkWell(
-        onTap: (){
-          if(departCode.isEmpty){
-            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Please Select Plant")));
-          }else{
-            _buildallDepartDialog(departModel);
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(label,
+              style: const TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                  color: kcLightGrey,
+                  letterSpacing: 0.8)),
+          const SizedBox(height: 8),
+          ...children,
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDateField(BuildContext context,
+      String hint, TextEditingController controller) {
+    return SizedBox(
+      height: 44,
+      child: TextFormField(
+        controller: controller,
+        style: const TextStyle(fontSize: 14, color: kcValueDark),
+        decoration: InputDecoration(
+          hintText: hint,
+          hintStyle:
+          const TextStyle(color: kcLightGrey, fontSize: 14),
+          prefixIcon: const Icon(Icons.calendar_month_outlined,
+              size: 18, color: kcLightGrey),
+          contentPadding:
+          const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          filled: true,
+          fillColor: kcWhite,
+          enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide:
+              const BorderSide(width: 1, color: kcVeryLightGrey)),
+          focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide:
+              const BorderSide(width: 1.5, color: kcvoilet)),
+        ),
+        readOnly: true,
+        onTap: () async {
+          final picked = await showDateRangePicker(
+            context: context,
+            firstDate: DateTime(2000),
+            lastDate: DateTime.now(),
+            builder: (ctx, child) => Theme(
+              data: Theme.of(ctx).copyWith(
+                colorScheme: Theme.of(ctx)
+                    .colorScheme
+                    .copyWith(primary: kcvoilet, onPrimary: kcWhite),
+              ),
+              child: child!,
+            ),
+            initialDateRange: startDateInput.text.isNotEmpty &&
+                    endDateInput.text.isNotEmpty
+                ? DateTimeRange(
+                    start: DateTime.parse(startDateInput.text),
+                    end: DateTime.parse(endDateInput.text))
+                : DateTimeRange(
+                    start:
+                        DateTime.now().subtract(const Duration(days: 7)),
+                    end: DateTime.now()),
+          );
+          if (picked != null) {
+            final fmt = DateFormat('yyyy-MM-dd');
+            startDateInput.text = fmt.format(picked.start);
+            fromDateInput.text = fmt.format(picked.start);
+            endDateInput.text = fmt.format(picked.end);
           }
-
         },
-        child: SizedBox(
-          width: 200,
-          height: 40,
-          child: Container(
-            // width: 80,
-            decoration: BoxDecoration(borderRadius: BorderRadius.circular(8.0),color: kcWhite),
-            child: ValueListenableBuilder<String>(
-              valueListenable: stat,
-              builder: (context, value, child) => Padding(
-                padding: const EdgeInsets.all(2.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    SizedBox(
-                      // width: 100,
-                      child: Text(
-                        value.isEmpty ? "Select Department" : stat.value,
-                        textAlign: TextAlign.center,
-                        maxLines: 4,
-                        style: TextStyle(color: (stat.value == "Select Department") ? kcDarkGreyColor : kcLightGrey),
-                      ),
-                    ),
-                    const Icon(Icons.arrow_drop_down_sharp)
-                  ],
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Observation Card — extracted widget
+// ─────────────────────────────────────────────────────────────────────────────
+class _ObservationCard extends StatelessWidget {
+  final dynamic item; // replace with your actual model type
+
+  const _ObservationCard({required this.item});
+
+  Color _statusColor(String status) {
+    switch (status.trim().toUpperCase()) {
+      case 'CLOSED':
+        return kcStatGreen;
+      case 'PENDING':
+        return kcStatRed;
+      case 'IN PROGRESS':
+        return kcStatPurple;
+      case 'COMPLIANCE':
+        return kcStatAmber;
+      default:
+        return kcLightGrey;
+    }
+  }
+
+  Color hexToColor(String h) {
+    h = h.replaceFirst('#', '');
+    if (h.length == 6) h = 'FF$h';
+    return Color(int.parse(h, radix: 16));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      decoration: BoxDecoration(
+        color: kcWhite,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: kcVeryLightGrey, width: 1),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.06),
+            blurRadius: 14,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // ----- Image -----
+            ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: SizedBox(
+                width: 220,
+                height: 200,
+                child: FadeInImage(
+                  placeholder: NetworkImage(item.lowQualityImageUrl),
+                  image: NetworkImage(item.imageNumber),
+                  fadeInDuration: const Duration(milliseconds: 300),
+                  fadeOutDuration: const Duration(milliseconds: 300),
+                  fit: BoxFit.cover,
+                  imageErrorBuilder: (_, __, ___) => Container(
+                    color: Colors.grey.shade100,
+                    alignment: Alignment.center,
+                    child: Icon(Icons.broken_image_outlined,
+                        color: Colors.grey.shade400, size: 48),
+                  ),
                 ),
               ),
             ),
+            const SizedBox(width: 12),
+            // ----- Content -----
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Top: 3 columns of grouped info, each with accent-bar value box
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            _buildInfoSection(
+                              icon: Icons.person_outline_rounded,
+                              iconColor: kcStatBlue,
+                              label: "Raised By",
+                              value: item.observationRaisedBy,
+                              valueColor: kcValueDark,
+                            ),
+                            _buildInfoSection(
+                              icon: Icons.factory_outlined,
+                              iconColor: kcStatGreen,
+                              label: "Plant / Dept",
+                              value: item.plantDept,
+                              valueColor: kcValueDark,
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            _buildInfoSection(
+                              icon: Icons.qr_code_2_outlined,
+                              iconColor: kcvoilet,
+                              label: "Unique ID",
+                              value: item.uniqueIdentificationNumber,
+                              valueColor: kcValueDark,
+                            ),
+                            _buildInfoSection(
+                              icon: Icons.location_on_outlined,
+                              iconColor: kcStatRed,
+                              label: "Location",
+                              value: item.location,
+                              valueColor: kcValueDark,
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            _buildInfoSection(
+                              icon: Icons.assignment_ind_outlined,
+                              iconColor: kcStatPurple,
+                              label: "Responsibility",
+                              value: item.responsibility,
+                              valueColor: kcmegenta,
+                            ),
+                            _buildInfoSection(
+                              icon: Icons.workspace_premium_outlined,
+                              iconColor: _statusColor(item.status),
+                              label: "Status",
+                              value: item.status,
+                              valueColor: _statusColor(item.status),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  // Soft gradient divider
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 10),
+                    child: Container(
+                      height: 1,
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            Colors.transparent,
+                            Colors.grey.shade300,
+                            Colors.transparent,
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                  // Date pill row: Raised + Target
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: Row(
+                          children: [
+                            _buildIconBadge(
+                                Icons.event_note_outlined, kcStatAmber),
+                            const SizedBox(width: 8),
+                            _buildLabel("Raised Date :"),
+                            const SizedBox(width: 6),
+                            Flexible(
+                              child: _buildPillBadge(
+                                  item.raisedDate, kcStatAmber),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Row(
+                          children: [
+                            _buildIconBadge(Icons.event_outlined, kcvoilet),
+                            const SizedBox(width: 8),
+                            _buildLabel("Target Date :"),
+                            const SizedBox(width: 6),
+                            Flexible(
+                              child: _buildPillBadge(
+                                  item.observationCompletionTargetDate,
+                                  kcvoilet),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                  // Compliance + Priority
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: Row(
+                          children: [
+                            _buildIconBadge(
+                                Icons.event_available_outlined, kcStatGreen),
+                            const SizedBox(width: 8),
+                            _buildLabel("Compliance Date :"),
+                            const SizedBox(width: 6),
+                            Flexible(
+                              child: _buildPillBadge(
+                                item.complianceDate.trim().isEmpty
+                                    ? '—'
+                                    : item.complianceDate,
+                                item.complianceDate.trim().isEmpty
+                                    ? kcLightGrey
+                                    : kcStatGreen,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Row(
+                          children: [
+                            _buildIconBadge(Icons.flag_outlined,
+                                hexToColor(item.priorityStatusColour)),
+                            const SizedBox(width: 8),
+                            _buildLabel("Priority :"),
+                            const SizedBox(width: 6),
+                            Flexible(
+                              child: _buildPillBadge(
+                                item.priorityStatusName,
+                                hexToColor(item.priorityStatusColour),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  // Observation paragraph
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildIconBadge(
+                          Icons.visibility_outlined, kcObservationCyan),
+                      const SizedBox(width: 8),
+                      _buildLabel("Observation :"),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 4),
+                          child: Text(
+                            item.observationText.isEmpty
+                                ? '—'
+                                : item.observationText,
+                            maxLines: 3,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w600,
+                              fontSize: 13,
+                              color: kcValueDark,
+                              height: 1.35,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  // Corrective measure + edit arrow
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildIconBadge(Icons.build_outlined, kcStatPurple),
+                      const SizedBox(width: 8),
+                      _buildLabel("Corrective Measure :"),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 4),
+                          child: Text(
+                            item.correctiveMeasure.isEmpty
+                                ? '—'
+                                : item.correctiveMeasure,
+                            maxLines: 4,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w600,
+                              fontSize: 13,
+                              color: kcValueDark,
+                              height: 1.35,
+                            ),
+                          ),
+                        ),
+                      ),
+                      IconButton(
+                        tooltip: 'View / Edit',
+                        onPressed: () {
+                          Navigator.of(context).push(MaterialPageRoute(
+                            builder: (_) => EditAllObservationPage(
+                              uniqueId: item.uniqueIdentificationNumber,
+                              raisedBy: item.observationRaisedBy,
+                              wrkGrp: item.wrkGrp,
+                              stationName: item.stationName,
+                              stateCode: item.stationCode,
+                              plant: item.plantDept,
+                              location: item.location,
+                              resHod: item.responsibilityHODName,
+                              priority: item.priorityStatusName,
+                              hazard: item.hazardCategory,
+                              observation: item.observationText,
+                              name: item.responsibility,
+                              raisedDate: item.raisedDate,
+                              raisedByEmpID:
+                                  item.observationRaisedByEmpUnqId,
+                              status: item.status,
+                              correctiveMeasure: item.correctiveMeasure,
+                              image: item.imageNumber,
+                              targetDate:
+                                  item.observationCompletionTargetDate,
+                              complianceDate: item.complianceDate,
+                            ),
+                            fullscreenDialog: true,
+                          ));
+                        },
+                        icon: const Icon(
+                            Icons.arrow_forward_ios_sharp,
+                            color: kcvoilet,
+                            size: 18),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Info group: tinted icon badge + label, then a colored-accent value box.
+  Widget _buildInfoSection({
+    required IconData icon,
+    required Color iconColor,
+    required String label,
+    required String value,
+    required Color valueColor,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(bottom: 4, top: 4),
+          child: Row(
+            children: [
+              _buildIconBadge(icon, iconColor),
+              const SizedBox(width: 6),
+              Flexible(child: _buildLabel("$label :")),
+            ],
+          ),
+        ),
+        _buildAccentTextBox(value, valueColor, accentColor: iconColor),
+      ],
+    );
+  }
+
+  /// Colored icon badge — colored icon on a tinted square background.
+  Widget _buildIconBadge(IconData icon, Color color) {
+    return Container(
+      padding: const EdgeInsets.all(6),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Icon(icon, color: color, size: 16),
+    );
+  }
+
+  /// Gradient pill chip for short emphasized values like dates.
+  Widget _buildPillBadge(String text, Color color) {
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [color, color.withValues(alpha: 0.85)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: color.withValues(alpha: 0.3),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+        child: Text(
+          text,
+          style: const TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.w600,
+            fontSize: 12,
           ),
         ),
       ),
     );
-
   }
 
-  Future<void> _buildallDepartDialog(List<AllDepartmentModel> departModel) {
-    final departListNotifier = departmentSearchableListNotifier(departModel);
-    return showDialog(
-        context: context,
-        builder: (context) {
-          return AlertDialog(
-            // actionsPadding: EdgeInsets.all(5.dw),
-            shape: const RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(5))),
-            // contentPadding: EdgeInsets.all(10.dw),
-            title: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  "Select or search Department",
-                  style:
-                  TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-                ),
-                TextFormField(
-                  onChanged: departListNotifier.filterBasedOn,
-                  decoration: const InputDecoration(
-                      hintText: "search here...",
-                      prefixIcon: Icon(
-                        Icons.search,
-                        color: kcLightGrey,
-                      )),
-                )
-              ],
-            ),
-            content: SizedBox(
-                width: 210,
-                height: 800,
-                child:ValueListenableBuilder<List<AllDepartmentModel>>(
-                    valueListenable: departListNotifier,
-                    builder: (context, list, widget){
-                      return ListView.builder(
-                          itemCount: list.length,
-                          shrinkWrap: true,
-                          itemBuilder: (context, index) {
-                            return Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                InkWell(
-                                  onTap: () {
-                                    stat.value = list[index].statName;
-                                    statCode = list[index].statCode;
-                                    employeeResponsibilityBloc.initState(departCode, statCode, window.localStorage['kDesgnCode']!);
-                                    Navigator.pop(context);
-                                  },
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(2.0),
-                                    child: Text(list[index].statName,
-                                    ),
-                                  ),
-                                ),
-                                const Padding(
-                                  padding: EdgeInsets.all(8.0),
-                                  child: Divider(
-                                    height: 0.8,
-                                    thickness: 1,
-                                    color: kcDarkGreyColor,
-                                  ),
-                                )
-                              ],
-                            );
-                          });
-                    }
-                )
-            ),
-            actions: [
-              Align(
-                alignment: Alignment.centerRight,
-                child: TextButton(
-                  onPressed: () {
-                    Navigator.pop(context);
-                  },
-                  child: const Text(
-                    "close",
-                    style: TextStyle(color: kcDarkGreyColor, fontSize: 18),
-                  ),
-                ),
-              )
-            ],
-          );
-        }
+  /// Compact label used next to icon badges.
+  Widget _buildLabel(String title) {
+    return Text(
+      title,
+      style: const TextStyle(
+        fontSize: 12,
+        fontWeight: FontWeight.w600,
+        color: kcLabelGrey,
+      ),
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
     );
   }
 
-  // Responsibility
-
-  Widget _buildResponsibility(){
-    return  BlocConsumer<EmployeeResponsibilityBloc, EmployeeResponsibilityState>(
-      bloc: employeeResponsibilityBloc,
-      listener: (_, state){},
-      builder: (_, state){
-        return state.when(
-            loading: _buildLoading3,
-            content: _buildContent3,
-            success: _buildContent3,
-            failed: (form, __) => _buildContent3(form));
-      },
-    );
-  }
-
-  Widget _buildLoading3(List<EmployeeResponsibilityModel> responsibilityModel){
-    return const CircularProgressIndicator();
-  }
-
-  Widget _buildContent3(List<EmployeeResponsibilityModel> responsibilityModel){
+  /// Value card with a left-edge colored accent bar matching its icon color.
+  Widget _buildAccentTextBox(String title, Color color,
+      {Color? accentColor}) {
     return Padding(
-      padding: const EdgeInsets.all(2),
-      child: InkWell(
-        onTap: (){
-          _buildResponsibilityDialog(responsibilityModel);
-        },
-        child: SizedBox(
-          width: 180,
-          height: 40,
-          child: Container(
-            width: 80,
-            decoration: BoxDecoration(borderRadius: BorderRadius.circular(8.0),color: kcWhite),
-            child: ValueListenableBuilder<String>(
-              valueListenable: responsibility,
-              builder: (context, value, child) => Padding(
-                padding: const EdgeInsets.all(2.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    SizedBox(
-                      width: 100,
-                      child: Text(
-                        responsibility.value,
-                        textAlign: TextAlign.center,
-                        maxLines: 4,
-                        style: TextStyle(color: (responsibility.value == "Select Responsibility") ? kcDarkGreyColor : kcLightGrey),
-                      ),
+      padding: const EdgeInsets.symmetric(vertical: 2),
+      child: Container(
+        width: double.infinity,
+        constraints: const BoxConstraints(minHeight: 36),
+        decoration: BoxDecoration(
+          color: kcWhite,
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: kcVeryLightGrey, width: 1),
+          boxShadow: [
+            BoxShadow(
+              color: (accentColor ?? Colors.black).withValues(alpha: 0.06),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: IntrinsicHeight(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              if (accentColor != null)
+                Container(
+                  width: 3,
+                  decoration: BoxDecoration(
+                    color: accentColor,
+                    borderRadius: const BorderRadius.only(
+                      topLeft: Radius.circular(10),
+                      bottomLeft: Radius.circular(10),
                     ),
-                    const Icon(Icons.arrow_drop_down_sharp)
-                  ],
+                  ),
+                ),
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 10, vertical: 6),
+                  child: Text(
+                    title.isEmpty ? '—' : title,
+                    maxLines: 2,
+                    textAlign: TextAlign.center,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 13,
+                      color: color,
+                    ),
+                  ),
                 ),
               ),
-            ),
+            ],
           ),
         ),
       ),
     );
-
   }
+}
 
-  Future<void> _buildResponsibilityDialog(List<EmployeeResponsibilityModel> responsibilityModel) {
-    final responsibilityListNotifier = responsibilitySearchableListNotifier(responsibilityModel);
-    return showDialog(
-        context: context,
-        builder: (context) {
-          return AlertDialog(
-            shape: const RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(5))),
-            title: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  "Select or search Responsibility",
-                  style:
-                  TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-                ),
-                TextFormField(
-                  onChanged: responsibilityListNotifier.filterBasedOn,
-                  decoration: const InputDecoration(
-                      hintText: "search here...",
-                      prefixIcon: Icon(
-                        Icons.search,
-                        color: kcLightGrey,
-                      )),
-                )
-              ],
-            ),
-            content: SizedBox(
-                width: 210,
-                height: 800,
-                child:ValueListenableBuilder<List<EmployeeResponsibilityModel>>(
-                    valueListenable: responsibilityListNotifier,
-                    builder: (context, list, widget){
-                      return ListView.builder(
-                          itemCount: list.length,
-                          shrinkWrap: true,
-                          itemBuilder: (context, index) {
-                            return Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                InkWell(
-                                  onTap: () {
-                                    responsibility.value = list[index].empName;
-                                    responsibleCode = list[index].empUnqId;
-                                    workGroup.value = list[index].wrkGrp;
-                                    responsibleHODBloc.initState(departCode, statCode, responsibleEnggDesignationCode, responsibleCode);
-                                    filterObservationBloc.initState(currentPage,"", "", "", "", "", "", "", responsibleCode, "");
-                                    Navigator.pop(context);
-                                  },
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(2.0),
-                                    child: Text(list[index].empName,
-                                    ),
-                                  ),
-                                ),
-                                const Padding(
-                                  padding: EdgeInsets.all(8.0),
-                                  child: Divider(
-                                    height: 0.8,
-                                    thickness: 1,
-                                    color: kcDarkGreyColor,
-                                  ),
-                                )
-                              ],
-                            );
-                          });
-                    }
-                )
-            ),
-            actions: [
-              Align(
-                alignment: Alignment.centerRight,
-                child: TextButton(
-                  onPressed: () {
-                    Navigator.pop(context);
-                  },
-                  child: const Text(
-                    "close",
-                    style: TextStyle(color: kcDarkGreyColor, fontSize: 18),
-                  ),
-                ),
-              )
-            ],
-          );
-        }
-    );
-  }
+// ─────────────────────────────────────────────────────────────────────────────
+// Small helpers
+// ─────────────────────────────────────────────────────────────────────────────
 
-  //Responsible HOD
+class _LoadingChip extends StatelessWidget {
+  const _LoadingChip();
+  @override
+  Widget build(BuildContext context) => Container(
+    height: 44,
+    decoration: BoxDecoration(
+      color: kcVeryLightGrey,
+      borderRadius: BorderRadius.circular(8),
+    ),
+    child: const Center(
+      child: SizedBox(
+          width: 18,
+          height: 18,
+          child: CircularProgressIndicator(strokeWidth: 2)),
+    ),
+  );
+}
 
-  Widget _buildResponsibleHOD(){
-    return  BlocConsumer<ResponsibleHODBloc, ResponsibleHODState>(
-      bloc: responsibleHODBloc,
-      listener: (_, state){},
-      builder: (_, state){
-        return state.when(
-            loading: _buildLoading5,
-            content: _buildContent5,
-            success: _buildContent5,
-            failed: (form, __) => _buildContent3(form));
-      },
-    );
-  }
+class _StatusPill extends StatelessWidget {
+  final String label;
+  final Color color;
+  const _StatusPill({required this.label, required this.color});
 
-  Widget _buildLoading5(List<EmployeeResponsibilityModel> responsibilityModel){
-    return const CircularProgressIndicator();
-  }
-
-  Widget _buildContent5(List<EmployeeResponsibilityModel> responsibilityModel){
-    return Padding(
-      padding: const EdgeInsets.all(2),
-      child: InkWell(
-        onTap: (){
-          _buildResponsibilityBYHODDialog(responsibilityModel);
-        },
-        child: SizedBox(
-          width: 180,
-          height: 40,
-          child: Container(
-            width: 80,
-            decoration: BoxDecoration(borderRadius: BorderRadius.circular(8.0),color: kcWhite),
-            child: ValueListenableBuilder<String>(
-              valueListenable: responsibleHOD,
-              builder: (context, value, child) => Padding(
-                padding: const EdgeInsets.all(2.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    SizedBox(
-                      width: 100,
-                      child: Text(
-                        responsibleHOD.value,
-                        textAlign: TextAlign.center,
-                        maxLines: 4,
-                        style: TextStyle(color: (responsibility.value == "Select Responsibility") ? kcDarkGreyColor : kcLightGrey),
-                      ),
-                    ),
-                    const Icon(Icons.arrow_drop_down_sharp)
-                  ],
-                ),
-              ),
-            ),
-          ),
+  @override
+  Widget build(BuildContext context) => Container(
+    padding:
+    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+    decoration: BoxDecoration(
+      color: color,
+      borderRadius: BorderRadius.circular(12),
+      boxShadow: [
+        BoxShadow(
+          color: color.withValues(alpha: 0.3),
+          blurRadius: 6,
+          offset: const Offset(0, 2),
         ),
+      ],
+    ),
+    child: Text(
+      label,
+      style: const TextStyle(
+        color: kcWhite,
+        fontWeight: FontWeight.w600,
+        fontSize: 12,
+        letterSpacing: 0.4,
       ),
-    );
-
-  }
-
-  Future<void> _buildResponsibilityBYHODDialog(List<EmployeeResponsibilityModel> responsibleHodModel) {
-    final responsibilityListNotifier = responsibleHODySearchableListNotifier(responsibleHodModel);
-    return showDialog(
-        context: context,
-        builder: (context) {
-          return AlertDialog(
-            shape: const RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(5))),
-            title: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  "Select or search Responsible HOD",
-                  style:
-                  TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-                ),
-                TextFormField(
-                  onChanged: responsibilityListNotifier.filterBasedOn,
-                  decoration: const InputDecoration(
-                      hintText: "search here...",
-                      prefixIcon: Icon(
-                        Icons.search,
-                        color: kcLightGrey,
-                      )),
-                )
-              ],
-            ),
-            content: SizedBox(
-                width: 210,
-                height: 800,
-                child:ValueListenableBuilder<List<EmployeeResponsibilityModel>>(
-                    valueListenable: responsibilityListNotifier,
-                    builder: (context, responsibleList, widget){
-                      return ListView.builder(
-                          itemCount: responsibleList.length,
-                          shrinkWrap: true,
-                          itemBuilder: (context, index) {
-                            return Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                InkWell(
-                                  onTap: () {
-                                    responsibleHOD.value = responsibleList[index].empName;
-                                    responsibleHODCode = responsibleList[index].empUnqId;
-                                    filterObservationBloc.initState(currentPage,"", "", "", "", "", "", "", responsibleHODCode, "");
-                                    Navigator.pop(context);
-                                  },
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(2.0),
-                                    child: Text(responsibleList[index].empName,
-                                    ),
-                                  ),
-                                ),
-                                const Padding(
-                                  padding: EdgeInsets.all(8.0),
-                                  child: Divider(
-                                    height: 0.8,
-                                    thickness: 1,
-                                    color: kcDarkGreyColor,
-                                  ),
-                                )
-                              ],
-                            );
-                          });
-                    }
-                )
-            ),
-            actions: [
-              Align(
-                alignment: Alignment.centerRight,
-                child: TextButton(
-                  onPressed: () {
-                    Navigator.pop(context);
-                  },
-                  child: const Text(
-                    "close",
-                    style: TextStyle(color: kcDarkGreyColor, fontSize: 18),
-                  ),
-                ),
-              )
-            ],
-          );
-        }
-    );
-  }
-
-  //Priority
-
-  Widget _buildPriority(){
-    return  BlocConsumer<PriorityBloc, PriorityState>(
-      bloc: priorityBloc,
-      listener: (_, state){},
-      builder: (_, state){
-        return state.when(
-            loading: _buildLoading6,
-            content: _buildContent6,
-            success: _buildContent6,
-            failed: (form, __) => _buildContent6(form));
-      },
-    );
-  }
-
-  Widget _buildLoading6(List<PriorityModel> priorityModel){
-    return const CircularProgressIndicator();
-  }
-
-  Widget _buildContent6(List<PriorityModel> priorityModel){
-    return Padding(
-      padding: const EdgeInsets.all(2),
-      child: InkWell(
-        onTap: (){
-          _buildPriorityDialog(priorityModel);
-        },
-        child: SizedBox(
-          width: 180,
-          height: 40,
-          child: Container(
-            //width: 80,
-            decoration: BoxDecoration(borderRadius: BorderRadius.circular(8.0),color: kcWhite),
-            child: ValueListenableBuilder<String>(
-              valueListenable: priority,
-              builder: (context, value, child) => Padding(
-                padding: const EdgeInsets.all(2.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    SizedBox(
-                      // width: 150,
-                      // height: 20,
-                      child: Text(
-                        value.isEmpty ? "Filter Priority" : priority.value,
-                        textAlign: TextAlign.center,
-                        maxLines: 4,
-                        style: TextStyle(color: (priority.value == "Filter Priority") ? kcDarkGreyColor : kcLightGrey),
-                      ),
-                    ),
-                    const Icon(Icons.arrow_drop_down_sharp)
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-
-  }
-
-  Future<void> _buildPriorityDialog(List<PriorityModel> priorityModel) {
-    final priorityListNotifier = PrioritySearchableListNotifier(priorityModel);
-    return showDialog(
-        context: context,
-        builder: (context) {
-          return AlertDialog(
-            shape: const RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(5))),
-            title: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  "Select or search Prioroty",
-                  style:
-                  TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-                ),
-                TextFormField(
-                  onChanged: priorityListNotifier.filterBasedOn,
-                  decoration: const InputDecoration(
-                      hintText: "search here...",
-                      prefixIcon: Icon(
-                        Icons.search,
-                        color: kcLightGrey,
-                      )),
-                )
-              ],
-            ),
-            content: SizedBox(
-                width: 210,
-                height: 800,
-                child:ValueListenableBuilder<List<PriorityModel>>(
-                    valueListenable: priorityListNotifier,
-                    builder: (context, list, widget){
-                      return ListView.builder(
-                          itemCount: list.length,
-                          shrinkWrap: true,
-                          itemBuilder: (context, index) {
-                            return Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                InkWell(
-                                  onTap: () {
-                                    priority.value = list[index].priorityStatusName;
-                                    priorityDesc.value = list[index].priorityStatusDeadline;
-                                    priorityColor = list[index].priorityStatusColour;
-                                    Navigator.pop(context);
-                                  },
-                                  child: Column(
-                                    children: [
-                                      Padding(
-                                        padding: const EdgeInsets.all(2.0),
-                                        child: Text(list[index].priorityStatusName,
-                                        ),
-                                      ),
-                                      Padding(
-                                        padding: const EdgeInsets.all(2.0),
-                                        child: Text(list[index].priorityStatusDeadline,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                const Padding(
-                                  padding: EdgeInsets.all(8.0),
-                                  child: Divider(
-                                    height: 0.8,
-                                    thickness: 1,
-                                    color: kcDarkGreyColor,
-                                  ),
-                                )
-                              ],
-                            );
-                          });
-                    }
-                )
-            ),
-            actions: [
-              Align(
-                alignment: Alignment.centerRight,
-                child: TextButton(
-                  onPressed: () {
-                    Navigator.pop(context);
-                  },
-                  child: const Text(
-                    "close",
-                    style: TextStyle(color: kcDarkGreyColor, fontSize: 18),
-                  ),
-                ),
-              )
-            ],
-          );
-        }
-    );
-  }
-
-  //location
-
-  Widget _buildLocation(){
-    return  BlocConsumer<LocationBloc, LocationState>(
-      bloc: locationBloc,
-      listener: (_, state){},
-      builder: (_, state){
-        return state.when(
-            loading: _buildLoading7,
-            content: _buildContent7,
-            success: _buildContent7,
-            failed: (form, __) => _buildContent7(form));
-      },
-    );
-  }
-
-  Widget _buildLoading7(List<LocationModel> locationModel){
-    return const CircularProgressIndicator();
-  }
-
-  Widget _buildContent7(List<LocationModel> locationModel){
-    return Padding(
-      padding: const EdgeInsets.all(2),
-      child: InkWell(
-        onTap: (){
-          _buildLocationDialog(locationModel);
-        },
-        child: SizedBox(
-          width: 200,
-          height: 40,
-          child: Container(
-            decoration: BoxDecoration(borderRadius: BorderRadius.circular(8.0),color: kcWhite),
-            child: ValueListenableBuilder<String>(
-              valueListenable: location,
-              builder: (context, value, child) => Padding(
-                padding: const EdgeInsets.all(2.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    SizedBox(
-                      // width: 150,
-                      // height: 20,
-                      child: Text(
-                        value.isEmpty ? "Select Location" : location.value,
-                        textAlign: TextAlign.center,
-                        maxLines: 4,
-                        style: TextStyle(color: (location.value == "Select Location") ? kcDarkGreyColor : kcLightGrey),
-                      ),
-                    ),
-                    const Icon(Icons.arrow_drop_down_sharp)
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-
-  }
-
-  Future<void> _buildLocationDialog(List<LocationModel> locationModel) {
-    final locationListNotifier = LocationSearchableListNotifier(locationModel);
-    return showDialog(
-        context: context,
-        builder: (context) {
-          return AlertDialog(
-            shape: const RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(5))),
-            title: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  "Select or search Location",
-                  style:
-                  TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-                ),
-                TextFormField(
-                  onChanged: locationListNotifier.filterBasedOn,
-                  decoration: const InputDecoration(
-                      hintText: "search here...",
-                      prefixIcon: Icon(
-                        Icons.search,
-                        color: kcLightGrey,
-                      )),
-                )
-              ],
-            ),
-            content: SizedBox(
-                width: 210,
-                height: 800,
-                child:ValueListenableBuilder<List<LocationModel>>(
-                    valueListenable: locationListNotifier,
-                    builder: (context, list, widget){
-                      return ListView.builder(
-                          itemCount: list.length,
-                          shrinkWrap: true,
-                          itemBuilder: (context, index) {
-                            return Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                InkWell(
-                                  onTap: () {
-                                    location.value = list[index].locations;
-                                    Navigator.pop(context);
-                                  },
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(2.0),
-                                    child: Text(list[index].locations,
-                                    ),
-                                  ),
-                                ),
-                                const Padding(
-                                  padding: EdgeInsets.all(8.0),
-                                  child: Divider(
-                                    height: 0.8,
-                                    thickness: 1,
-                                    color: kcDarkGreyColor,
-                                  ),
-                                )
-                              ],
-                            );
-                          });
-                    }
-                )
-            ),
-            actions: [
-              Align(
-                alignment: Alignment.centerRight,
-                child: TextButton(
-                  onPressed: () {
-                    Navigator.pop(context);
-                  },
-                  child: const Text(
-                    "close",
-                    style: TextStyle(color: kcDarkGreyColor, fontSize: 18),
-                  ),
-                ),
-              )
-            ],
-          );
-        }
-    );
-  }
-
-
-  // Unique Id
-  Widget _buildUniqueId(){
-    return  BlocConsumer<UniqueIdBloc, UniqueIdState>(
-      bloc: uniqueIdBloc,
-      listener: (_, state){},
-      builder: (_, state){
-        return state.when(
-            loading: _buildUniqueIDLoding,
-            content: _buildUNiqueIdContent,
-            success: _buildUNiqueIdContent,
-            failed: (form, __) => _buildUNiqueIdContent(form));
-      },
-    );
-  }
-
-  Widget _buildUniqueIDLoding(List<UniqueIdModel> uniqueIdModel){
-    return const CircularProgressIndicator();
-  }
-
-  Widget _buildUNiqueIdContent(List<UniqueIdModel> uniqueIdModel){
-    return Padding(
-      padding: const EdgeInsets.all(2),
-      child: InkWell(
-        onTap: (){
-          uniqueIdBloc.initState();
-          _buildUniqueIdDialog(uniqueIdModel);
-        },
-        child: SizedBox(
-          width: 200,
-          height: 40,
-          child: Container(
-            decoration: BoxDecoration(borderRadius: BorderRadius.circular(8.0),color: kcWhite),
-            child: ValueListenableBuilder<String>(
-              valueListenable: uniqueId,
-              builder: (context, value, child) => Padding(
-                padding: const EdgeInsets.all(2.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    SizedBox(
-                      // width: 150,
-                      // height: 20,
-                      child: Text(
-                        value.isEmpty ? "Select Unique Id" : uniqueId.value,
-                        textAlign: TextAlign.center,
-                        maxLines: 4,
-                        style: TextStyle(color: (uniqueId.value == "Select Unique Id") ? kcDarkGreyColor : kcLightGrey),
-                      ),
-                    ),
-                    const Icon(Icons.arrow_drop_down_sharp)
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-
-  }
-
-  Future<void> _buildUniqueIdDialog(List<UniqueIdModel> uniqueIdModel) {
-    final uniqueIdListNotifier = UniqueIdSearchableListNotifier(uniqueIdModel);
-    return showDialog(
-        context: context,
-        builder: (context) {
-          return AlertDialog(
-            shape: const RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(5))),
-            title: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  "Select or search Location",
-                  style:
-                  TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-                ),
-                TextFormField(
-                  onChanged: uniqueIdListNotifier.filterBasedOn,
-                  decoration: const InputDecoration(
-                      hintText: "search here...",
-                      prefixIcon: Icon(
-                        Icons.search,
-                        color: kcLightGrey,
-                      )),
-                )
-              ],
-            ),
-            content: SizedBox(
-                width: 210,
-                height: 800,
-                child:ValueListenableBuilder<List<UniqueIdModel>>(
-                    valueListenable: uniqueIdListNotifier,
-                    builder: (context, list, widget){
-                      return ListView.builder(
-                          itemCount: list.length,
-                          shrinkWrap: true,
-                          itemBuilder: (context, index) {
-                            return Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                InkWell(
-                                  onTap: () {
-                                    uniqueId.value = list[index].uniqueIdentificationNumber;
-                                    Navigator.pop(context);
-                                  },
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(2.0),
-                                    child: Text(list[index].uniqueIdentificationNumber,
-                                    ),
-                                  ),
-                                ),
-                                const Padding(
-                                  padding: EdgeInsets.all(8.0),
-                                  child: Divider(
-                                    height: 0.8,
-                                    thickness: 1,
-                                    color: kcDarkGreyColor,
-                                  ),
-                                )
-                              ],
-                            );
-                          });
-                    }
-                )
-            ),
-            actions: [
-              Align(
-                alignment: Alignment.centerRight,
-                child: TextButton(
-                  onPressed: () {
-                    Navigator.pop(context);
-                  },
-                  child: const Text(
-                    "close",
-                    style: TextStyle(color: kcDarkGreyColor, fontSize: 18),
-                  ),
-                ),
-              )
-            ],
-          );
-        }
-    );
-  }
-
-  //Hazard
-
-  Widget _buildHazard(){
-    return  BlocConsumer<AllHazardCatBloc, AllHazardCatState>(
-      bloc: allHazardCatBloc,
-      listener: (_, state){},
-      builder: (_, state){
-        return state.when(
-            loading: _buildLoading8,
-            content: _buildContent8,
-            success: _buildContent8,
-            failed: (form, __) => _buildContent8(form));
-      },
-    );
-  }
-
-  Widget _buildLoading8(List<AllHazardCatModel> hazardModel){
-    return const CircularProgressIndicator();
-  }
-
-  Widget _buildContent8(List<AllHazardCatModel> hazardModel){
-    return Padding(
-      padding: const EdgeInsets.all(2),
-      child: InkWell(
-        onTap: (){
-          _buildHazardDialog(hazardModel);
-        },
-        child: SizedBox(
-          width: 200,
-          height: 40,
-          child: Container(
-            decoration: BoxDecoration(borderRadius: BorderRadius.circular(8.0),color: kcWhite),
-            child: ValueListenableBuilder<String>(
-              valueListenable: hazard,
-              builder: (context, value, child) => Padding(
-                padding: const EdgeInsets.all(2.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    SizedBox(
-                      // width: 150,
-                      // height: 20,
-                      child: Text(
-                        value.isEmpty ? "Select Hazard" : hazard.value,
-                        textAlign: TextAlign.center,
-                        maxLines: 4,
-                        style: TextStyle(color: (hazard.value == "Select Hazard") ? kcDarkGreyColor : kcLightGrey),
-                      ),
-                    ),
-                    const Icon(Icons.arrow_drop_down_sharp)
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-
-  }
-
-  Future<void> _buildHazardDialog(List<AllHazardCatModel> hazardModel) {
-    final hazardListNotifier = HazardSearchableListNotifier(hazardModel);
-    return showDialog(
-        context: context,
-        builder: (context) {
-          return AlertDialog(
-            shape: const RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(5))),
-            title: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  "Select or search Hazard Category",
-                  style:
-                  TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-                ),
-                TextFormField(
-                  onChanged: hazardListNotifier.filterBasedOn,
-                  decoration: const InputDecoration(
-                      hintText: "search here...",
-                      prefixIcon: Icon(
-                        Icons.search,
-                        color: kcLightGrey,
-                      )),
-                )
-              ],
-            ),
-            content: SizedBox(
-                width: 210,
-                height: 800,
-                child:ValueListenableBuilder<List<AllHazardCatModel>>(
-                    valueListenable: hazardListNotifier,
-                    builder: (context, list, widget){
-                      return ListView.builder(
-                          itemCount: list.length,
-                          shrinkWrap: true,
-                          itemBuilder: (context, index) {
-                            return Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                InkWell(
-                                  onTap: () {
-                                    hazard.value = list[index].hazardCategoryName;
-                                    Navigator.pop(context);
-                                  },
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(2.0),
-                                    child: Text(list[index].hazardCategoryName,
-                                    ),
-                                  ),
-                                ),
-                                const Padding(
-                                  padding: EdgeInsets.all(8.0),
-                                  child: Divider(
-                                    height: 0.8,
-                                    thickness: 1,
-                                    color: kcDarkGreyColor,
-                                  ),
-                                )
-                              ],
-                            );
-                          });
-                    }
-                )
-            ),
-            actions: [
-              Align(
-                alignment: Alignment.centerRight,
-                child: TextButton(
-                  onPressed: () {
-                    Navigator.pop(context);
-                  },
-                  child: const Text(
-                    "close",
-                    style: TextStyle(color: kcDarkGreyColor, fontSize: 18),
-                  ),
-                ),
-              )
-            ],
-          );
-        }
-    );
-  }
-
-
-
-}
-
-
-class SearchableListNotifier extends ValueNotifier<List<AllPlantModel>> {
-  SearchableListNotifier(super.value) {
-    initialValue = value;
-  }
-
-  late List<AllPlantModel> initialValue;
-
-  void filterBasedOn(String query) {
-    if (query.isEmpty) {
-      value = initialValue;
-    } else {
-      value = initialValue.where((e) => e.deptName.toLowerCase().contains(query.toLowerCase())).toList();
-    }
-    notifyListeners();
-  }
-}
-
-class departmentSearchableListNotifier extends ValueNotifier<List<AllDepartmentModel>> {
-
-  departmentSearchableListNotifier(super.value) {
-    initialValue = value;
-  }
-
-  late List<AllDepartmentModel> initialValue;
-
-  void filterBasedOn(String query) {
-    if (query.isEmpty) {
-      value = initialValue;
-    } else {
-      value = initialValue.where((e) => e.statName.toLowerCase().contains(query.toLowerCase())).toList();
-    }
-    notifyListeners();
-  }
-
-}
-
-class responsibilitySearchableListNotifier extends ValueNotifier<List<EmployeeResponsibilityModel>> {
-
-  responsibilitySearchableListNotifier(super.value) {
-    initialValue = value;
-  }
-
-  late List<EmployeeResponsibilityModel> initialValue;
-
-  void filterBasedOn(String query) {
-    if (query.isEmpty) {
-      value = initialValue;
-    } else {
-      value = initialValue.where((e) => e.empName.toLowerCase().contains(query.toLowerCase())).toList();
-    }
-    notifyListeners();
-  }
-}
-
-class responsibleHODySearchableListNotifier extends ValueNotifier<List<EmployeeResponsibilityModel>> {
-
-  responsibleHODySearchableListNotifier(super.value) {
-    initialValue = value;
-  }
-
-  late List<EmployeeResponsibilityModel> initialValue;
-
-  void filterBasedOn(String query) {
-    if (query.isEmpty) {
-      value = initialValue;
-    } else {
-      value = initialValue.where((e) => e.empName.toLowerCase().contains(query.toLowerCase())).toList();
-    }
-    notifyListeners();
-  }
-}
-
-class WorkGroupSearchableListNotifier extends ValueNotifier<List<AllWorkGroupModel>> {
-
-  WorkGroupSearchableListNotifier(super.value) {
-    initialValue = value;
-  }
-
-  late List<AllWorkGroupModel> initialValue;
-
-  void filterBasedOn(String query) {
-    if (query.isEmpty) {
-      value = initialValue;
-    } else {
-      value = initialValue.where((e) => e.wrkGrp.toLowerCase().contains(query.toLowerCase())).toList();
-    }
-    notifyListeners();
-  }
-}
-
-class PrioritySearchableListNotifier extends ValueNotifier<List<PriorityModel>> {
-
-  PrioritySearchableListNotifier(super.value) {
-    initialValue = value;
-  }
-
-  late List<PriorityModel> initialValue;
-
-  void filterBasedOn(String query) {
-    if (query.isEmpty) {
-      value = initialValue;
-    } else {
-      value = initialValue.where((e) => e.priorityStatusName.toLowerCase().contains(query.toLowerCase())).toList();
-    }
-    notifyListeners();
-  }
-}
-
-class LocationSearchableListNotifier extends ValueNotifier<List<LocationModel>> {
-
-  LocationSearchableListNotifier(super.value) {
-    initialValue = value;
-  }
-
-  late List<LocationModel> initialValue;
-
-  void filterBasedOn(String query) {
-    if (query.isEmpty) {
-      value = initialValue;
-    } else {
-      value = initialValue.where((e) => e.locations.toLowerCase().contains(query.toLowerCase())).toList();
-    }
-    notifyListeners();
-  }
-}
-
-class HazardSearchableListNotifier extends ValueNotifier<List<AllHazardCatModel>> {
-
-  HazardSearchableListNotifier(super.value) {
-    initialValue = value;
-  }
-
-  late List<AllHazardCatModel> initialValue;
-
-  void filterBasedOn(String query) {
-    if (query.isEmpty) {
-      value = initialValue;
-    } else {
-      value = initialValue.where((e) => e.hazardCategoryName.toLowerCase().contains(query.toLowerCase())).toList();
-    }
-    notifyListeners();
-  }
-}
-
-class HazardTypeSearchableListNotifier extends ValueNotifier<List<AllTypeHazardModel>> {
-
-  HazardTypeSearchableListNotifier(super.value) {
-    initialValue = value;
-  }
-
-  late List<AllTypeHazardModel> initialValue;
-
-  void filterBasedOn(String query) {
-    if (query.isEmpty) {
-      value = initialValue;
-    } else {
-      value = initialValue.where((e) => e.categoryName.toLowerCase().contains(query.toLowerCase())).toList();
-    }
-    notifyListeners();
-  }
-}
-
-class UniqueIdSearchableListNotifier extends ValueNotifier<List<UniqueIdModel>> {
-
-  UniqueIdSearchableListNotifier(super.value) {
-    initialValue = value;
-  }
-
-  late List<UniqueIdModel> initialValue;
-
-  void filterBasedOn(String query) {
-    if (query.isEmpty) {
-      value = initialValue;
-    } else {
-      value = initialValue.where((e) => e.uniqueIdentificationNumber.toLowerCase().contains(query.toLowerCase())).toList();
-    }
-    notifyListeners();
-  }
+    ),
+  );
 }

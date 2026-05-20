@@ -78,47 +78,67 @@ class _SafetyObservationsChartState extends State<SafetyObservationsChart> {
                             "",
                           );
                     },
-                    style: ElevatedButton.styleFrom(backgroundColor: kcgreen),
-                    icon: Icon(Icons.refresh),
+                    style: IconButton.styleFrom(
+                      backgroundColor: kcgreen,
+                      foregroundColor: kcMediumGrey,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                    ),
+                    tooltip: 'Refresh',
+                    icon: const Icon(Icons.refresh),
                   ),
                 ),
                 Center(
-                  child: ElevatedButton(
+                  child: ElevatedButton.icon(
                       onPressed: () {
                         openFilterDialog();
                       },
                       style: ElevatedButton.styleFrom(
-                          backgroundColor: kcRed, fixedSize: const Size(150, 30)),
-                      child: const Text(
-                        "Filter",
-                        style: TextStyle(color: kcWhite),
-                      )),
+                          backgroundColor: kcvoilet,
+                          foregroundColor: kcWhite,
+                          fixedSize: const Size(150, 36),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(6),
+                          )),
+                      icon: const Icon(Icons.filter_alt_outlined, size: 18),
+                      label: const Text("Filter")),
                 ),
                 _buildDownloadExcel(),
               ],
             ),
           ),
           _buildChart(data),
-          SfCircularChart(
-            key: UniqueKey(), // Forces the chart to rebuild
-            backgroundColor: kcWhite,
-            title: const ChartTitle(text: 'Safety Observations by Department'),
-            legend: const Legend(
-                isVisible: true, overflowMode: LegendItemOverflowMode.wrap),
-            tooltipBehavior: TooltipBehavior(enable: true),
-            series: <CircularSeries>[
-              PieSeries<AllSafetyObservationByManagerandEnggModel, String>(
-                dataSource: data,
-                xValueMapper: (obs, _) => obs.pantDept,
-                yValueMapper: (obs, _) => obs.count,
-                dataLabelSettings: const DataLabelSettings(
-                  isVisible: true,
-                  textStyle: TextStyle(fontSize: 12, color: Colors.black),
+          SizedBox(
+            height: 420,
+            child: SfCircularChart(
+              backgroundColor: kcWhite,
+              title: const ChartTitle(
+                text: 'Safety Observations by Department',
+                textStyle: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: kcValueDark,
                 ),
-                explode: true, // Optional: Explode the segments
-                explodeIndex: 0, // Optional: Highlight the first segment
               ),
-            ],
+              legend: const Legend(
+                  isVisible: true,
+                  overflowMode: LegendItemOverflowMode.wrap,
+                  position: LegendPosition.bottom),
+              tooltipBehavior: TooltipBehavior(enable: true),
+              series: <CircularSeries>[
+                PieSeries<AllSafetyObservationByManagerandEnggModel, String>(
+                  dataSource: data,
+                  xValueMapper: (obs, _) => obs.pantDept,
+                  yValueMapper: (obs, _) => obs.count,
+                  radius: '70%',
+                  dataLabelSettings: const DataLabelSettings(
+                    isVisible: true,
+                    textStyle: TextStyle(fontSize: 12, color: kcValueDark),
+                  ),
+                ),
+              ],
+            ),
           )
         ],
       ),
@@ -128,38 +148,54 @@ class _SafetyObservationsChartState extends State<SafetyObservationsChart> {
   Widget _buildChart(List<AllSafetyObservationByManagerandEnggModel> data) {
     return Column(
       children: [
-        SfCartesianChart(
-          key: UniqueKey(), // Forces the chart to rebuild
-          backgroundColor: kcWhite,
-          title: const ChartTitle(text: 'Safety Observations by Department'),
-          legend: const Legend(isVisible: false),
-          tooltipBehavior: TooltipBehavior(enable: true),
-          primaryXAxis: const CategoryAxis(
-            title: AxisTitle(text: 'Department'),
-            isVisible: true,
-            labelRotation: 45,
-            labelStyle: TextStyle(fontSize: 12, color: Colors.black),
-          ),
-          primaryYAxis: const NumericAxis(
-            title: AxisTitle(text: 'Total No of Observations'),
-          ),
-          series: <CartesianSeries>[
-            ColumnSeries<AllSafetyObservationByManagerandEnggModel, String>(
-              dataSource: data,
-              xValueMapper: (obs, _) => obs.pantDept,
-              yValueMapper: (obs, _) => obs.count,
-              dataLabelSettings: const DataLabelSettings(
-                isVisible: true,
-                labelPosition: ChartDataLabelPosition.outside,
-                textStyle: TextStyle(fontSize: 12, color: Colors.black),
+        SizedBox(
+          height: 420,
+          child: SfCartesianChart(
+            backgroundColor: kcWhite,
+            title: const ChartTitle(
+              text: 'Safety Observations by Department',
+              textStyle: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: kcValueDark,
               ),
-              color: Colors.blue,
-              width: 0.6,
-              spacing: 0.2,
             ),
-          ],
+            legend: const Legend(isVisible: false),
+            tooltipBehavior: TooltipBehavior(enable: true),
+            plotAreaBorderWidth: 0,
+            primaryXAxis: const CategoryAxis(
+              title: AxisTitle(text: 'Department'),
+              isVisible: true,
+              labelRotation: 45,
+              majorGridLines: MajorGridLines(width: 0),
+              labelStyle: TextStyle(fontSize: 12, color: kcValueDark),
+            ),
+            primaryYAxis: const NumericAxis(
+              title: AxisTitle(text: 'Total No of Observations'),
+              axisLine: AxisLine(width: 0),
+              majorTickLines: MajorTickLines(size: 0),
+            ),
+            series: <CartesianSeries>[
+              ColumnSeries<AllSafetyObservationByManagerandEnggModel, String>(
+                dataSource: data,
+                xValueMapper: (obs, _) => obs.pantDept,
+                yValueMapper: (obs, _) => obs.count,
+                dataLabelSettings: const DataLabelSettings(
+                  isVisible: true,
+                  labelPosition: ChartDataLabelPosition.outside,
+                  textStyle: TextStyle(fontSize: 12, color: kcValueDark),
+                ),
+                color: kcvoilet,
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(4),
+                  topRight: Radius.circular(4),
+                ),
+                width: 0.6,
+                spacing: 0.2,
+              ),
+            ],
+          ),
         ),
-
       ],
     );
   }
@@ -174,33 +210,41 @@ class _SafetyObservationsChartState extends State<SafetyObservationsChart> {
         builder: (context) {
           return AlertDialog(
             shape: const RoundedRectangleBorder(
-                borderRadius: BorderRadius.all(Radius.circular(10))),
-            contentPadding: const EdgeInsets.all(8.0),
+                borderRadius: BorderRadius.all(Radius.circular(12))),
+            titlePadding: const EdgeInsets.fromLTRB(20, 18, 20, 0),
+            contentPadding: const EdgeInsets.fromLTRB(8, 12, 8, 8),
+            actionsPadding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+            title: Row(
+              children: const [
+                Icon(Icons.filter_alt_outlined, color: kcvoilet, size: 20),
+                SizedBox(width: 8),
+                Text(
+                  "Select Filters",
+                  style: TextStyle(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 16,
+                    color: kcValueDark,
+                  ),
+                ),
+              ],
+            ),
             content: SizedBox(
-              height: 200,
+              width: 320,
               child: Column(
                 mainAxisSize: MainAxisSize.min,
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
-                  const Text(
-                    "SELECT FILTERS",
-                    style: TextStyle(fontWeight: FontWeight.bold),
-                  ),
                   _buildDateRangeContainer("Start Date", startDateInput),
                   _buildDateRangeContainer("End Date", endDateInput),
                 ],
               ),
             ),
             actions: [
-              ElevatedButton(
+              TextButton(
                 onPressed: () {
                   Navigator.pop(context);
                 },
-                style: ElevatedButton.styleFrom(backgroundColor: kcRed),
-                child: const Text(
-                  "Cancel",
-                  style: TextStyle(color: kcWhite),
-                ),
+                style: TextButton.styleFrom(foregroundColor: kcLightGrey),
+                child: const Text("Cancel"),
               ),
               ElevatedButton(
                 onPressed: () {
@@ -229,11 +273,13 @@ class _SafetyObservationsChartState extends State<SafetyObservationsChart> {
                   }
                 },
                 style: ElevatedButton.styleFrom(
-                    backgroundColor: kcobservationgreen),
-                child: const Text(
-                  "Apply Filters",
-                  style: TextStyle(color: kcWhite),
+                  backgroundColor: kcvoilet,
+                  foregroundColor: kcWhite,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(6),
+                  ),
                 ),
+                child: const Text("Apply Filters"),
               ),
             ],
           );
@@ -244,58 +290,68 @@ class _SafetyObservationsChartState extends State<SafetyObservationsChart> {
 
   _buildDateRangeContainer(String hintText, TextEditingController controller) {
     return Padding(
-      padding: const EdgeInsets.all(8.0),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       child: SizedBox(
         width: 300,
-        height: 40,
+        height: 44,
         child: TextFormField(
           controller: controller,
+          style: const TextStyle(fontSize: 14, color: kcValueDark),
           decoration: InputDecoration(
-            contentPadding: const EdgeInsets.all(8),
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
             hintText: hintText,
+            hintStyle: const TextStyle(color: kcLightGrey, fontSize: 14),
             fillColor: kcWhite,
-            suffixIcon: const Icon(
-              Icons.calendar_month,
-              size: 20.0,
+            prefixIcon: const Icon(
+              Icons.calendar_month_outlined,
+              size: 18,
+              color: kcLightGrey,
             ),
             filled: true,
             enabledBorder: _border(),
-            focusedBorder: _border(),
+            focusedBorder: _focusedBorder(),
           ),
           readOnly: true,
-          onTap: hintText == "Start Date"
-              ? () async {
-                  // Open a date range picker only for Start Date
-                  DateTimeRange? pickedDateRange = await showDateRangePicker(
-                    context: context,
-                    firstDate: DateTime(2000),
-                    lastDate: DateTime.now(),
-                    initialDateRange: startDateInput.text.isNotEmpty &&
-                            endDateInput.text.isNotEmpty
-                        ? DateTimeRange(
-                            start: DateTime.parse(startDateInput.text),
-                            end: DateTime.parse(endDateInput.text),
-                          )
-                        : DateTimeRange(
-                            start: DateTime.now()
-                                .subtract(const Duration(days: 7)),
-                            end: DateTime.now(),
-                          ),
-                  );
+          onTap: () async {
+            DateTimeRange? pickedDateRange = await showDateRangePicker(
+              context: context,
+              firstDate: DateTime(2000),
+              lastDate: DateTime.now(),
+              builder: (ctx, child) => Theme(
+                data: Theme.of(ctx).copyWith(
+                  colorScheme: Theme.of(ctx).colorScheme.copyWith(
+                        primary: kcvoilet,
+                        onPrimary: kcWhite,
+                      ),
+                ),
+                child: child!,
+              ),
+              initialDateRange: startDateInput.text.isNotEmpty &&
+                      endDateInput.text.isNotEmpty
+                  ? DateTimeRange(
+                      start: DateTime.parse(startDateInput.text),
+                      end: DateTime.parse(endDateInput.text),
+                    )
+                  : DateTimeRange(
+                      start:
+                          DateTime.now().subtract(const Duration(days: 7)),
+                      end: DateTime.now(),
+                    ),
+            );
 
-                  if (pickedDateRange != null) {
-                    String formattedStartDate =
-                        DateFormat('yyyy-MM-dd').format(pickedDateRange.start);
-                    String formattedEndDate =
-                        DateFormat('yyyy-MM-dd').format(pickedDateRange.end);
+            if (pickedDateRange != null) {
+              String formattedStartDate =
+                  DateFormat('yyyy-MM-dd').format(pickedDateRange.start);
+              String formattedEndDate =
+                  DateFormat('yyyy-MM-dd').format(pickedDateRange.end);
 
-                    setState(() {
-                      startDateInput.text = formattedStartDate;
-                      endDateInput.text = formattedEndDate;
-                    });
-                  }
-                }
-              : null, // Do nothing for "End Date"
+              setState(() {
+                startDateInput.text = formattedStartDate;
+                endDateInput.text = formattedEndDate;
+              });
+            }
+          },
         ),
       ),
     );
@@ -303,7 +359,11 @@ class _SafetyObservationsChartState extends State<SafetyObservationsChart> {
 
   _border() => OutlineInputBorder(
       borderRadius: BorderRadius.circular(8),
-      borderSide: const BorderSide(width: 1.5, color: kcBlack));
+      borderSide: const BorderSide(width: 1, color: kcVeryLightGrey));
+
+  _focusedBorder() => OutlineInputBorder(
+      borderRadius: BorderRadius.circular(8),
+      borderSide: const BorderSide(width: 1.5, color: kcvoilet));
 
   _buildDownloadExcel() {
     return BlocConsumer<DepartmentgraphExportBloc, DepartmentgraphExportState>(
@@ -329,21 +389,34 @@ class _SafetyObservationsChartState extends State<SafetyObservationsChart> {
                   onPressed: () {
                     departmentgraphExportBloc.initState();
                   },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: kcWhite,
+                    foregroundColor: kcobservationgreen,
+                    elevation: 0,
+                    side: const BorderSide(
+                        color: kcobservationgreen, width: 1.2),
+                    fixedSize: const Size(140, 36),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                  ),
                   child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Padding(
-                        padding: const EdgeInsets.all(2.0),
+                        padding: const EdgeInsets.only(right: 6),
                         child: Image.asset(
                           "assets/images/excelicon.png",
-                          scale: 20,
+                          width: 18,
+                          height: 18,
                         ),
                       ),
                       const Text(
                         "Export",
                         style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w900,
-                            color: kcBlack),
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: kcobservationgreen),
                       ),
                     ],
                   )),

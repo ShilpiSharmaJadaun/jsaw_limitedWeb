@@ -31,6 +31,7 @@ import 'package:flutter/foundation.dart' show Uint8List;
 import 'dart:html';
 import 'package:flutter/foundation.dart' show Uint8List, kIsWeb;
 
+import 'package:flutter/services.dart';
 
 class IncidentReportingPage extends StatefulWidget {
   const IncidentReportingPage({super.key});
@@ -350,12 +351,29 @@ class _IncidentReportingPageState extends State<IncidentReportingPage> {
                   children: [
                     Expanded(
                       child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          _fieldIcon(Icons.apartment, const Color(0xFF6366F1), const Color(0xFFE0E7FF)),
+                          const Text("*", style: TextStyle(color: Colors.red, fontSize: 18)),
+                          _buildHeadingText("Plant"),
+                          Expanded(
+                            child: ValueListenableBuilder<String>(
+                              valueListenable: department, // you're storing empName here
+                              builder: (_, v, __) => _buildInfoText(v.isEmpty ? "-" : v),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 20),
+                    Expanded(
+                      child: Row(
                         children: [
                           _fieldIcon(Icons.factory, const Color(0xFFEC4899), const Color(0xFFFCE7F3)),
                           // const SizedBox(width: 4),
                           const Text("*", style: TextStyle(color: Colors.red, fontSize: 18)),
                           // const SizedBox(width: 4),
-                          _buildHeadingText("Plant"),
+                          _buildHeadingText("Department Name"),
                           // const SizedBox(width: 10),
                           Expanded(
                             child: ValueListenableBuilder<String>(
@@ -366,23 +384,8 @@ class _IncidentReportingPageState extends State<IncidentReportingPage> {
                         ],
                       ),
                     ),
-                    const SizedBox(width: 20),
-                    Expanded(
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          _fieldIcon(Icons.apartment, const Color(0xFF6366F1), const Color(0xFFE0E7FF)),
-                          const Text("*", style: TextStyle(color: Colors.red, fontSize: 18)),
-                          _buildHeadingText("Dept Name"),
-                          Expanded(
-                            child: ValueListenableBuilder<String>(
-                              valueListenable: department, // you're storing empName here
-                              builder: (_, v, __) => _buildInfoText(v.isEmpty ? "-" : v),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
+
+
                   ],
                 ),
 
@@ -476,15 +479,20 @@ class _IncidentReportingPageState extends State<IncidentReportingPage> {
                     ),
                     const SizedBox(width: 20),
                     Expanded(
-                      child: Row(
-                        children: [
-                          _fieldIcon(Icons.groups_outlined, const Color(0xFF06B6D4), const Color(0xFFCFFAFE)),
-                          const Text("*", style: TextStyle(color: Colors.red, fontSize: 18)),
-                          // const SizedBox(width: 4),
-                          _buildHeadingText("Work on Injury "),
-                          // const SizedBox(width: 10),
-                          Expanded(child: _buildWorkInjuryTextField()),
-                        ],
+                      child: ValueListenableBuilder<String>(
+                        valueListenable: typeOfIncident,
+                        builder: (context, value, _) {
+                          if (!value.toUpperCase().contains("IOW")) {
+                            return const SizedBox.shrink();
+                          }
+                          return Row(
+                            children: [
+                              _fieldIcon(Icons.groups_outlined, const Color(0xFF06B6D4), const Color(0xFFCFFAFE)),
+                              _buildHeadingText("Work on Injury "),
+                              Expanded(child: _buildWorkInjuryTextField()),
+                            ],
+                          );
+                        },
                       ),
                     ),
                   ],
@@ -629,10 +637,10 @@ class _IncidentReportingPageState extends State<IncidentReportingPage> {
                       age.value,
                       contractorName.value,
                       contractorID.value,
-                      plant.value,
-                      plantCode.value,
                       department.value,
                       departmentId.value,
+                      plant.value,
+                      plantCode.value,
                       location.value,
                       responsibleEngg,
                       responsibleHOD.value,
@@ -1652,7 +1660,11 @@ class _IncidentReportingPageState extends State<IncidentReportingPage> {
       controller: mobileController,
       maxLines: 10,
       minLines: 1,
-
+      keyboardType: TextInputType.phone,
+      inputFormatters: [
+        FilteringTextInputFormatter.digitsOnly,
+        LengthLimitingTextInputFormatter(10),   // adjust as needed
+      ],
       decoration: InputDecoration(
         hintText: "Enter details",
         border: OutlineInputBorder(
@@ -1662,6 +1674,8 @@ class _IncidentReportingPageState extends State<IncidentReportingPage> {
       ),
     );
   }
+
+
 
   Widget _buildWorkInjuryTextField() {
     return TextFormField(

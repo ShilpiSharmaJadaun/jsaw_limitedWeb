@@ -41,6 +41,7 @@ class _InvestigationFormPageState extends State<InvestigationFormPage> {
     super.initState();
     dateController = TextEditingController();
     detailsController = TextEditingController();
+
   }
 
   @override

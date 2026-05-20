@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:jsaw_limited/pages/allIncident_page.dart';
 import 'package:jsaw_limited/pages/approve_reject_table_page.dart';
 import 'package:jsaw_limited/pages/approved_observation_page.dart';
 import 'package:jsaw_limited/pages/change_password_page.dart';
@@ -6,14 +7,13 @@ import 'package:jsaw_limited/pages/dashboardSelection.dart';
 import 'package:jsaw_limited/pages/employee_reporting_page.dart';
 import 'package:jsaw_limited/pages/graph_page.dart';
 import 'package:jsaw_limited/pages/investigation_team_page.dart';
-import 'package:jsaw_limited/pages/medical_Officer_page.dart';
 import 'package:jsaw_limited/pages/observation.dart';
 import 'package:jsaw_limited/pages/priority_changes_page.dart';
 import 'package:jsaw_limited/pages/register_observation_page.dart';
-import 'package:jsaw_limited/pages/safety_remark_page.dart';
+import 'package:jsaw_limited/pages/safetyRemarkResponse_page.dart';
 import 'package:jsaw_limited/pages/suggestion_page.dart';
 import 'package:responsive_builder/responsive_builder.dart';
-import '../pages/allIncidentList_page.dart';
+import '../pages/medicalOfficerResponse_page.dart';
 import '../pages/incident_Reporting_page.dart';
 import '../utils/app_color.dart';
 import 'dart:html' as html;
@@ -26,227 +26,286 @@ class AppDrawer extends StatelessWidget {
 
   const AppDrawer({Key? key, required this.onSelectPage}) : super(key: key);
 
+  List<_DrawerEntry> _getEntries() {
+    final khse = html.window.localStorage['khseCode'] == '1';
+    final reporting = html.window.localStorage['kreporting'] == '1';
+
+    return [
+      const _DrawerEntry(
+        section: 'Workspace',
+        title: 'Dashboard',
+        icon: Icons.dashboard_outlined,
+        page: DashboardselectionPage(),
+      ),
+      const _DrawerEntry(
+        section: 'Workspace',
+        title: 'Observation',
+        icon: Icons.visibility_outlined,
+        page: ObservationPage(),
+      ),
+      const _DrawerEntry(
+        section: 'Workspace',
+        title: 'Graph',
+        icon: Icons.bar_chart_outlined,
+        page: GraphPage(),
+      ),
+      const _DrawerEntry(
+        section: 'Workspace',
+        title: 'All Incident',
+        icon: Icons.visibility_outlined,
+        page: AllIncidentPage(),
+      ),
+      const _DrawerEntry(
+        section: 'Reporting',
+        title: 'Raise Observation',
+        icon: Icons.add_alert_outlined,
+        page: RegisterObservationPage(),
+      ),
+      const _DrawerEntry(
+        section: 'Reporting',
+        title: 'Incident Tracking',
+        icon: Icons.warning_amber_outlined,
+        page: IncidentReportingPage(),
+      ),
+      const _DrawerEntry(
+        section: 'Reporting',
+        title: 'Medical Officer Response',
+        icon: Icons.list_alt_outlined,
+        page: MedicalOfficerResponsePage(),
+      ),
+      const _DrawerEntry(
+        section: 'Reporting',
+        title: 'Safety Remark Form',
+        icon: Icons.health_and_safety_outlined,
+        page: SafetyRemarkResponsePage(),
+      ),
+      const _DrawerEntry(
+        section: 'Reporting',
+        title: 'Investigation Form',
+        icon: Icons.fact_check_outlined,
+        page: InvestigationTeamPage(),
+      ),
+      if (khse)
+        const _DrawerEntry(
+          section: 'Admin',
+          title: 'Approval Queue',
+          icon: Icons.pending_actions_outlined,
+          page: ApprovedObservationPage(),
+        ),
+      if (khse)
+        const _DrawerEntry(
+          section: 'Admin',
+          title: 'Close/Reopen Records',
+          icon: Icons.lock_reset_outlined,
+          page: ApproveRejectTablePage(),
+        ),
+      if (khse)
+        const _DrawerEntry(
+          section: 'Admin',
+          title: 'Priority Changes',
+          icon: Icons.swap_vert_outlined,
+          page: PriorityChangesPage(),
+        ),
+      if (khse)
+        const _DrawerEntry(
+          section: 'Admin',
+          title: 'Write Us',
+          icon: Icons.mail_outline,
+          page: SuggestionFeedbackPage(),
+        ),
+      const _DrawerEntry(
+        section: 'Account',
+        title: 'Change Pass / Email',
+        icon: Icons.lock_outline,
+        page: ChangePasswordPage(),
+      ),
+      if (reporting)
+        const _DrawerEntry(
+          section: 'Account',
+          title: 'Employee Reporting',
+          icon: Icons.groups_outlined,
+          page: EmployeeReportingPage(),
+        ),
+    ];
+  }
+
   @override
   Widget build(BuildContext context) {
+    final entries = _getEntries();
     return SizedBox(
       width: getValueForScreenType<double>(
         context: context,
-        mobile: 150,
-        tablet: 180,
+        mobile: 200,
+        tablet: 220,
         desktop: 280,
       ),
       height: MediaQuery.of(context).size.height,
       child: Drawer(
         backgroundColor: kcWhite,
-        child: ListView(
+        elevation: 1,
+        child: Column(
           children: [
-            SizedBox(
-              width: 40,
-              height: 80,
-              child: DrawerHeader(
-                decoration: const BoxDecoration(
-                  color: kcVeryLightGrey,
-                ),
-                child: Row(
-                  children: [
-                    Image.asset(
-                      "assets/images/jindal-saw-logo-removebg-preview.png",
-                      scale: 0.5,
-                    ),
-                    const Text(
-                      "JSAW",
-                      style: TextStyle(
-                        fontSize: 30,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
-                ),
+            _buildHeader(),
+            Expanded(
+              child: ListView(
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                children: _buildSectionedItems(context, entries),
               ),
             ),
-            ListView.builder(
-              itemCount: _getDrawerTitles().length,
-              itemBuilder: (_, index) {
-                return _buildDrawerItem(
-                  index: index,
-                  title: _getDrawerTitles()[index],
-                  imagePath: _getDrawerImages()[index],
-                  content: _getDrawerContent()[index],
-                );
-              },
-              physics: const NeverScrollableScrollPhysics(),
-              shrinkWrap: true,
-            ),
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: ElevatedButton(
-                onPressed: () {
-                  // Clear session data and navigate to login page
-                  html.window.localStorage.clear();
-                  Navigator.pushNamedAndRemoveUntil(
-                    context,
-                    '/login_page',
-                        (Route<dynamic> route) => false,
-                  );
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: kcRed,
-                ),
-                child: const Text(
-                  "Logout",
-                  style: TextStyle(color: kcWhite),
-                ),
-              ),
-            ),
+            const Divider(color: kcVeryLightGrey, height: 1),
+            _buildLogout(context),
           ],
         ),
       ),
     );
   }
 
-  List<String> _getDrawerTitles() {
-    final drawerTitles = [
-      'Dashboard',
-      'Observation',
-      'Graph',
-      'Raise Observation',
-      'Incident Tracking',
-      'All Incident',
-      'Medical Form',
-      'Safety Remark Form',
-      'Investigation Form',
-    ];
-
-    if (html.window.localStorage['khseCode'] == '1') {
-      drawerTitles.add('Approve Close/Reopen');
-    }
-    if (html.window.localStorage['khseCode'] == '1') {
-      drawerTitles.add('Approve Close/Reopen Table');
-    }
-    if (html.window.localStorage['khseCode'] == '1') {
-      drawerTitles.add('Priority Changes');
-    }
-    if (html.window.localStorage['khseCode'] == '1') {
-      drawerTitles.add('Write Us');
-    }
-    drawerTitles.add('Change Pass/ Email');
-    if (html.window.localStorage['kreporting'] == '1') {
-      drawerTitles.add('Employee Reporting');
-    }
-
-
-    return drawerTitles;
+  Widget _buildHeader() {
+    return Container(
+      height: 96,
+      width: double.infinity,
+      decoration: const BoxDecoration(color: kcVeryLightGrey),
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Row(
+        children: [
+          Image.asset(
+            "assets/images/jindal-saw-logo-removebg-preview.png",
+            width: 36,
+            height: 36,
+          ),
+          const SizedBox(width: 12),
+          const Text(
+            "JSAW",
+            style: TextStyle(
+              fontSize: 30,
+              fontWeight: FontWeight.bold,
+              color: kcValueDark,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
-  List<String> _getDrawerImages() {
-    final drawerImages = [
-      'assets/images/dashboard.png',
-      'assets/images/observation.png',
-      'assets/images/graph.png',
-      'assets/images/raise_observation.png',
-      'assets/images/raise_observation.png',
-      'assets/images/raise_observation.png',
-      'assets/images/raise_observation.png',
-      'assets/images/raise_observation.png',
-      'assets/images/raise_observation.png',
-      'assets/images/raise_observation.png',
-
-    ];
-
-    if  (html.window.localStorage['khseCode'] == '1') {
-      drawerImages.add('assets/images/approved.png');
+  List<Widget> _buildSectionedItems(
+      BuildContext context, List<_DrawerEntry> entries) {
+    final widgets = <Widget>[];
+    String? currentSection;
+    for (var i = 0; i < entries.length; i++) {
+      final entry = entries[i];
+      if (entry.section != currentSection) {
+        if (currentSection != null) {
+          widgets.add(const SizedBox(height: 4));
+        }
+        widgets.add(Padding(
+          padding: const EdgeInsets.fromLTRB(20, 14, 16, 6),
+          child: Text(
+            entry.section.toUpperCase(),
+            style: const TextStyle(
+              color: kcLightGrey,
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              letterSpacing: 0.8,
+            ),
+          ),
+        ));
+        currentSection = entry.section;
+      }
+      widgets.add(_buildDrawerItem(
+        context: context,
+        index: i,
+        entry: entry,
+      ));
     }
-    if (html.window.localStorage['khseCode'] == '1') {
-      drawerImages.add('assets/images/approved.png');
-    }
-    if (html.window.localStorage['khseCode'] == '1') {
-      drawerImages.add('assets/images/approved.png');
-    }
-
-    if (html.window.localStorage['khseCode'] == '1') {
-      drawerImages.add('assets/images/writeUs.png');
-    }
-
-    drawerImages.add('assets/images/changepassword.png');
-
-    if (html.window.localStorage['kreporting'] == '1') {
-      drawerImages.add('assets/images/employee-report.png');
-    }
-
-
-    return drawerImages;
-  }
-
-  List<Widget> _getDrawerContent() {
-    final drawerContent = [
-      const DashboardselectionPage(),
-      const ObservationPage(),
-      const GraphPage(),
-      const RegisterObservationPage(),
-      const IncidentReportingPage(),
-      const AllincidentlistPage(),
-      const MedicalOfficerPage(),
-      const SafetyRemarkPage(),
-      const InvestigationTeamPage()
-    ];
-
-    if (html.window.localStorage['khseCode'] == '1') {
-      drawerContent.add(const ApprovedObservationPage());
-    }
-    if (html.window.localStorage['khseCode'] == '1') {
-      drawerContent.add(const ApproveRejectTablePage());
-    }
-    if (html.window.localStorage['khseCode'] == '1') {
-      drawerContent.add(const PriorityChangesPage());
-    }
-
-    if (html.window.localStorage['khseCode'] == '1') {
-      drawerContent.add(const SuggestionFeedbackPage());
-    }
-
-    drawerContent.add(const ChangePasswordPage());
-    if (html.window.localStorage['kreporting'] == '1') {
-      drawerContent.add(const EmployeeReportingPage());
-    }
-    return drawerContent;
-
+    return widgets;
   }
 
   Widget _buildDrawerItem({
+    required BuildContext context,
     required int index,
-    required String title,
-    required String imagePath,
-    required Widget content,
+    required _DrawerEntry entry,
   }) {
     return ValueListenableBuilder<int>(
       valueListenable: _selectedIndexNotifier,
       builder: (context, selectedIndex, child) {
-        return ListTile(
-          title: Text(
-            title,
-            style: TextStyle(
-              fontWeight: FontWeight.w400,
-              color: kcMediumGrey,
-              fontSize: getValueForScreenType<double>(
-                context: context,
-                mobile: 14,
-                tablet: 16,
-                desktop: 18,
+        final isSelected = selectedIndex == index;
+        return Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+          child: ListTile(
+            dense: true,
+            visualDensity: const VisualDensity(vertical: -1),
+            title: Text(
+              entry.title,
+              style: TextStyle(
+                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                fontSize: getValueForScreenType<double>(
+                  context: context,
+                  mobile: 13,
+                  tablet: 14,
+                  desktop: 15,
+                ),
               ),
             ),
+            leading: Icon(entry.icon, size: 22),
+            onTap: () {
+              _selectedIndexNotifier.value = index;
+              onSelectPage(index, entry.title, entry.page);
+            },
+            selected: isSelected,
+            selectedTileColor: kcvoilet.withValues(alpha: 0.10),
+            selectedColor: kcvoilet,
+            hoverColor: kcvoilet.withValues(alpha: 0.05),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(6),
+            ),
+            contentPadding: const EdgeInsets.symmetric(horizontal: 12),
           ),
-          leading: Image.asset(imagePath, height: 30),
-          onTap: () {
-            // Update the selected index
-            _selectedIndexNotifier.value = index;
-            // Call the callback to update the content in the main page
-            onSelectPage(index, title, content);
-          },
-          selected: selectedIndex == index,
-          selectedTileColor: lightBlue,
-          selectedColor: kcOrange,
         );
       },
     );
   }
+
+  Widget _buildLogout(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(12, 10, 12, 16),
+      child: SizedBox(
+        width: double.infinity,
+        child: ElevatedButton.icon(
+          onPressed: () {
+            // Clear session data and navigate to login page
+            html.window.localStorage.clear();
+            Navigator.pushNamedAndRemoveUntil(
+              context,
+              '/login_page',
+              (Route<dynamic> route) => false,
+            );
+          },
+          icon: const Icon(Icons.logout, size: 18),
+          label: const Text("Logout"),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: kcRed,
+            foregroundColor: kcWhite,
+            elevation: 0,
+            padding: const EdgeInsets.symmetric(vertical: 10),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(6),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _DrawerEntry {
+  final String section;
+  final String title;
+  final IconData icon;
+  final Widget page;
+  const _DrawerEntry({
+    required this.section,
+    required this.title,
+    required this.icon,
+    required this.page,
+  });
 }

@@ -63,22 +63,39 @@ class _GraphPageState extends State<GraphPage> with SingleTickerProviderStateMix
                       isScrollable: false,
                       controller: tabController,
                       indicatorColor: kcvoilet,
-                      indicatorSize: TabBarIndicatorSize.label,
+                      indicatorSize: TabBarIndicatorSize.tab,
+                      indicatorWeight: 3,
+                      labelColor: kcvoilet,
+                      unselectedLabelColor: kcLightGrey,
+                      labelStyle: const TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 13,
+                        letterSpacing: 0.2,
+                      ),
+                      unselectedLabelStyle: const TextStyle(
+                        fontWeight: FontWeight.w500,
+                        fontSize: 13,
+                        letterSpacing: 0.2,
+                      ),
+                      dividerColor: kcVeryLightGrey,
+                      overlayColor: WidgetStateProperty.resolveWith((states) {
+                        if (states.contains(WidgetState.hovered)) {
+                          return kcvoilet.withValues(alpha: 0.06);
+                        }
+                        if (states.contains(WidgetState.pressed)) {
+                          return kcvoilet.withValues(alpha: 0.12);
+                        }
+                        return null;
+                      }),
                       tabs: const [
                         Tab(
-                          icon: Icon(
-                            Icons.bar_chart,
-                            color: kcMediumGrey,
-                          ),
+                          icon: Icon(Icons.bar_chart),
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               Text(
                                 "Department Wise Received Observation",
                                 textAlign: TextAlign.center,
-                                style: TextStyle(
-                                  color: kcMediumGrey,
-                                ),
                                 softWrap: true,
                                 maxLines: 2,
                                 overflow: TextOverflow.ellipsis,
@@ -87,19 +104,13 @@ class _GraphPageState extends State<GraphPage> with SingleTickerProviderStateMix
                           ),
                         ),
                         Tab(
-                          icon: Icon(
-                            Icons.bar_chart,
-                            color: kcMediumGrey,
-                          ),
+                          icon: Icon(Icons.stacked_bar_chart),
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               Text(
                                 "Department Wise Raised Observation",
                                 textAlign: TextAlign.center,
-                                style: TextStyle(
-                                  color: kcMediumGrey,
-                                ),
                                 softWrap: true,
                                 maxLines: 2,
                                 overflow: TextOverflow.ellipsis,
@@ -108,19 +119,13 @@ class _GraphPageState extends State<GraphPage> with SingleTickerProviderStateMix
                           ),
                         ),
                         Tab(
-                          icon: Icon(
-                            Icons.bar_chart,
-                            color: kcMediumGrey,
-                          ),
+                          icon: Icon(Icons.warning_amber_rounded),
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               Text(
                                 "Hazard Graph",
                                 textAlign: TextAlign.center,
-                                style: TextStyle(
-                                  color: kcMediumGrey,
-                                ),
                                 softWrap: true,
                                 maxLines: 2,
                                 overflow: TextOverflow.ellipsis,
@@ -129,19 +134,13 @@ class _GraphPageState extends State<GraphPage> with SingleTickerProviderStateMix
                           ),
                         ),
                         Tab(
-                          icon: Icon(
-                            Icons.bar_chart,
-                            color: kcMediumGrey,
-                          ),
+                          icon: Icon(Icons.insights),
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               Text(
                                 "Total No Of Observation Received",
                                 textAlign: TextAlign.center,
-                                style: TextStyle(
-                                  color: kcMediumGrey,
-                                ),
                                 softWrap: true,
                                 maxLines: 2,
                                 overflow: TextOverflow.ellipsis,
@@ -150,19 +149,13 @@ class _GraphPageState extends State<GraphPage> with SingleTickerProviderStateMix
                           ),
                         ),
                         Tab(
-                          icon: Icon(
-                            Icons.bar_chart,
-                            color: kcMediumGrey,
-                          ),
+                          icon: Icon(Icons.table_rows_outlined),
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               Text(
                                 "User Wise Table",
                                 textAlign: TextAlign.center,
-                                style: TextStyle(
-                                  color: kcMediumGrey,
-                                ),
                                 softWrap: true,
                                 maxLines: 2,
                                 overflow: TextOverflow.ellipsis,
@@ -171,19 +164,13 @@ class _GraphPageState extends State<GraphPage> with SingleTickerProviderStateMix
                           ),
                         ),
                         Tab(
-                          icon: Icon(
-                            Icons.bar_chart,
-                            color: kcMediumGrey,
-                          ),
+                          icon: Icon(Icons.table_chart_outlined),
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               Text(
                                 "Station WIse Table",
                                 textAlign: TextAlign.center,
-                                style: TextStyle(
-                                  color: kcMediumGrey,
-                                ),
                                 softWrap: true,
                                 maxLines: 2,
                                 overflow: TextOverflow.ellipsis,
@@ -197,6 +184,7 @@ class _GraphPageState extends State<GraphPage> with SingleTickerProviderStateMix
                       height: MediaQuery.of(context).size.height - kToolbarHeight, // Set a specific height for the TabBarView
                       child: TabBarView(
                         controller: tabController,
+                        physics: const NeverScrollableScrollPhysics(),
                         children: [
                           SafetyObservationsChart(),
                           SafetyobservationchartRaisedPage(),// This calls the manager's graph

@@ -94,155 +94,223 @@ class _UserwiseGraphTableState extends State<UserwiseGraphTable> {
                   onPressed: () {
                     userWiseTableGraphBloc.init("", "", "");
                   },
+                  style: IconButton.styleFrom(
+                    backgroundColor: kcgreen,
+                    foregroundColor: kcMediumGrey,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                  ),
+                  tooltip: 'Refresh',
                   icon: const Icon(Icons.refresh),
                 ),
               ),
               Center(
-                child: ElevatedButton(
+                child: ElevatedButton.icon(
                   onPressed: () {
                     openFilterDialog();
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: kcRed,
-                    fixedSize: const Size(150, 30),
+                    backgroundColor: kcvoilet,
+                    foregroundColor: kcWhite,
+                    fixedSize: const Size(150, 36),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(6),
+                    ),
                   ),
-                  child: const Text(
-                    "Filter",
-                    style: TextStyle(color: kcWhite),
-                  ),
+                  icon: const Icon(Icons.filter_alt_outlined, size: 18),
+                  label: const Text("Filter"),
                 ),
               ),
               _buildDownloadExcel(),
             ],
           ),
         ),
-        TextFormField(
-          onChanged: userWiseNotifier.filterBasedOn,
-          decoration: const InputDecoration(
-            hintText: "search here...",
-            prefixIcon: Icon(
-              Icons.search,
-              color: kcLightGrey,
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          child: SizedBox(
+            height: 44,
+            child: TextFormField(
+              onChanged: userWiseNotifier.filterBasedOn,
+              style: const TextStyle(fontSize: 14, color: kcValueDark),
+              decoration: InputDecoration(
+                hintText: "Search by name or emp code…",
+                hintStyle: const TextStyle(color: kcLightGrey, fontSize: 14),
+                prefixIcon: const Icon(
+                  Icons.search,
+                  color: kcLightGrey,
+                  size: 20,
+                ),
+                filled: true,
+                fillColor: kcWhite,
+                contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 12, vertical: 10),
+                enabledBorder: _border(),
+                focusedBorder: _focusedBorder(),
+              ),
             ),
           ),
         ),
-        SizedBox(
-          width: 1800,
-          child: Row(
-            children: [
-              _buildTableHeaderContainer("Emp Code", 80),
-              _buildTableHeaderContainer("Emp Name", 100),
-              _buildTableHeaderContainer("Total Raised", 20),
-              _buildTableHeaderContainer("Total Received", 20),
-              _buildTableHeaderContainer("Total Pending", 20),
-              _buildTableHeaderContainer("Total Closed", 20),
-              _buildTableHeaderContainer("Department", 40),
-              _buildTableHeaderContainer("Designation Name", 40),
-            ],
-          ),
-        ),
-        if(model.isNotEmpty)
         Expanded(
-          child: ValueListenableBuilder<List<UserWiseTableGraphModel>>(
-            valueListenable: userWiseNotifier,
-            builder: (context, list, widget) {
-              if (list.isEmpty) {
-                // Show a message if the list is empty
-                return const Center(
-                  child: Text(
-                    "No data available",
-                    style: TextStyle(color: Colors.grey, fontSize: 16),
-                  ),
-                );
-              }
-              return ListView.builder(
-                itemCount: list.length,
-                itemBuilder: (BuildContext context, int index) {
-                  return Row(
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _buildTableBodyContainer(
-                        list[index].empUnqId,
-                        120,
-                      ),
-                      _buildTableBodyContainer(
-                        list[index].empName,
-                        120,
-                      ),
-                      _buildTableBodyContainer(
-                        list[index].totalRaised.toString(),
-                        40,
-                      ),
-                      _buildTableBodyContainer(
-                        list[index].totalReceived.toString(),
-                        40,
-                      ),
-                      _buildTableBodyContainer(
-                        list[index].totalPendingRaised.toString(),
-                        40,
-                      ),
-                      _buildTableBodyContainer(
-                        list[index].totalClosedRaised.toString(),
-                        80,
-                      ),
-                      _buildTableBodyContainer(
-                        list[index].departmentName.toString(),
-                        80,
-                      ),
-                      _buildTableBodyContainer(
-                        list[index].designationName.toString(),
-                        80,
-                      ),
-                    ],
-                  );
-                },
-              );
-            },
+          child: Scrollbar(
+            thumbVisibility: true,
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: SizedBox(
+                width: 1090,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        _buildTableHeaderContainer("Emp Code", 120),
+                        _buildTableHeaderContainer("Emp Name", 180),
+                        _buildTableHeaderContainer("Total Raised", 110),
+                        _buildTableHeaderContainer("Total Received", 120),
+                        _buildTableHeaderContainer("Total Pending", 110),
+                        _buildTableHeaderContainer("Total Closed", 110),
+                        _buildTableHeaderContainer("Department", 160),
+                        _buildTableHeaderContainer("Designation Name", 180),
+                      ],
+                    ),
+                    Expanded(
+                      child: model.isEmpty
+                          ? const _TableEmptyState(
+                              message: "No data available",
+                            )
+                          : ValueListenableBuilder<
+                              List<UserWiseTableGraphModel>>(
+                              valueListenable: userWiseNotifier,
+                              builder: (context, list, widget) {
+                                if (list.isEmpty) {
+                                  return const _TableEmptyState(
+                                    message: "No results match your search",
+                                  );
+                                }
+                                return ListView.builder(
+                                  itemCount: list.length,
+                                  itemBuilder:
+                                      (BuildContext context, int index) {
+                                    final row = list[index];
+                                    final rowColor = index.isOdd
+                                        ? kcDashboardBg2
+                                        : kcWhite;
+                                    return Container(
+                                      color: rowColor,
+                                      child: Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.start,
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          _buildTableBodyContainer(
+                                              row.empUnqId, 120),
+                                          _buildTableBodyContainer(
+                                              row.empName, 180),
+                                          _buildTableBodyContainer(
+                                            row.totalRaised.toString(),
+                                            110,
+                                            valueColor: kcStatBlue,
+                                          ),
+                                          _buildTableBodyContainer(
+                                            row.totalReceived.toString(),
+                                            120,
+                                            valueColor: kcStatBlue,
+                                          ),
+                                          _buildTableBodyContainer(
+                                            row.totalPendingRaised
+                                                .toString(),
+                                            110,
+                                            valueColor: kcStatRed,
+                                          ),
+                                          _buildTableBodyContainer(
+                                            row.totalClosedRaised
+                                                .toString(),
+                                            110,
+                                            valueColor: kcStatGreen,
+                                          ),
+                                          _buildTableBodyContainer(
+                                              row.departmentName.toString(),
+                                              160),
+                                          _buildTableBodyContainer(
+                                              row.designationName.toString(),
+                                              180),
+                                        ],
+                                      ),
+                                    );
+                                  },
+                                );
+                              },
+                            ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
           ),
         ),
-       // const Text("No Data Found")
-
       ],
     );
   }
 
 
-  _buildTableHeaderContainer(String title,double width) {
+  _buildTableHeaderContainer(String title, double width) {
     return Container(
-      width: 120,
-      height: 100,
-      decoration: BoxDecoration(
-          border: Border.all(color: Colors.black, width:2),
-          color: kcDarkGreyColor
+      width: width,
+      height: 48,
+      decoration: const BoxDecoration(
+        color: kcvoilet,
+        border: Border(
+          right: BorderSide(color: Colors.white24, width: 0.5),
+        ),
       ),
       child: Center(
         child: Padding(
-          padding: const EdgeInsets.all(10),
-          child: Text(title,
+          padding: const EdgeInsets.symmetric(horizontal: 8),
+          child: Text(
+            title,
             maxLines: 2,
             textAlign: TextAlign.center,
             overflow: TextOverflow.ellipsis,
-            style: const TextStyle(fontWeight: FontWeight.bold,color: kcWhite),),
-        ),),);
+            style: const TextStyle(
+              fontWeight: FontWeight.w600,
+              fontSize: 13,
+              color: kcWhite,
+            ),
+          ),
+        ),
+      ),
+    );
   }
 
-  _buildTableBodyContainer(String title, double width) {
+  _buildTableBodyContainer(String title, double width, {Color? valueColor}) {
     return Container(
-      width: 120,
-      height: 60,
-      decoration: BoxDecoration(
-          border: Border.all(color: Colors.black, width: .5)
+      width: width,
+      height: 44,
+      decoration: const BoxDecoration(
+        border: Border(
+          bottom: BorderSide(color: kcVeryLightGrey, width: 0.6),
+        ),
       ),
       child: Center(
         child: Padding(
-          padding: const EdgeInsets.all(10),
-          child: Text(title,
+          padding: const EdgeInsets.symmetric(horizontal: 8),
+          child: Text(
+            title,
             maxLines: 2,
-            textAlign: TextAlign.start,
+            textAlign: TextAlign.center,
             overflow: TextOverflow.ellipsis,
-            style: const TextStyle(fontWeight: FontWeight.bold),),
-        ),),);
+            style: TextStyle(
+              fontWeight:
+                  valueColor != null ? FontWeight.w600 : FontWeight.w400,
+              fontSize: 13,
+              color: valueColor ?? kcValueDark,
+            ),
+          ),
+        ),
+      ),
+    );
   }
 
 
@@ -417,35 +485,50 @@ class _UserwiseGraphTableState extends State<UserwiseGraphTable> {
 
   Widget _buildContent4(List<AllDesignationModel> departModel){
     return Padding(
-      padding: const EdgeInsets.all(2),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       child: InkWell(
+        borderRadius: BorderRadius.circular(8),
         onTap: (){
           _buildallDepartDialog(departModel, context);
         },
         child: SizedBox(
-          width: 250,
-          height: 40,
+          width: 300,
+          height: 44,
           child: Container(
-            // width: 80,
-            decoration: BoxDecoration(borderRadius: BorderRadius.circular(8.0),color: kcWhite),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(8.0),
+              color: kcWhite,
+              border: Border.all(color: kcVeryLightGrey, width: 1),
+            ),
             child: ValueListenableBuilder<String>(
               valueListenable: stat,
               builder: (context, value, child) => Padding(
-                padding: const EdgeInsets.all(2.0),
+                padding: const EdgeInsets.symmetric(horizontal: 12),
                 child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    SizedBox(
-                       width: 100,
+                    const Icon(
+                      Icons.work_outline,
+                      size: 18,
+                      color: kcLightGrey,
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
                       child: Text(
-                        value.isEmpty ? "Select Designation" : stat.value,
-                        textAlign: TextAlign.center,
+                        value.isEmpty ? "Select Designation" : value,
+                        textAlign: TextAlign.start,
                         overflow: TextOverflow.ellipsis,
-                        maxLines: 4,
-                        style: TextStyle(color: (stat.value == "Select Designation") ? kcDarkGreyColor : kcLightGrey),
+                        maxLines: 1,
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: value.isEmpty ? kcLightGrey : kcValueDark,
+                        ),
                       ),
                     ),
-                    const Icon(Icons.arrow_drop_down_sharp)
+                    const Icon(
+                      Icons.arrow_drop_down_sharp,
+                      color: kcLightGrey,
+                    ),
                   ],
                 ),
               ),
@@ -469,103 +552,162 @@ class _UserwiseGraphTableState extends State<UserwiseGraphTable> {
           builder: (context, setState) {
             return AlertDialog(
               shape: const RoundedRectangleBorder(
-                borderRadius: BorderRadius.all(Radius.circular(5)),
+                borderRadius: BorderRadius.all(Radius.circular(12)),
               ),
-              title: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    "Select or search Department",
-                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-                  ),
-                  TextFormField(
-                    onChanged: departListNotifier.filterBasedOn,
-                    decoration: const InputDecoration(
-                      hintText: "search here...",
-                      prefixIcon: Icon(
-                        Icons.search,
-                        color: kcLightGrey,
-                      ),
+              titlePadding: const EdgeInsets.fromLTRB(20, 18, 20, 8),
+              contentPadding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+              actionsPadding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+              title: Row(
+                children: const [
+                  Icon(Icons.work_outline, color: kcvoilet, size: 20),
+                  SizedBox(width: 8),
+                  Text(
+                    "Select Designation",
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: kcValueDark,
                     ),
                   ),
                 ],
               ),
               content: SizedBox(
-                width: 300,
-                height: 800,
-                child: ValueListenableBuilder<List<AllDesignationModel>>(
-                  valueListenable: departListNotifier,
-                  builder: (context, list, widget) {
-                    return ListView.builder(
-                      itemCount: list.length,
-                      shrinkWrap: true,
-                      itemBuilder: (context, index) {
-                        final designation = list[index];
-                        final isSelected = selectedDesignations.contains(designation.designation_name);
+                width: 360,
+                height: 440,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    SizedBox(
+                      height: 44,
+                      child: TextFormField(
+                        onChanged: departListNotifier.filterBasedOn,
+                        style: const TextStyle(
+                            fontSize: 14, color: kcValueDark),
+                        decoration: InputDecoration(
+                          hintText: "Search designations…",
+                          hintStyle: const TextStyle(
+                              color: kcLightGrey, fontSize: 14),
+                          prefixIcon: const Icon(
+                            Icons.search,
+                            color: kcLightGrey,
+                            size: 20,
+                          ),
+                          filled: true,
+                          fillColor: kcWhite,
+                          contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 12, vertical: 10),
+                          enabledBorder: _border(),
+                          focusedBorder: _focusedBorder(),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Expanded(
+                      child: ValueListenableBuilder<List<AllDesignationModel>>(
+                        valueListenable: departListNotifier,
+                        builder: (context, list, widget) {
+                          if (list.isEmpty) {
+                            return const Center(
+                              child: Text(
+                                "No designations match",
+                                style: TextStyle(
+                                    color: kcLightGrey, fontSize: 14),
+                              ),
+                            );
+                          }
+                          return Scrollbar(
+                            child: ListView.separated(
+                              itemCount: list.length,
+                              separatorBuilder: (_, __) => const Divider(
+                                height: 1,
+                                thickness: 0.5,
+                                color: kcVeryLightGrey,
+                              ),
+                              itemBuilder: (context, index) {
+                                final designation = list[index];
+                                final isSelected = selectedDesignations
+                                    .contains(designation.designation_name);
 
-                        return Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            InkWell(
-                              onTap: () {
-                                setState(() {
-                                  if (isSelected) {
-                                    selectedDesignations.remove(designation.designation_name);
-                                  } else {
-                                    selectedDesignations.add(designation.designation_name);
-                                  }
-                                });
-                              },
-                              child: Row(
-                                children: [
-                                  Checkbox(
-                                    value: isSelected,
-                                    onChanged: (value) {
-                                      setState(() {
-                                        if (value == true) {
-                                          selectedDesignations.add(designation.designation_name);
-                                        } else {
-                                          selectedDesignations.remove(designation.designation_name);
-                                        }
-                                      });
-                                    },
-                                  ),
-                                  Expanded(
-                                    child: Text(
-                                      designation.designation_name,
-                                      style: const TextStyle(color: kcBlack),
+                                return InkWell(
+                                  onTap: () {
+                                    setState(() {
+                                      if (isSelected) {
+                                        selectedDesignations.remove(
+                                            designation.designation_name);
+                                      } else {
+                                        selectedDesignations
+                                            .add(designation.designation_name);
+                                      }
+                                    });
+                                  },
+                                  child: Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                        vertical: 2),
+                                    child: Row(
+                                      children: [
+                                        Checkbox(
+                                          value: isSelected,
+                                          activeColor: kcvoilet,
+                                          materialTapTargetSize:
+                                              MaterialTapTargetSize
+                                                  .shrinkWrap,
+                                          visualDensity:
+                                              VisualDensity.compact,
+                                          onChanged: (value) {
+                                            setState(() {
+                                              if (value == true) {
+                                                selectedDesignations.add(
+                                                    designation
+                                                        .designation_name);
+                                              } else {
+                                                selectedDesignations.remove(
+                                                    designation
+                                                        .designation_name);
+                                              }
+                                            });
+                                          },
+                                        ),
+                                        Expanded(
+                                          child: Text(
+                                            designation.designation_name,
+                                            style: const TextStyle(
+                                                color: kcValueDark,
+                                                fontSize: 14),
+                                          ),
+                                        ),
+                                      ],
                                     ),
                                   ),
-                                ],
-                              ),
+                                );
+                              },
                             ),
-                            const Padding(
-                              padding: EdgeInsets.all(8.0),
-                              child: Divider(
-                                height: 0.8,
-                                thickness: 1,
-                                color: kcDarkGreyColor,
-                              ),
-                            ),
-                          ],
-                        );
-                      },
-                    );
-                  },
+                          );
+                        },
+                      ),
+                    ),
+                  ],
                 ),
               ),
               actions: [
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: TextButton(
-                    onPressed: () {
-                      Navigator.pop(context, selectedDesignations);
-                    },
-                    child: const Text(
-                      "Done",
-                      style: TextStyle(color: kcDarkGreyColor, fontSize: 18),
+                TextButton(
+                  onPressed: () {
+                    Navigator.pop(context);
+                  },
+                  style: TextButton.styleFrom(foregroundColor: kcLightGrey),
+                  child: const Text("Cancel"),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.pop(context, selectedDesignations);
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: kcvoilet,
+                    foregroundColor: kcWhite,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(6),
                     ),
                   ),
+                  child: const Text("Done"),
                 ),
               ],
             );
@@ -575,7 +717,6 @@ class _UserwiseGraphTableState extends State<UserwiseGraphTable> {
     ).then((selectedValues) {
       if (selectedValues != null && selectedValues is List<String>) {
         stat.value = selectedValues.join(", ");
-        print("Selected values: $selectedValues");
       }
     });
 
@@ -583,7 +724,11 @@ class _UserwiseGraphTableState extends State<UserwiseGraphTable> {
 
   _border() => OutlineInputBorder(
       borderRadius: BorderRadius.circular(8),
-      borderSide: const BorderSide(width: 1.5, color: kcBlack));
+      borderSide: const BorderSide(width: 1, color: kcVeryLightGrey));
+
+  _focusedBorder() => OutlineInputBorder(
+      borderRadius: BorderRadius.circular(8),
+      borderSide: const BorderSide(width: 1.5, color: kcvoilet));
 
   _buildDownloadExcel(){
     return BlocConsumer<UserWiseTableExportBloc, UserWiseTableExportState>(
@@ -625,6 +770,28 @@ class _UserwiseGraphTableState extends State<UserwiseGraphTable> {
         });
   }
 
+}
+
+class _TableEmptyState extends StatelessWidget {
+  final String message;
+  const _TableEmptyState({required this.message});
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(Icons.inbox_outlined, size: 48, color: kcLightGrey),
+          const SizedBox(height: 8),
+          Text(
+            message,
+            style: const TextStyle(color: kcLightGrey, fontSize: 14),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 class designationSearchableListNotifier extends ValueNotifier<List<AllDesignationModel>> {

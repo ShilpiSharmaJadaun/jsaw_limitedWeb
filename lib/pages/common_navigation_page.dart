@@ -22,6 +22,10 @@ class CommonNavigationPage extends StatefulWidget {
 class _CommonNavigationPageState extends State<CommonNavigationPage> {
   late Widget content;
   late String title;
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+
+  // Below this width the drawer becomes an overlay opened via menu button.
+  static const double _drawerBreakpoint = 900;
 
   @override
   void initState() {
@@ -30,14 +34,20 @@ class _CommonNavigationPageState extends State<CommonNavigationPage> {
     content = widget.initialChild ?? widget.child;
   }
 
-  void _updateContent(String newTitle, Widget newContent, String newRoute) {
+  void _updateContent(
+    String newTitle,
+    Widget newContent,
+    String newRoute, {
+    bool closeOverlayDrawer = false,
+  }) {
     setState(() {
       title = newTitle;
       content = newContent;
     });
-
-    // Change the URL without reloading the page
     _updateUrl(newRoute);
+    if (closeOverlayDrawer) {
+      _scaffoldKey.currentState?.closeDrawer();
+    }
   }
 
   void _updateUrl(String route) {
@@ -47,27 +57,53 @@ class _CommonNavigationPageState extends State<CommonNavigationPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Row(
-        children: [
-          AppDrawer(
-            onSelectPage: (index, newTitle, pageContent) {
-              String newRoute = _getRouteFromTitle(newTitle);
-              _updateContent(newTitle, pageContent, newRoute);
-            },
-          ),
-          Expanded(
-            child: Column(
-              children: [
-                PageHeader(title), // Update the title dynamically
-                Expanded(
-                  child: content,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isWide = constraints.maxWidth >= _drawerBreakpoint;
+
+        final appDrawer = AppDrawer(
+          onSelectPage: (index, newTitle, pageContent) {
+            final newRoute = _getRouteFromTitle(newTitle);
+            _updateContent(
+              newTitle,
+              pageContent,
+              newRoute,
+              closeOverlayDrawer: !isWide,
+            );
+          },
+        );
+
+        return Scaffold(
+          key: _scaffoldKey,
+          drawer: isWide ? null : appDrawer,
+          body: Row(
+            children: [
+              if (isWide) appDrawer,
+              Expanded(
+                child: Column(
+                  children: [
+                    Row(
+                      children: [
+                        if (!isWide)
+                          Builder(
+                            builder: (innerContext) => IconButton(
+                              icon: const Icon(Icons.menu, color: Colors.black87),
+                              tooltip: "Open menu",
+                              onPressed: () =>
+                                  Scaffold.of(innerContext).openDrawer(),
+                            ),
+                          ),
+                        Expanded(child: PageHeader(title)),
+                      ],
+                    ),
+                    Expanded(child: content),
+                  ],
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 

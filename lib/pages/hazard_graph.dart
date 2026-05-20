@@ -73,23 +73,31 @@ class _HazardGraphState extends State<HazardGraph> {
                         "",
                       );
                     },
-                    style: ElevatedButton.styleFrom(backgroundColor: kcgreen),
-                    icon: Icon(Icons.refresh),
+                    style: IconButton.styleFrom(
+                      backgroundColor: kcgreen,
+                      foregroundColor: kcMediumGrey,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                    ),
+                    tooltip: 'Refresh',
+                    icon: const Icon(Icons.refresh),
                   ),
                 ),
                 Center(
-                  child: ElevatedButton(
+                  child: ElevatedButton.icon(
                       onPressed: () {
                         openFilterDialog();
-                        startDateInput.clear();
-                        endDateInput.clear();
                       },
                       style: ElevatedButton.styleFrom(
-                          backgroundColor: kcRed, fixedSize: const Size(150, 30)),
-                      child: const Text(
-                        "Filter",
-                        style: TextStyle(color: kcWhite),
-                      )),
+                          backgroundColor: kcvoilet,
+                          foregroundColor: kcWhite,
+                          fixedSize: const Size(150, 36),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(6),
+                          )),
+                      icon: const Icon(Icons.filter_alt_outlined, size: 18),
+                      label: const Text("Filter")),
                 ),
                 _buildDownloadExcel(),
               ],
@@ -133,22 +141,32 @@ class _HazardGraphState extends State<HazardGraph> {
     return Expanded(
       flex: 1,
       child: SfCircularChart(
-        key: UniqueKey(),
-        title: const ChartTitle(text: 'Safety Observations by Status'),
+        backgroundColor: kcWhite,
+        title: const ChartTitle(
+          text: 'Safety Observations by Status',
+          textStyle: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+            color: kcValueDark,
+          ),
+        ),
         legend: const Legend(
-            isVisible: true, overflowMode: LegendItemOverflowMode.wrap),
+            isVisible: true,
+            overflowMode: LegendItemOverflowMode.wrap,
+            position: LegendPosition.bottom),
         tooltipBehavior: TooltipBehavior(enable: true),
         series: <CircularSeries>[
           PieSeries<ObservationStatusListModel, String>(
             dataSource: observationStatusList,
-            xValueMapper: (data, _) => "${data.name}-${data.percentage}%",
+            xValueMapper: (data, _) => data.name,
             yValueMapper: (data, _) => data.count,
+            dataLabelMapper: (data, _) =>
+                "${data.name} • ${data.percentage}%",
+            radius: '70%',
             dataLabelSettings: const DataLabelSettings(
               isVisible: true,
-              textStyle: TextStyle(fontSize: 12, color: Colors.black),
+              textStyle: TextStyle(fontSize: 12, color: kcValueDark),
             ),
-            explode: true,
-            explodeIndex: 0,
           ),
         ],
       ),
@@ -156,40 +174,82 @@ class _HazardGraphState extends State<HazardGraph> {
   }
 
   Widget _buildObservationStatusPieChartWithTable(List<AllSafetyObservationRaisedByManagerandEnggModelPieChart> allRaisedPieChart) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-
-        _buildObservationStatusPieBody1(),
-        // Data Table
-        Expanded(
-          flex: 2,
-          child: SingleChildScrollView(
-            scrollDirection: Axis.vertical,
-            child: DataTable(
-              columnSpacing: 12.0,
-              columns: const [
-                DataColumn(label: Text('Plant / Department', style: TextStyle(fontWeight: FontWeight.bold))),
-                DataColumn(label: Text('Closed', style: TextStyle(fontWeight: FontWeight.bold))),
-                DataColumn(label: Text('Compliance', style: TextStyle(fontWeight: FontWeight.bold))),
-                DataColumn(label: Text('In Progress', style: TextStyle(fontWeight: FontWeight.bold))),
-                DataColumn(label: Text('Pending', style: TextStyle(fontWeight: FontWeight.bold))),
-              ],
-              rows: allRaisedPieChart.map((data) {
-                return DataRow(
-                  cells: [
-                    DataCell(Text(data.plant)),
-                    DataCell(Text(data.closed.toString())),
-                    DataCell(Text(data.compliance.toString())),
-                    DataCell(Text(data.inProgress.toString())),
-                    DataCell(Text(data.pending.toString())),
-                  ],
-                );
-              }).toList(),
+    return SizedBox(
+      height: 360,
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildObservationStatusPieBody1(),
+          // Data Table
+          Expanded(
+            flex: 2,
+            child: Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Scrollbar(
+                child: SingleChildScrollView(
+                  scrollDirection: Axis.vertical,
+                  child: SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: DataTable(
+                      columnSpacing: 18.0,
+                      headingRowColor:
+                          WidgetStateProperty.all(kcvoilet),
+                      headingTextStyle: const TextStyle(
+                        color: kcWhite,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 13,
+                      ),
+                      dataTextStyle: const TextStyle(
+                        color: kcValueDark,
+                        fontSize: 13,
+                      ),
+                      dividerThickness: 0.5,
+                      columns: const [
+                        DataColumn(label: Text('Plant / Department')),
+                        DataColumn(label: Text('Closed')),
+                        DataColumn(label: Text('Compliance')),
+                        DataColumn(label: Text('In Progress')),
+                        DataColumn(label: Text('Pending')),
+                      ],
+                      rows: allRaisedPieChart.map((data) {
+                        return DataRow(
+                          cells: [
+                            DataCell(Text(data.plant)),
+                            DataCell(Text(
+                              data.closed.toString(),
+                              style: const TextStyle(
+                                  color: kcStatGreen,
+                                  fontWeight: FontWeight.w600),
+                            )),
+                            DataCell(Text(
+                              data.compliance.toString(),
+                              style: const TextStyle(
+                                  color: kcStatAmber,
+                                  fontWeight: FontWeight.w600),
+                            )),
+                            DataCell(Text(
+                              data.inProgress.toString(),
+                              style: const TextStyle(
+                                  color: kcStatPurple,
+                                  fontWeight: FontWeight.w600),
+                            )),
+                            DataCell(Text(
+                              data.pending.toString(),
+                              style: const TextStyle(
+                                  color: kcStatRed,
+                                  fontWeight: FontWeight.w600),
+                            )),
+                          ],
+                        );
+                      }).toList(),
+                    ),
+                  ),
+                ),
+              ),
             ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
@@ -208,26 +268,34 @@ class _HazardGraphState extends State<HazardGraph> {
 
   Widget _buildPieBody(List<HazardGraphModel> allRaisedPieChart) {
     return SizedBox(
-      height: 600,
+      height: 420,
       child: SfCircularChart(
-        key: UniqueKey(), // Forces the chart to rebuild
         backgroundColor: kcWhite,
-        title: const ChartTitle(text: 'Safety Observations by Department'),
+        title: const ChartTitle(
+          text: 'Hazard Observations by Category',
+          textStyle: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+            color: kcValueDark,
+          ),
+        ),
         legend: const Legend(
-            isVisible: true, overflowMode: LegendItemOverflowMode.scroll),
+            isVisible: true,
+            overflowMode: LegendItemOverflowMode.scroll,
+            position: LegendPosition.bottom),
         tooltipBehavior: TooltipBehavior(enable: true),
         series: <CircularSeries>[
           PieSeries<HazardGraphModel, String>(
             dataSource: allRaisedPieChart,
-            xValueMapper: (obs, _) =>
-            "${obs.hazardCategory}  - ${obs.observationCount} - ${obs.percentage.toString()}%",
+            xValueMapper: (obs, _) => obs.hazardCategory,
             yValueMapper: (obs, _) => obs.observationCount,
+            dataLabelMapper: (obs, _) =>
+                "${obs.hazardCategory} • ${obs.observationCount} (${obs.percentage}%)",
+            radius: '70%',
             dataLabelSettings: const DataLabelSettings(
               isVisible: true,
-              textStyle: TextStyle(fontSize: 12, color: Colors.black),
+              textStyle: TextStyle(fontSize: 12, color: kcValueDark),
             ),
-            explode: true, // Optional: Explode the segments
-            explodeIndex: 0, // Optional: Highlight the first segment
           ),
         ],
       ),
@@ -244,33 +312,41 @@ class _HazardGraphState extends State<HazardGraph> {
         builder: (context) {
           return AlertDialog(
             shape: const RoundedRectangleBorder(
-                borderRadius: BorderRadius.all(Radius.circular(10))),
-            contentPadding: const EdgeInsets.all(8.0),
+                borderRadius: BorderRadius.all(Radius.circular(12))),
+            titlePadding: const EdgeInsets.fromLTRB(20, 18, 20, 0),
+            contentPadding: const EdgeInsets.fromLTRB(8, 12, 8, 8),
+            actionsPadding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+            title: Row(
+              children: const [
+                Icon(Icons.filter_alt_outlined, color: kcvoilet, size: 20),
+                SizedBox(width: 8),
+                Text(
+                  "Select Filters",
+                  style: TextStyle(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 16,
+                    color: kcValueDark,
+                  ),
+                ),
+              ],
+            ),
             content: SizedBox(
-              height: 200,
+              width: 320,
               child: Column(
                 mainAxisSize: MainAxisSize.min,
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
-                  const Text(
-                    "SELECT FILTERS",
-                    style: TextStyle(fontWeight: FontWeight.bold),
-                  ),
                   _buildDateRangeContainer("Start Date", startDateInput),
                   _buildDateRangeContainer("End Date", endDateInput),
                 ],
               ),
             ),
             actions: [
-              ElevatedButton(
+              TextButton(
                 onPressed: () {
                   Navigator.pop(context);
                 },
-                style: ElevatedButton.styleFrom(backgroundColor: kcRed),
-                child: const Text(
-                  "Cancel",
-                  style: TextStyle(color: kcWhite),
-                ),
+                style: TextButton.styleFrom(foregroundColor: kcLightGrey),
+                child: const Text("Cancel"),
               ),
               ElevatedButton(
                 onPressed: () {
@@ -293,11 +369,14 @@ class _HazardGraphState extends State<HazardGraph> {
                     );
                   }
                 },
-                style: ElevatedButton.styleFrom(backgroundColor: kcobservationgreen),
-                child: const Text(
-                  "Apply Filters",
-                  style: TextStyle(color: kcWhite),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: kcvoilet,
+                  foregroundColor: kcWhite,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(6),
+                  ),
                 ),
+                child: const Text("Apply Filters"),
               ),
             ],
           );
@@ -309,58 +388,68 @@ class _HazardGraphState extends State<HazardGraph> {
 
   _buildDateRangeContainer(String hintText, TextEditingController controller) {
     return Padding(
-      padding: const EdgeInsets.all(8.0),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       child: SizedBox(
         width: 300,
-        height: 40,
+        height: 44,
         child: TextFormField(
           controller: controller,
+          style: const TextStyle(fontSize: 14, color: kcValueDark),
           decoration: InputDecoration(
-            contentPadding: const EdgeInsets.all(8),
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
             hintText: hintText,
+            hintStyle: const TextStyle(color: kcLightGrey, fontSize: 14),
             fillColor: kcWhite,
-            suffixIcon: const Icon(
-              Icons.calendar_month,
-              size: 20.0,
+            prefixIcon: const Icon(
+              Icons.calendar_month_outlined,
+              size: 18,
+              color: kcLightGrey,
             ),
             filled: true,
             enabledBorder: _border(),
-            focusedBorder: _border(),
+            focusedBorder: _focusedBorder(),
           ),
           readOnly: true,
-          onTap: hintText == "Start Date"
-              ? () async {
-                  // Open a date range picker only for Start Date
-                  DateTimeRange? pickedDateRange = await showDateRangePicker(
-                    context: context,
-                    firstDate: DateTime(2000),
-                    lastDate: DateTime.now(),
-                    initialDateRange: startDateInput.text.isNotEmpty &&
-                            endDateInput.text.isNotEmpty
-                        ? DateTimeRange(
-                            start: DateTime.parse(startDateInput.text),
-                            end: DateTime.parse(endDateInput.text),
-                          )
-                        : DateTimeRange(
-                            start: DateTime.now()
-                                .subtract(const Duration(days: 7)),
-                            end: DateTime.now(),
-                          ),
-                  );
+          onTap: () async {
+            DateTimeRange? pickedDateRange = await showDateRangePicker(
+              context: context,
+              firstDate: DateTime(2000),
+              lastDate: DateTime.now(),
+              builder: (ctx, child) => Theme(
+                data: Theme.of(ctx).copyWith(
+                  colorScheme: Theme.of(ctx).colorScheme.copyWith(
+                        primary: kcvoilet,
+                        onPrimary: kcWhite,
+                      ),
+                ),
+                child: child!,
+              ),
+              initialDateRange: startDateInput.text.isNotEmpty &&
+                      endDateInput.text.isNotEmpty
+                  ? DateTimeRange(
+                      start: DateTime.parse(startDateInput.text),
+                      end: DateTime.parse(endDateInput.text),
+                    )
+                  : DateTimeRange(
+                      start:
+                          DateTime.now().subtract(const Duration(days: 7)),
+                      end: DateTime.now(),
+                    ),
+            );
 
-                  if (pickedDateRange != null) {
-                    String formattedStartDate =
-                        DateFormat('yyyy-MM-dd').format(pickedDateRange.start);
-                    String formattedEndDate =
-                        DateFormat('yyyy-MM-dd').format(pickedDateRange.end);
+            if (pickedDateRange != null) {
+              String formattedStartDate =
+                  DateFormat('yyyy-MM-dd').format(pickedDateRange.start);
+              String formattedEndDate =
+                  DateFormat('yyyy-MM-dd').format(pickedDateRange.end);
 
-                    setState(() {
-                      startDateInput.text = formattedStartDate;
-                      endDateInput.text = formattedEndDate;
-                    });
-                  }
-                }
-              : null, // Do nothing for "End Date"
+              setState(() {
+                startDateInput.text = formattedStartDate;
+                endDateInput.text = formattedEndDate;
+              });
+            }
+          },
         ),
       ),
     );
@@ -368,7 +457,11 @@ class _HazardGraphState extends State<HazardGraph> {
 
   _border() => OutlineInputBorder(
       borderRadius: BorderRadius.circular(8),
-      borderSide: const BorderSide(width: 1.5, color: kcBlack));
+      borderSide: const BorderSide(width: 1, color: kcVeryLightGrey));
+
+  _focusedBorder() => OutlineInputBorder(
+      borderRadius: BorderRadius.circular(8),
+      borderSide: const BorderSide(width: 1.5, color: kcvoilet));
 
   _buildDownloadExcel() {
     return BlocConsumer<HazardGraphExportBloc, HazardGraphExportState>(
@@ -394,21 +487,34 @@ class _HazardGraphState extends State<HazardGraph> {
                   onPressed: () {
                     hazardGraphExportBloc.initState();
                   },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: kcWhite,
+                    foregroundColor: kcobservationgreen,
+                    elevation: 0,
+                    side: const BorderSide(
+                        color: kcobservationgreen, width: 1.2),
+                    fixedSize: const Size(140, 36),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                  ),
                   child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Padding(
-                        padding: const EdgeInsets.all(2.0),
+                        padding: const EdgeInsets.only(right: 6),
                         child: Image.asset(
                           "assets/images/excelicon.png",
-                          scale: 20,
+                          width: 18,
+                          height: 18,
                         ),
                       ),
                       const Text(
                         "Export",
                         style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w900,
-                            color: kcBlack),
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: kcobservationgreen),
                       ),
                     ],
                   )),

@@ -95,6 +95,7 @@ import 'package:jsaw_limited/pages/medical_Officer_page.dart';
 import 'package:jsaw_limited/pages/observation.dart';
 import 'package:jsaw_limited/pages/priority_changes_page.dart';
 import 'package:jsaw_limited/pages/register_observation_page.dart';
+import 'package:jsaw_limited/pages/safetyRemarkList_page.dart';
 import 'package:jsaw_limited/pages/safety_remark_page.dart';
 import 'package:jsaw_limited/pages/suggestion_page.dart';
 import '../pages/login.dart';
@@ -140,8 +141,8 @@ class AppRoutes {
       dashboardSelection: (_)=> DashboardselectionPage(),
       employeeReporetingPage: (_) => EmployeeReportingPage(),
        incidentTrackingPage: (_) => IncidentReportingPage(),
-       medicalOfficerPage: (_) => MedicalOfficerPage(),
-      safetyRemarkpage: (_) => SafetyRemarkPage(),
+       // medicalOfficerPage: (_) => MedicalOfficerPage(allIncidentListModel: null,),
+      safetyRemarkpage: (_) => SafetyRemarkListPage(),
       investigationTeamPage: (_) => InvestigationTeamPage()
     };
   }

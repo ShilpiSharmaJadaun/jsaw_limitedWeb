@@ -195,462 +195,611 @@ class _ReceivedObservationPageState extends State<ReceivedObservationPage> {
     return Column(
       children: [
         Padding(
-          padding: const EdgeInsets.all(8.0),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
           child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisAlignment: MainAxisAlignment.end,
             children: [
-              ElevatedButton(onPressed: (){
-                uniqueIdBloc.initState();
-                openFilterDialog();
-              },
-                  style: ElevatedButton.styleFrom(backgroundColor: kcRed, fixedSize: const Size(300, 40)),
-                  child: const Text("Filter", style: TextStyle(color: kcWhite),)),
-              TextButton(onPressed: (){
-                setState(() {
-                  currentPage = 0;
-                });
-                allFilterObservationBloc.initState(0,"", "", "", "", "", "", "",window.localStorage['kEmployeeCode'] ?? "", "","","");
-
-              }, child: const Row(
-                children: [
-                  Text("Refresh"),
-                  Icon(Icons.refresh)
-                ],
-              ))
-            ],
-          ),
-        ),
-        const Divider(),
-        if(model.totalItems != 0)
-        Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              if(currentPage < model.totalPages)
-              ElevatedButton(onPressed: _previousPage, style: ElevatedButton.styleFrom(backgroundColor: kcmegenta), child: const Text("Previous", style: TextStyle(fontWeight: FontWeight.w600, color: kcWhite),),),
-              Row(
-                children: [
-                  Text("Page $currentPage"),
-                  Text(" Out of Total Pages " + model.totalPages.toString()),
-                ],
+              IconButton(
+                onPressed: () {
+                  setState(() => currentPage = 0);
+                  allFilterObservationBloc.initState(0, "", "", "", "", "", "", "",
+                      window.localStorage['kEmployeeCode'] ?? "", "", "", "");
+                },
+                style: IconButton.styleFrom(
+                  backgroundColor: kcgreen,
+                  foregroundColor: kcMediumGrey,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                ),
+                tooltip: 'Refresh',
+                icon: const Icon(Icons.refresh),
               ),
-              if(currentPage < model.totalPages)
-              ElevatedButton(onPressed: _nextPage, style: ElevatedButton.styleFrom(backgroundColor: kcmegenta), child: Text("Next", style: TextStyle(fontWeight: FontWeight.w600, color: kcWhite),)),
+              const SizedBox(width: 8),
+              ElevatedButton.icon(
+                onPressed: () {
+                  uniqueIdBloc.initState();
+                  openFilterDialog();
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: kcvoilet,
+                  foregroundColor: kcWhite,
+                  fixedSize: const Size(160, 40),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                ),
+                icon: const Icon(Icons.filter_alt_outlined, size: 18),
+                label: const Text("Filter"),
+              ),
             ],
           ),
         ),
+        const Divider(height: 1, color: kcVeryLightGrey),
+        if (model.totalItems != 0)
+          Padding(
+            padding:
+                const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                ElevatedButton.icon(
+                  onPressed: currentPage > 0 ? _previousPage : null,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: kcvoilet,
+                    foregroundColor: kcWhite,
+                    disabledBackgroundColor: kcVeryLightGrey,
+                    disabledForegroundColor: kcLightGrey,
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                  ),
+                  icon: const Icon(Icons.chevron_left, size: 18),
+                  label: const Text("Previous"),
+                ),
+                Text(
+                  "Page ${currentPage + 1} of ${model.totalPages}",
+                  style: const TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: kcValueDark,
+                  ),
+                ),
+                ElevatedButton.icon(
+                  onPressed: currentPage < model.totalPages - 1
+                      ? _nextPage
+                      : null,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: kcvoilet,
+                    foregroundColor: kcWhite,
+                    disabledBackgroundColor: kcVeryLightGrey,
+                    disabledForegroundColor: kcLightGrey,
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                  ),
+                  icon: const Icon(Icons.chevron_right, size: 18),
+                  label: const Text("Next"),
+                ),
+              ],
+            ),
+          ),
         Expanded(
           child: ListView.builder(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               itemCount: model.model.length,
               itemBuilder: (BuildContext context, int index) {
-                return Card(
+                final item = model.model[index];
+                return Container(
+                  margin: const EdgeInsets.only(bottom: 16),
+                  decoration: BoxDecoration(
                     color: kcWhite,
-                    elevation: 8,
-                    child: SingleChildScrollView(
-                      scrollDirection: Axis.horizontal,
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.all(8),
-                            child: SizedBox(
-                              width: 35.screenWidth,
-                              height:20.screenHeight,
-                              child: FadeInImage(
-                                placeholder: NetworkImage(model.model[index].lowQualityImageUrl), // Low-quality image
-                                image: NetworkImage(model.model[index].imageNumber), // High-quality image
-                                fadeInDuration: const Duration(milliseconds: 300), // Fade duration for transition
-                                fadeOutDuration: const Duration(milliseconds: 300), // Fade out duration for the placeholder
-                                fit: BoxFit.cover, // Image fit mode
-                                imageErrorBuilder: (context, error, stackTrace) {
-                                  return const Icon(Icons.error); // Handle any error loading the image
-                                },
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: kcVeryLightGrey, width: 1),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.06),
+                        blurRadius: 14,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(12),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // ----- Image -----
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(12),
+                          child: SizedBox(
+                            width: 220,
+                            height: 200,
+                            child: FadeInImage(
+                              placeholder:
+                                  NetworkImage(item.lowQualityImageUrl),
+                              image: NetworkImage(item.imageNumber),
+                              fadeInDuration:
+                                  const Duration(milliseconds: 300),
+                              fadeOutDuration:
+                                  const Duration(milliseconds: 300),
+                              fit: BoxFit.cover,
+                              imageErrorBuilder: (_, __, ___) => Container(
+                                color: Colors.grey.shade100,
+                                alignment: Alignment.center,
+                                child: Icon(Icons.broken_image_outlined,
+                                    color: Colors.grey.shade400, size: 48),
                               ),
                             ),
                           ),
-                          Column(
+                        ),
+                        const SizedBox(width: 12),
+                        // ----- Content -----
+                        Expanded(
+                          child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisAlignment: MainAxisAlignment.start,
                             children: [
-                              SizedBox(
-                                width: 100.screenWidth,
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                  crossAxisAlignment: CrossAxisAlignment.center,
-                                  children: [
-                                    Column(
-                                      children: [
-                                        Column(
-                                          mainAxisAlignment:
-                                          MainAxisAlignment.start,
-                                          children: [
-                                            Row(
-                                              children: [
-                                                Image.asset(
-                                                  "assets/images/raisedby.png",
-                                                  scale: 20,
-                                                ),
-                                                _buildHeadingText(
-                                                    "Observation Raised By :"),
-                                              ],
-                                            ),
-                                            _buildTextBox(
-                                                model.model[index].observationRaisedBy,
-                                                kcDarkGreyColor),
-                                          ],
-                                        ),
-                                        Column(
-                                          mainAxisAlignment:
-                                          MainAxisAlignment.start,
-                                          children: [
-                                            Row(
-                                              children: [
-                                                Image.asset(
-                                                  "assets/images/plant.png",
-                                                  scale: 20,
-                                                ),
-                                                _buildHeadingText(
-                                                    "Plant / Dept :"),
-                                              ],
-                                            ),
-                                            _buildTextBox(model.model[index].plantDept,
-                                                Colors.black)
-                                          ],
-                                        ),
-                                      ],
-                                    ),
-                                    Column(
-                                      children: [
-                                        Column(
-                                          children: [
-                                            Row(
-                                              children: [
-                                                Image.asset(
-                                                  "assets/images/uniqueid.png",
-                                                  scale: 20,
-                                                ),
-                                                _buildHeadingText(
-                                                    "Unique ID No. :"),
-                                              ],
-                                            ),
-                                            _buildTextBox(
-                                                model.model[index]
-                                                    .uniqueIdentificationNumber,
-                                                kcDarkGreyColor),
-                                          ],
-                                        ),
-                                        Column(
-                                          mainAxisAlignment:
-                                          MainAxisAlignment.start,
-                                          children: [
-                                            Row(
-                                              children: [
-                                                Image.asset(
-                                                  "assets/images/location.png",
-                                                  scale: 20,
-                                                ),
-                                                _buildHeadingText("Location :"),
-                                              ],
-                                            ),
-                                            _buildTextBox(model.model[index].location,
-                                                Colors.black)
-                                          ],
-                                        ),
-                                      ],
-                                    ),
-                                    Column(
-                                      children: [
-                                        Column(
-                                          children: [
-                                            Row(
-                                              children: [
-                                                Image.asset(
-                                                  "assets/images/date.png",
-                                                  scale: 20,
-                                                ),
-                                                _buildHeadingText("Date :"),
-                                              ],
-                                            ),
-                                            _buildTextBox(
-                                                model.model[index].raisedDate, kcRed)
-                                          ],
-                                        ),
-                                        Column(
-                                          mainAxisAlignment:
-                                          MainAxisAlignment.start,
-                                          children: [
-                                            Row(
-                                              children: [
-                                                Image.asset(
-                                                  "assets/images/responsibility.png",
-                                                  scale: 20,
-                                                ),
-                                                _buildHeadingText(
-                                                    "Responsibility"),
-                                              ],
-                                            ),
-                                            _buildTextBox(
-                                                model.model[index].responsibility,
-                                                kcmegenta)
-                                          ],
-                                        ),
-                                      ],
-                                    )
-                                  ],
-                                ),
-                              ),
-                              Center(
-                                  child: Container(
-                                    height: 2,
-                                    alignment: Alignment.center,
-                                    color: kcVeryLightGrey,
-                                    width: 100.screenWidth,
-                                  )),
-                              SizedBox(
-                                width: 600,
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Row(
-                                      children: [
-                                        Row(
-                                          children: [
-                                            Image.asset(
-                                              "assets/images/suggestions.png",
-                                              scale: 20,
-                                            ),
-                                            _buildHeadingText("Status :"),
-                                          ],
-                                        ),
-                                        Container(
-                                          decoration: const BoxDecoration(
-                                              boxShadow: [
-                                                BoxShadow(
-                                                  color: Colors.black,
-                                                  blurRadius: 2.0,
-                                                  spreadRadius: 0.0,
-                                                  offset: Offset(2.0, 2.0), // shadow direction: bottom right
-                                                )
-                                              ],
-                                              color: kcRed),
-                                          child: Padding(
-                                            padding: const EdgeInsets.only(
-                                                left: 1,
-                                                right: 1),
-                                            child: Text(
-                                              model.model[index].status,
-                                              style:  const TextStyle(
-                                                  color: kcWhite,
-                                                  fontWeight: FontWeight.w500),
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                    Row(
-                                      children: [
-                                        Row(
-                                          children: [
-                                            Image.asset(
-                                              "assets/images/observation.png",
-                                              scale: 20,
-                                            ),
-                                            _buildHeadingText("Priority :"),
-                                          ],
-                                        ),
-                                        Padding(
-                                          padding: const EdgeInsets.only(left: 8.0),
-                                          child: Container(
-                                            decoration: BoxDecoration(
-                                                boxShadow: const [
-                                                  BoxShadow(
-                                                    color: Colors.black,
-                                                    blurRadius: 2.0,
-                                                    spreadRadius: 0.0,
-                                                    offset: Offset(2.0, 2.0), // shadow direction: bottom right
-                                                  )
-                                                ],
-                                                color: hexToColor(model.model[index].priorityStatusColour,
-                                                )),
-                                            child: Padding(
-                                              padding: EdgeInsets.only(
-                                                  left: 1.screenWidth,
-                                                  right: 1.screenWidth),
-                                              child: Text(
-                                                model.model[index].priorityStatusName,
-                                                style: const TextStyle(
-                                                    color: kcWhite,
-                                                    fontWeight: FontWeight.w500),
-                                              ),
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    )
-                                  ],
-                                ),
-                              ),
-                              SizedBox(
-                                width: 600,
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Row(
-                                      children: [
-                                        Row(
-                                          children: [
-                                            Image.asset(
-                                              "assets/images/tagetdate.png",
-                                              scale: 20,
-                                            ),
-                                            _buildHeadingText("Target Date :"),
-                                          ],
-                                        ),
-                                        Container(
-
-                                          child: Padding(
-                                            padding: const EdgeInsets.only(
-                                                left: 1,
-                                                right: 1),
-                                            child: Text(
-                                              model.model[index].observationCompletionTargetDate,
-                                              style:  const TextStyle(
-                                                  color: kcBlack,
-                                                  fontWeight: FontWeight.w500),
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                    Row(
-                                      children: [
-                                        Row(
-                                          children: [
-                                            Image.asset(
-                                              "assets/images/tagetdate.png",
-                                              scale: 20,
-                                            ),
-                                            _buildHeadingText("Compliance Date :"),
-                                          ],
-                                        ),
-                                        Container(
-
-                                          child: Padding(
-                                            padding: const EdgeInsets.only(
-                                                left: 1,
-                                                right: 1),
-                                            child: Text(
-                                              model.model[index].complianceDate,
-                                              style:  const TextStyle(
-                                                  color: kcBlack,
-                                                  fontWeight: FontWeight.w500),
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ],
-                                ),
-                              ),
+                              // Top: 3 columns of grouped info
                               Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Row(
-                                    children: [
-                                      Image.asset(
-                                        "assets/images/observation.png",
-                                        scale: 20,
-                                      ),
-                                      _buildHeadingText("Observations :"),
-                                    ],
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        _buildInfoSection(
+                                          icon: Icons.person_outline_rounded,
+                                          iconColor: kcStatBlue,
+                                          label: "Raised By",
+                                          value: item.observationRaisedBy,
+                                          valueColor: kcValueDark,
+                                        ),
+                                        _buildInfoSection(
+                                          icon: Icons.factory_outlined,
+                                          iconColor: kcStatGreen,
+                                          label: "Plant / Dept",
+                                          value: item.plantDept,
+                                          valueColor: kcValueDark,
+                                        ),
+                                      ],
+                                    ),
                                   ),
-                                  SizedBox(
-                                    width: 500,
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        _buildInfoSection(
+                                          icon: Icons.qr_code_2_outlined,
+                                          iconColor: kcvoilet,
+                                          label: "Unique ID",
+                                          value:
+                                              item.uniqueIdentificationNumber,
+                                          valueColor: kcValueDark,
+                                        ),
+                                        _buildInfoSection(
+                                          icon: Icons.location_on_outlined,
+                                          iconColor: kcStatRed,
+                                          label: "Location",
+                                          value: item.location,
+                                          valueColor: kcValueDark,
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        _buildInfoSection(
+                                          icon: Icons
+                                              .assignment_ind_outlined,
+                                          iconColor: kcStatPurple,
+                                          label: "Responsibility",
+                                          value: item.responsibility,
+                                          valueColor: kcmegenta,
+                                        ),
+                                        _buildInfoSection(
+                                          icon: Icons
+                                              .workspace_premium_outlined,
+                                          iconColor: _statusColor(item.status),
+                                          label: "Status",
+                                          value: item.status,
+                                          valueColor: _statusColor(item.status),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              // Soft gradient divider
+                              Padding(
+                                padding: const EdgeInsets.symmetric(
+                                    vertical: 10),
+                                child: Container(
+                                  height: 1,
+                                  decoration: BoxDecoration(
+                                    gradient: LinearGradient(
+                                      colors: [
+                                        Colors.transparent,
+                                        Colors.grey.shade300,
+                                        Colors.transparent,
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              // Date pill row: Raised + Target
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Expanded(
+                                    child: Row(
+                                      children: [
+                                        _buildIconBadge(
+                                            Icons.event_note_outlined,
+                                            kcStatAmber),
+                                        const SizedBox(width: 8),
+                                        _buildLabel("Raised Date :"),
+                                        const SizedBox(width: 6),
+                                        Flexible(
+                                          child: _buildPillBadge(
+                                              item.raisedDate, kcStatAmber),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    child: Row(
+                                      children: [
+                                        _buildIconBadge(
+                                            Icons.event_outlined, kcvoilet),
+                                        const SizedBox(width: 8),
+                                        _buildLabel("Target Date :"),
+                                        const SizedBox(width: 6),
+                                        Flexible(
+                                          child: _buildPillBadge(
+                                              item.observationCompletionTargetDate,
+                                              kcvoilet),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 10),
+                              // Compliance + Priority
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Expanded(
+                                    child: Row(
+                                      children: [
+                                        _buildIconBadge(
+                                            Icons.event_available_outlined,
+                                            kcStatGreen),
+                                        const SizedBox(width: 8),
+                                        _buildLabel("Compliance Date :"),
+                                        const SizedBox(width: 6),
+                                        Flexible(
+                                          child: _buildPillBadge(
+                                            item.complianceDate.trim().isEmpty
+                                                ? '—'
+                                                : item.complianceDate,
+                                            item.complianceDate.trim().isEmpty
+                                                ? kcLightGrey
+                                                : kcStatGreen,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    child: Row(
+                                      children: [
+                                        _buildIconBadge(
+                                            Icons.flag_outlined,
+                                            hexToColor(
+                                                item.priorityStatusColour)),
+                                        const SizedBox(width: 8),
+                                        _buildLabel("Priority :"),
+                                        const SizedBox(width: 6),
+                                        Flexible(
+                                          child: _buildPillBadge(
+                                            item.priorityStatusName,
+                                            hexToColor(
+                                                item.priorityStatusColour),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 12),
+                              // Observation paragraph
+                              Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  _buildIconBadge(Icons.visibility_outlined,
+                                      kcObservationCyan),
+                                  const SizedBox(width: 8),
+                                  _buildLabel("Observation :"),
+                                  const SizedBox(width: 8),
+                                  Expanded(
                                     child: Padding(
-                                      padding:
-                                      EdgeInsets.all(1.0.screenWidth),
+                                      padding: const EdgeInsets.symmetric(
+                                          vertical: 4),
                                       child: Text(
-                                        model.model[index].observationText,
+                                        item.observationText.isEmpty
+                                            ? '—'
+                                            : item.observationText,
                                         maxLines: 3,
                                         overflow: TextOverflow.ellipsis,
-                                        style: TextStyle(
-                                            fontWeight: FontWeight.w600,
-                                            fontSize: 2.screenWidth,
-                                            color: Colors.black),
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.w600,
+                                          fontSize: 13,
+                                          color: kcValueDark,
+                                          height: 1.35,
+                                        ),
                                       ),
                                     ),
                                   ),
                                 ],
                               ),
+                              const SizedBox(height: 8),
+                              // Corrective measure paragraph + edit arrow
                               Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Row(
-                                    children: [
-                                      Image.asset(
-                                        "assets/images/suggestions.png",
-                                        scale: 20,
-                                      ),
-                                      _buildHeadingText("Corrective Measure"),
-                                    ],
-                                  ),
-                                  SizedBox(
-                                    width: 500,
+                                  _buildIconBadge(
+                                      Icons.build_outlined, kcStatPurple),
+                                  const SizedBox(width: 8),
+                                  _buildLabel("Corrective Measure :"),
+                                  const SizedBox(width: 8),
+                                  Expanded(
                                     child: Padding(
-                                      padding: const EdgeInsets.all(10),
+                                      padding: const EdgeInsets.symmetric(
+                                          vertical: 4),
                                       child: Text(
-                                        model.model[index].correctiveMeasure,
-                                        maxLines: 5,
+                                        item.correctiveMeasure.isEmpty
+                                            ? '—'
+                                            : item.correctiveMeasure,
+                                        maxLines: 4,
                                         overflow: TextOverflow.ellipsis,
                                         style: const TextStyle(
-                                            fontWeight: FontWeight.w600,
-                                            fontSize: 14,
-                                            color: Colors.black),
+                                          fontWeight: FontWeight.w600,
+                                          fontSize: 13,
+                                          color: kcValueDark,
+                                          height: 1.35,
+                                        ),
                                       ),
                                     ),
                                   ),
                                   IconButton(
-                                      onPressed: () async {
-                                        final shouldInit = await Navigator.of(context).push(MaterialPageRoute(builder: (context) => EditReceivedObservationsPage(uniqueId: model.model[index].uniqueIdentificationNumber,
-                                            raisedBy:model.model[index].observationRaisedByEmpUnqId,
-                                            department: model.model[index].stationName,
-                                            responsibility: model.model[index].responsibility,
-                                            location: model.model[index].location,
-                                            resHod: model.model[index].responsibilityHODName,
-                                            priority: model.model[index].priorityStatusName,
-                                            hazard: model.model[index].hazardCategory,
-                                            observation: model.model[index].observationText,
-                                            name: model.model[index].observationRaisedBy,
-                                            raisedDate: model.model[index].raisedDate,
-                                            wrkGrp:model.model[index].wrkGrp, deptCode: model.model[index].plantDeptCode,
-                                            stateCode: model.model[index].stationCode
-                                            , plant: model.model[index].plantDept,
-                                            raisedByEmpID: model.model[index].observationRaisedByEmpUnqId,
-                                            status: model.model[index].status,
-                                            imageNumber: model.model[index].imageNumber,
-                                          correctiveMeasures: model.model[index].correctiveMeasure,
-                                          targetDate: model.model[index].observationCompletionTargetDate,
-                                          complianceDate: model.model[index].complianceDate,
-                                          ), fullscreenDialog: true),
-                                        );
-                                        if(shouldInit != null && shouldInit) {
-                                          allFilterObservationBloc.initState(currentPage,"", "", "", "", "", "", "",window.localStorage['kEmployeeCode'] ?? "", "","","");
-                                        }
-                                      },
-                                      icon: const Icon(
-                                          Icons.arrow_forward_ios_sharp)),
+                                    tooltip: 'View / Edit',
+                                    onPressed: () async {
+                                      final shouldInit = await Navigator.of(context).push(MaterialPageRoute(
+                                        builder: (context) =>
+                                            EditReceivedObservationsPage(
+                                          uniqueId: item.uniqueIdentificationNumber,
+                                          raisedBy: item.observationRaisedByEmpUnqId,
+                                          department: item.stationName,
+                                          responsibility: item.responsibility,
+                                          location: item.location,
+                                          resHod: item.responsibilityHODName,
+                                          priority: item.priorityStatusName,
+                                          hazard: item.hazardCategory,
+                                          observation: item.observationText,
+                                          name: item.observationRaisedBy,
+                                          raisedDate: item.raisedDate,
+                                          wrkGrp: item.wrkGrp,
+                                          deptCode: item.plantDeptCode,
+                                          stateCode: item.stationCode,
+                                          plant: item.plantDept,
+                                          raisedByEmpID: item.observationRaisedByEmpUnqId,
+                                          status: item.status,
+                                          imageNumber: item.imageNumber,
+                                          correctiveMeasures: item.correctiveMeasure,
+                                          targetDate: item.observationCompletionTargetDate,
+                                          complianceDate: item.complianceDate,
+                                        ),
+                                        fullscreenDialog: true,
+                                      ));
+                                      if (shouldInit != null && shouldInit) {
+                                        allFilterObservationBloc.initState(
+                                            currentPage, "", "", "", "", "", "", "",
+                                            window.localStorage['kEmployeeCode'] ?? "", "", "", "");
+                                      }
+                                    },
+                                    icon: const Icon(
+                                      Icons.arrow_forward_ios_sharp,
+                                      color: kcvoilet,
+                                      size: 18,
+                                    ),
+                                  ),
                                 ],
                               ),
                             ],
                           ),
-                        ],
-                      ),
-                    ));
+                        ),
+                      ],
+                    ),
+                  ),
+                );
               }),
         ),
       ],
     );
   }
+
+  // ─── Safety-remark-style card helpers ───
+
+  Color _statusColor(String status) {
+    switch (status.trim().toUpperCase()) {
+      case 'CLOSED':
+        return kcStatGreen;
+      case 'PENDING':
+        return kcStatRed;
+      case 'IN PROGRESS':
+        return kcStatPurple;
+      case 'COMPLIANCE':
+        return kcStatAmber;
+      default:
+        return kcLightGrey;
+    }
+  }
+
+  Widget _buildInfoSection({
+    required IconData icon,
+    required Color iconColor,
+    required String label,
+    required String value,
+    required Color valueColor,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(bottom: 4, top: 4),
+          child: Row(
+            children: [
+              _buildIconBadge(icon, iconColor),
+              const SizedBox(width: 6),
+              Flexible(child: _buildLabel("$label :")),
+            ],
+          ),
+        ),
+        _buildAccentTextBox(value, valueColor, accentColor: iconColor),
+      ],
+    );
+  }
+
+  Widget _buildIconBadge(IconData icon, Color color) {
+    return Container(
+      padding: const EdgeInsets.all(6),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Icon(icon, color: color, size: 16),
+    );
+  }
+
+  Widget _buildPillBadge(String text, Color color) {
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [color, color.withValues(alpha: 0.85)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: color.withValues(alpha: 0.3),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+        child: Text(
+          text,
+          style: const TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.w600,
+            fontSize: 12,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLabel(String title) {
+    return Text(
+      title,
+      style: const TextStyle(
+        fontSize: 12,
+        fontWeight: FontWeight.w600,
+        color: kcLabelGrey,
+      ),
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
+    );
+  }
+
+  Widget _buildAccentTextBox(String title, Color color,
+      {Color? accentColor}) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 2),
+      child: Container(
+        width: double.infinity,
+        constraints: const BoxConstraints(minHeight: 36),
+        decoration: BoxDecoration(
+          color: kcWhite,
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: kcVeryLightGrey, width: 1),
+          boxShadow: [
+            BoxShadow(
+              color: (accentColor ?? Colors.black).withValues(alpha: 0.06),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: IntrinsicHeight(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              if (accentColor != null)
+                Container(
+                  width: 3,
+                  decoration: BoxDecoration(
+                    color: accentColor,
+                    borderRadius: const BorderRadius.only(
+                      topLeft: Radius.circular(10),
+                      bottomLeft: Radius.circular(10),
+                    ),
+                  ),
+                ),
+              Expanded(
+                child: Padding(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  child: Text(
+                    title.isEmpty ? '—' : title,
+                    maxLines: 2,
+                    textAlign: TextAlign.center,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 13,
+                      color: color,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  // ─── Legacy helpers (kept for backwards compatibility) ───
 
   _buildHeadingText(String title) {
     return Padding(

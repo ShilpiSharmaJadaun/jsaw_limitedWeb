@@ -80,94 +80,164 @@ class _StationWiseGraphTablePageState extends State<StationWiseGraphTablePage> {
             children: [
               Padding(
                 padding: const EdgeInsets.all(8.0),
-                child: IconButton(onPressed: (){
-                  stationWiseGraphTableBloc.init("","");
-                },
-                  style: ElevatedButton.styleFrom(backgroundColor: kcgreen),
-                  icon: Icon(Icons.refresh),
+                child: IconButton(
+                  onPressed: () {
+                    stationWiseGraphTableBloc.init("", "");
+                  },
+                  style: IconButton.styleFrom(
+                    backgroundColor: kcgreen,
+                    foregroundColor: kcMediumGrey,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                  ),
+                  tooltip: 'Refresh',
+                  icon: const Icon(Icons.refresh),
                 ),
               ),
               Center(
-                child: ElevatedButton(onPressed: (){
-                  openFilterDialog();
-                },
-                    style: ElevatedButton.styleFrom(backgroundColor: kcRed, fixedSize: const Size(150, 30)),
-                    child: const Text("Filter", style: TextStyle(color: kcWhite),)),
+                child: ElevatedButton.icon(
+                  onPressed: () {
+                    openFilterDialog();
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: kcvoilet,
+                    foregroundColor: kcWhite,
+                    fixedSize: const Size(150, 36),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                  ),
+                  icon: const Icon(Icons.filter_alt_outlined, size: 18),
+                  label: const Text("Filter"),
+                ),
               ),
               _buildDownloadExcel(),
             ],
           ),
         ),
-        // _buildDateContainer(),
-        // _buildDownloadExcel(),
-        SizedBox(
-          width: 1800,
-          //   color: Colors.grey,
-          child: Row(
-            children: [
-              _buildTableHeaderContainer("Station Name",160),
-              _buildTableHeaderContainer("Total Observations Raised by Station",170),
-              _buildTableHeaderContainer("Total Observations Received by Station",170),
-            ],
-          ),
-        ),
         Expanded(
-          child: SizedBox(
-            width: 1800,
-            child: ListView.builder(
-              itemCount: model.length,
-              shrinkWrap: true,
-              itemBuilder: (BuildContext context, int index) {
-                return Row(
+          child: Scrollbar(
+            thumbVisibility: true,
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: SizedBox(
+                width: 760,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _buildTableBodyContainer(model[index].stationName.toString(),170),
-                    _buildTableBodyContainer(model[index].totalRaised.toString(),200),
-                    _buildTableBodyContainer(model[index].totalReceived.toString(),200),
+                    Row(
+                      children: [
+                        _buildTableHeaderContainer("Station Name", 240),
+                        _buildTableHeaderContainer(
+                            "Total Observations Raised by Station", 260),
+                        _buildTableHeaderContainer(
+                            "Total Observations Received by Station", 260),
+                      ],
+                    ),
+                    Expanded(
+                      child: model.isEmpty
+                          ? const _TableEmptyState(
+                              message: "No data available",
+                            )
+                          : ListView.builder(
+                              itemCount: model.length,
+                              itemBuilder:
+                                  (BuildContext context, int index) {
+                                final row = model[index];
+                                final rowColor = index.isOdd
+                                    ? kcDashboardBg2
+                                    : kcWhite;
+                                return Container(
+                                  color: rowColor,
+                                  child: Row(
+                                    children: [
+                                      _buildTableBodyContainer(
+                                          row.stationName.toString(), 240),
+                                      _buildTableBodyContainer(
+                                        row.totalRaised.toString(),
+                                        260,
+                                        valueColor: kcStatBlue,
+                                      ),
+                                      _buildTableBodyContainer(
+                                        row.totalReceived.toString(),
+                                        260,
+                                        valueColor: kcStatGreen,
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              },
+                            ),
+                    ),
                   ],
-                );
-              },
-
+                ),
+              ),
             ),
           ),
-        )
+        ),
       ],
     );
 
   }
 
-  _buildTableHeaderContainer(String title,double width) {
+  _buildTableHeaderContainer(String title, double width) {
     return Container(
-      width: 300,
-      height: 100,
-      decoration: BoxDecoration(
-          border: Border.all(color: Colors.black, width:2),
-          color: kcDarkGreyColor
+      width: width,
+      height: 56,
+      decoration: const BoxDecoration(
+        color: kcvoilet,
+        border: Border(
+          right: BorderSide(color: Colors.white24, width: 0.5),
+        ),
       ),
       child: Center(
         child: Padding(
-          padding: const EdgeInsets.all(10),
-          child: Text(title,
+          padding: const EdgeInsets.symmetric(horizontal: 8),
+          child: Text(
+            title,
             maxLines: 2,
+            textAlign: TextAlign.center,
             overflow: TextOverflow.ellipsis,
-            style: const TextStyle(fontWeight: FontWeight.bold,color: kcWhite),),
-        ),),);
+            style: const TextStyle(
+              fontWeight: FontWeight.w600,
+              fontSize: 13,
+              color: kcWhite,
+            ),
+          ),
+        ),
+      ),
+    );
   }
 
-  _buildTableBodyContainer(String title, double width) {
+  _buildTableBodyContainer(String title, double width, {Color? valueColor}) {
     return Container(
-      width: 300,
-      height: 60,
-      decoration: BoxDecoration(
-          border: Border.all(color: Colors.black, width: .5)
+      width: width,
+      height: 48,
+      decoration: const BoxDecoration(
+        border: Border(
+          bottom: BorderSide(color: kcVeryLightGrey, width: 0.6),
+        ),
       ),
       child: Center(
         child: Padding(
-          padding: const EdgeInsets.all(10),
-          child: Text(title,
+          padding: const EdgeInsets.symmetric(horizontal: 8),
+          child: Text(
+            title,
             maxLines: 2,
+            textAlign: TextAlign.center,
             overflow: TextOverflow.ellipsis,
-            style: TextStyle(fontWeight: FontWeight.bold),),
-        ),),);
+            style: TextStyle(
+              fontWeight:
+                  valueColor != null ? FontWeight.w600 : FontWeight.w400,
+              fontSize: 13,
+              color: valueColor ?? kcValueDark,
+            ),
+          ),
+        ),
+      ),
+    );
   }
 
   Future<void> openFilterDialog() async {
@@ -181,33 +251,41 @@ class _StationWiseGraphTablePageState extends State<StationWiseGraphTablePage> {
         builder: (context) {
           return AlertDialog(
             shape: const RoundedRectangleBorder(
-                borderRadius: BorderRadius.all(Radius.circular(10))),
-            contentPadding: const EdgeInsets.all(8.0),
+                borderRadius: BorderRadius.all(Radius.circular(12))),
+            titlePadding: const EdgeInsets.fromLTRB(20, 18, 20, 0),
+            contentPadding: const EdgeInsets.fromLTRB(8, 12, 8, 8),
+            actionsPadding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+            title: Row(
+              children: const [
+                Icon(Icons.filter_alt_outlined, color: kcvoilet, size: 20),
+                SizedBox(width: 8),
+                Text(
+                  "Select Filters",
+                  style: TextStyle(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 16,
+                    color: kcValueDark,
+                  ),
+                ),
+              ],
+            ),
             content: SizedBox(
-              height: 200,
+              width: 320,
               child: Column(
                 mainAxisSize: MainAxisSize.min,
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
-                  const Text(
-                    "SELECT FILTERS",
-                    style: TextStyle(fontWeight: FontWeight.bold),
-                  ),
                   _buildDateRangeContainer("Start Date", startDateInput),
                   _buildDateRangeContainer("End Date", endDateInput),
                 ],
               ),
             ),
             actions: [
-              ElevatedButton(
+              TextButton(
                 onPressed: () {
                   Navigator.pop(context);
                 },
-                style: ElevatedButton.styleFrom(backgroundColor: kcRed),
-                child: const Text(
-                  "Cancel",
-                  style: TextStyle(color: kcWhite),
-                ),
+                style: TextButton.styleFrom(foregroundColor: kcLightGrey),
+                child: const Text("Cancel"),
               ),
               ElevatedButton(
                 onPressed: () {
@@ -232,11 +310,14 @@ class _StationWiseGraphTablePageState extends State<StationWiseGraphTablePage> {
                     );
                   }
                 },
-                style: ElevatedButton.styleFrom(backgroundColor: kcobservationgreen),
-                child: const Text(
-                  "Apply Filters",
-                  style: TextStyle(color: kcWhite),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: kcvoilet,
+                  foregroundColor: kcWhite,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(6),
+                  ),
                 ),
+                child: const Text("Apply Filters"),
               ),
             ],
           );
@@ -248,58 +329,68 @@ class _StationWiseGraphTablePageState extends State<StationWiseGraphTablePage> {
 
   _buildDateRangeContainer(String hintText, TextEditingController controller) {
     return Padding(
-      padding: const EdgeInsets.all(8.0),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       child: SizedBox(
         width: 300,
-        height: 40,
+        height: 44,
         child: TextFormField(
           controller: controller,
+          style: const TextStyle(fontSize: 14, color: kcValueDark),
           decoration: InputDecoration(
-            contentPadding: const EdgeInsets.all(8),
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
             hintText: hintText,
+            hintStyle: const TextStyle(color: kcLightGrey, fontSize: 14),
             fillColor: kcWhite,
-            suffixIcon: const Icon(
-              Icons.calendar_month,
-              size: 20.0,
+            prefixIcon: const Icon(
+              Icons.calendar_month_outlined,
+              size: 18,
+              color: kcLightGrey,
             ),
             filled: true,
             enabledBorder: _border(),
-            focusedBorder: _border(),
+            focusedBorder: _focusedBorder(),
           ),
           readOnly: true,
-          onTap: hintText == "Start Date"
-              ? () async {
-            // Open a date range picker only for Start Date
+          onTap: () async {
             DateTimeRange? pickedDateRange = await showDateRangePicker(
               context: context,
               firstDate: DateTime(2000),
               lastDate: DateTime.now(),
-              initialDateRange: startDateInput.text.isNotEmpty &&
-                  endDateInput.text.isNotEmpty
-                  ? DateTimeRange(
-                start: DateTime.parse(startDateInput.text),
-                end: DateTime.parse(endDateInput.text),
-              )
-                  : DateTimeRange(
-                start: DateTime.now()
-                    .subtract(const Duration(days: 7)),
-                end: DateTime.now(),
+              builder: (ctx, child) => Theme(
+                data: Theme.of(ctx).copyWith(
+                  colorScheme: Theme.of(ctx).colorScheme.copyWith(
+                        primary: kcvoilet,
+                        onPrimary: kcWhite,
+                      ),
+                ),
+                child: child!,
               ),
+              initialDateRange: startDateInput.text.isNotEmpty &&
+                      endDateInput.text.isNotEmpty
+                  ? DateTimeRange(
+                      start: DateTime.parse(startDateInput.text),
+                      end: DateTime.parse(endDateInput.text),
+                    )
+                  : DateTimeRange(
+                      start:
+                          DateTime.now().subtract(const Duration(days: 7)),
+                      end: DateTime.now(),
+                    ),
             );
 
             if (pickedDateRange != null) {
               String formattedStartDate =
-              DateFormat('yyyy-MM-dd').format(pickedDateRange.start);
+                  DateFormat('yyyy-MM-dd').format(pickedDateRange.start);
               String formattedEndDate =
-              DateFormat('yyyy-MM-dd').format(pickedDateRange.end);
+                  DateFormat('yyyy-MM-dd').format(pickedDateRange.end);
 
               setState(() {
                 startDateInput.text = formattedStartDate;
                 endDateInput.text = formattedEndDate;
               });
             }
-          }
-              : null, // Do nothing for "End Date"
+          },
         ),
       ),
     );
@@ -307,7 +398,11 @@ class _StationWiseGraphTablePageState extends State<StationWiseGraphTablePage> {
 
   _border() => OutlineInputBorder(
       borderRadius: BorderRadius.circular(8),
-      borderSide: const BorderSide(width: 1.5, color: kcBlack));
+      borderSide: const BorderSide(width: 1, color: kcVeryLightGrey));
+
+  _focusedBorder() => OutlineInputBorder(
+      borderRadius: BorderRadius.circular(8),
+      borderSide: const BorderSide(width: 1.5, color: kcvoilet));
 
   _buildDownloadExcel(){
     return BlocConsumer<StationWiseTableExportBloc, StationWiseTableExportState>(
@@ -332,22 +427,63 @@ class _StationWiseGraphTablePageState extends State<StationWiseGraphTablePage> {
               padding: const EdgeInsets.all(8.0),
               child: ElevatedButton(
                   onPressed: (){ stationWiseTableExportBloc.initState(startDateInput.text + " 00:00:00",endDateInput.text + " 23:59:59");},
-
-                  child:
-                  Row(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: kcWhite,
+                    foregroundColor: kcobservationgreen,
+                    elevation: 0,
+                    side: const BorderSide(
+                        color: kcobservationgreen, width: 1.2),
+                    fixedSize: const Size(140, 36),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Padding(
-                        padding: const EdgeInsets.all(2.0),
-                        child: Image.asset("assets/images/excelicon.png", scale: 20,),
+                        padding: const EdgeInsets.only(right: 6),
+                        child: Image.asset(
+                          "assets/images/excelicon.png",
+                          width: 18,
+                          height: 18,
+                        ),
                       ),
-                      const Text("Export", style: TextStyle(fontSize: 16, fontWeight: FontWeight.w900, color: kcBlack),),
+                      const Text(
+                        "Export",
+                        style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: kcobservationgreen),
+                      ),
                     ],
-                  )
-              ),
+                  )),
             );
 
           });
         });
   }
 
+}
+
+class _TableEmptyState extends StatelessWidget {
+  final String message;
+  const _TableEmptyState({required this.message});
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(Icons.inbox_outlined, size: 48, color: kcLightGrey),
+          const SizedBox(height: 8),
+          Text(
+            message,
+            style: const TextStyle(color: kcLightGrey, fontSize: 14),
+          ),
+        ],
+      ),
+    );
+  }
 }
