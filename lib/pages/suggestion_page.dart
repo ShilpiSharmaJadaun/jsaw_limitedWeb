@@ -18,7 +18,7 @@ import '../utils/app_drawer.dart';
 import '../utils/page_header.dart';
 import 'package:flutter/foundation.dart' show Uint8List, kIsWeb;
 import 'image_picker.dart';
-import 'dart:html' as html;
+import 'package:web/web.dart' as html;
 import 'dart:io' as io;
 
 
@@ -536,8 +536,8 @@ class _SuggestionPageState extends State<SuggestionPage> {
                     await saveSuggestionBloc.saveSuggestion(_selectedImage!,
                         titleController.text, suggestionController.text,
                         dateTimeController.text, "1.1",
-                        determineOperatingSystem(), priority.value, html.window.localStorage['kEmployeeCode'] ?? "",
-                        html.window.localStorage['kEmployeename']  ?? "", "pending");
+                        determineOperatingSystem(), priority.value, html.window.localStorage.getItem('kEmployeeCode') ?? "",
+                        html.window.localStorage.getItem('kEmployeename')  ?? "", "pending");
 
                   },
                   style: ElevatedButton.styleFrom(

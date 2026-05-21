@@ -6,7 +6,7 @@ import 'package:jsaw_limited/state/compliance_state.dart';
 import 'package:jsaw_limited/utils/page_header.dart';
 import 'package:flutter/foundation.dart' show Uint8List, kIsWeb;
 import 'package:provider/provider.dart';
-import 'dart:html' as html;
+import 'package:web/web.dart' as html;
 import '../service/observation_service.dart';
 import '../utils/app_color.dart';
 import 'image_picker.dart';
@@ -231,9 +231,9 @@ class _CompliancePageBottomSheetState extends State<CompliancePageBottomSheet> {
                         actionTakenController.text,
                         "COMPLIANCE",
                         remarkController.text,
-                        html.window.localStorage['kEmployeeCode']!,
-                        html.window.localStorage['kEmployeename']!,
-                        html.window.localStorage['kUserEmail']!,
+                        html.window.localStorage.getItem('kEmployeeCode')!,
+                        html.window.localStorage.getItem('kEmployeename')!,
+                        html.window.localStorage.getItem('kUserEmail')!,
                         widget.raisedByUnqID,
                       );
                       clearFormValues();

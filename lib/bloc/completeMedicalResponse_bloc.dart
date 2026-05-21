@@ -4,14 +4,14 @@ import 'package:jsaw_limited/service/incident_service.dart';
 import 'package:jsaw_limited/state/completeMedicalResponse_state.dart';
 import 'package:jsaw_limited/state/employeeAppReporting_state.dart';
 import '../error/api_error.dart';
-import 'dart:html';
+import 'package:web/web.dart' show window;
 
 class CompleteMedicalResponseBloc extends Cubit<CompleteMedicalResponseState> {
   CompleteMedicalResponseBloc(this.incidentService) : super(CompleteMedicalResponseState.initial());
 
   late IncidentService incidentService;
 
-  final employeeCode = window.localStorage['kEmployeeCode'] ?? "";
+  final employeeCode = window.localStorage.getItem('kEmployeeCode') ?? "";
 
   Future<void> initState() async {
     emit(CompleteMedicalResponseState.loading(state.completeMedicalResponse));

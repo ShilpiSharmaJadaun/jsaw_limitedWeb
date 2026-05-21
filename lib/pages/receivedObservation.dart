@@ -43,8 +43,8 @@ import '../state/employeeResponsibility_state.dart';
 import '../state/location_state.dart';
 import '../state/priority_state.dart';
 import '../state/responsibleHOD_state.dart';
-import 'dart:html';
-import 'dart:html' as html;
+import 'package:web/web.dart' show window;
+import 'package:web/web.dart' as html;
 
 import '../state/uniqueId_state.dart';
 
@@ -102,7 +102,7 @@ class _ReceivedObservationPageState extends State<ReceivedObservationPage> {
 
   late String employeeName;
   late String employeeCode;
-  late String receivedSessionID = window.localStorage['kReceivedsessionID'] ?? "";
+  late String receivedSessionID = window.localStorage.getItem('kReceivedsessionID') ?? "";
   late String statCode = "";
   late String departCode = "";
   late String responsibleCode;
@@ -123,7 +123,7 @@ class _ReceivedObservationPageState extends State<ReceivedObservationPage> {
   void _nextPage() {
     setState(() {
       currentPage++;
-      //allFilterObservationBloc.initState(currentPage,"", "", "", "", "", "", "",window.localStorage['kEmployeeCode'] ?? "", "","");
+      //allFilterObservationBloc.initState(currentPage,"", "", "", "", "", "", "",window.localStorage.getItem('kEmployeeCode') ?? "", "","");
 
       allFilterObservationBloc.initState(currentPage,"", "", "", "", "", "", "", "", "",receivedSessionID,"");
     });
@@ -147,14 +147,14 @@ class _ReceivedObservationPageState extends State<ReceivedObservationPage> {
     filterObservationBloc= FilterObservationBloc(observationService);
     // allObservationBloc.initState();
     allFilterObservationBloc = AllFilterObservationBloc(observationService);
-    allFilterObservationBloc.initState(currentPage,"", "", "", "", "", "", "",window.localStorage['kEmployeeCode'] ?? "", "","","");
-   // filterObservationBloc.initState(currentPage,"", "", "", "", "", "", "",window.localStorage['kEmployeeCode'] ?? "",  "");
+    allFilterObservationBloc.initState(currentPage,"", "", "", "", "", "", "",window.localStorage.getItem('kEmployeeCode') ?? "", "","","");
+   // filterObservationBloc.initState(currentPage,"", "", "", "", "", "", "",window.localStorage.getItem('kEmployeeCode') ?? "",  "");
     allPlantBloc = AllPlantBloc(observationService);
     allPlantBloc.initState();
     allDepartBloc = AllDepartBloc(observationService);
     employeeResponsibilityBloc = EmployeeResponsibilityBloc(observationService);
-    employeeName = window.localStorage['kEmployeename'] ?? "";
-    employeeCode = window.localStorage['kEmployeeCode'] ?? "";
+    employeeName = window.localStorage.getItem('kEmployeename') ?? "";
+    employeeCode = window.localStorage.getItem('kEmployeeCode') ?? "";
     priorityBloc = PriorityBloc(observationService);
     priorityBloc.initState();
     locationBloc = LocationBloc(observationService);
@@ -203,7 +203,7 @@ class _ReceivedObservationPageState extends State<ReceivedObservationPage> {
                 onPressed: () {
                   setState(() => currentPage = 0);
                   allFilterObservationBloc.initState(0, "", "", "", "", "", "", "",
-                      window.localStorage['kEmployeeCode'] ?? "", "", "", "");
+                      window.localStorage.getItem('kEmployeeCode') ?? "", "", "", "");
                 },
                 style: IconButton.styleFrom(
                   backgroundColor: kcgreen,
@@ -620,7 +620,7 @@ class _ReceivedObservationPageState extends State<ReceivedObservationPage> {
                                       if (shouldInit != null && shouldInit) {
                                         allFilterObservationBloc.initState(
                                             currentPage, "", "", "", "", "", "", "",
-                                            window.localStorage['kEmployeeCode'] ?? "", "", "", "");
+                                            window.localStorage.getItem('kEmployeeCode') ?? "", "", "", "");
                                       }
                                     },
                                     icon: const Icon(
@@ -857,7 +857,7 @@ class _ReceivedObservationPageState extends State<ReceivedObservationPage> {
   }
 
   Future<void> openFilterDialog() async {
-    final employeeCode = window.localStorage['kEmployeeCode'] ?? "";
+    final employeeCode = window.localStorage.getItem('kEmployeeCode') ?? "";
 
     await _buildFilterDialog(context, employeeCode);  // Pass employeeCode to the dialog
   }
@@ -905,7 +905,7 @@ class _ReceivedObservationPageState extends State<ReceivedObservationPage> {
                   setState(() {
                     currentPage = 0;
                   });
-                  html.window.localStorage.remove('kReceivedsessionID');
+                  html.window.localStorage.removeItem('kReceivedsessionID');
                   startDateInput.clear();
                   endDateInput.clear();
                   clearFormValues();
@@ -1704,7 +1704,7 @@ class _ReceivedObservationPageState extends State<ReceivedObservationPage> {
                                   onTap: () {
                                     stat.value = list[index].statName;
                                     statCode = list[index].statCode;
-                                    employeeResponsibilityBloc.initState(departCode, statCode, window.localStorage['kDesgnCode']!);
+                                    employeeResponsibilityBloc.initState(departCode, statCode, window.localStorage.getItem('kDesgnCode')!);
                                     Navigator.pop(context);
                                   },
                                   child: Padding(

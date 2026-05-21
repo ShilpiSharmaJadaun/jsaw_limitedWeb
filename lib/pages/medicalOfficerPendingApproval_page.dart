@@ -10,11 +10,10 @@ import 'package:jsaw_limited/state/allMedicalOfficerList_state.dart';
 import 'package:lottie/lottie.dart';
 import 'package:provider/provider.dart';
 import 'package:responsive_builder/responsive_builder.dart';
-import 'dart:html';
+import 'package:web/web.dart' show window;
 import '../bloc/all_filter_observation_bloc.dart';
 import '../service/incident_service.dart';
 import '../utils/app_color.dart';
-import 'dart:html' as html;
 
 class MedicalOfficerPendingApprovalPage extends StatefulWidget {
   const MedicalOfficerPendingApprovalPage({super.key});
@@ -36,7 +35,7 @@ class _MedicalOfficerPendingApprovalPageState extends State<MedicalOfficerPendin
   }
 
   int currentPage = 0;
-  late String raisedSessionID = window.localStorage['kRaisedSessionID'] ?? "";
+  late String raisedSessionID = window.localStorage.getItem('kRaisedSessionID') ?? "";
 
 
   @override

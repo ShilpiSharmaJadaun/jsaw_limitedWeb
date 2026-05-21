@@ -21,7 +21,7 @@ import 'package:jsaw_limited/state/update_password_state.dart';
 import 'package:jsaw_limited/utils/app_color.dart';
 import 'package:lottie/lottie.dart';
 import 'package:provider/provider.dart';
-import 'dart:html' as html;
+import 'package:web/web.dart' as html;
 
 import 'package:responsive_builder/responsive_builder.dart';
 
@@ -74,7 +74,7 @@ class _ExtraLargeDashboardPageState extends State<ExtraLargeDashboardPage> {
     updatePasswordBloc = UpdatePasswordBloc(passwordService);
 
     var empPassStatus =
-    html.window.localStorage['kEmployeePassStatus'].toString();
+    html.window.localStorage.getItem('kEmployeePassStatus').toString();
     if (empPassStatus == '0') {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         _showPasswordChangeDialog(context);
@@ -1145,11 +1145,11 @@ class _ExtraLargeDashboardPageState extends State<ExtraLargeDashboardPage> {
                                         newPasswordController.text;
                                     if (newPassword.isNotEmpty) {
                                       _updatepassword(
-                                          html.window.localStorage[
-                                          'kEmployeeCode']
+                                          html.window.localStorage
+                                              .getItem('kEmployeeCode')
                                               .toString(),
-                                          html.window.localStorage[
-                                          'kEmployeePassStatus']
+                                          html.window.localStorage
+                                              .getItem('kEmployeePassStatus')
                                               .toString(),
                                           newPasswordController.text);
                                       Navigator.pop(context);

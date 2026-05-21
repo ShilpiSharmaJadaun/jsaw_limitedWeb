@@ -1,4 +1,4 @@
-import 'dart:html' as html;
+import 'package:web/web.dart' as html;
 import 'package:flutter/material.dart';
 import '../utils/app_drawer.dart';
 import '../utils/page_header.dart';

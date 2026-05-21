@@ -39,7 +39,7 @@ import '../state/location_state.dart';
 import '../state/priority_state.dart';
 import '../utils/app_color.dart';
 import '../utils/page_header.dart';
-import 'dart:html' as html;
+import 'package:web/web.dart' as html;
 
 class ApproveObservationDetailPage extends StatefulWidget {
   ApproveObservationDetailPage({super.key, required this.model
@@ -814,9 +814,9 @@ class _ApproveObservationDetailPageState extends State<ApproveObservationDetailP
                       "actionTaken": widget.model.actionTaken.toString(),
                       "status": "CLOSED",
                       "remarks": remarkController.text,
-                      "updatedByEmpId": html.window.localStorage['kEmployeeCode']!,
-                      "updatedByEmpName": html.window.localStorage['kEmployeename']!,
-                      "updatedByEmail": html.window.localStorage['kUserEmail']!,
+                      "updatedByEmpId": html.window.localStorage.getItem('kEmployeeCode')!,
+                      "updatedByEmpName": html.window.localStorage.getItem('kEmployeename')!,
+                      "updatedByEmail": html.window.localStorage.getItem('kUserEmail')!,
                       "raisedByEmpID": widget.model.observationRaisedByEmpUnqId.toString(),
                       "imgURL": widget.model.imageCompliance
                     };
@@ -871,9 +871,9 @@ class _ApproveObservationDetailPageState extends State<ApproveObservationDetailP
                       "actionTaken": widget.model.actionTaken.toString(),
                       "status": "IN PROGRESS",
                       "remarks": remarkController.text,
-                      "updatedByEmpId": html.window.localStorage['kEmployeeCode']!,
-                      "updatedByEmpName": html.window.localStorage['kEmployeename']!,
-                      "updatedByEmail": html.window.localStorage['kUserEmail']!,
+                      "updatedByEmpId": html.window.localStorage.getItem('kEmployeeCode')!,
+                      "updatedByEmpName": html.window.localStorage.getItem('kEmployeename')!,
+                      "updatedByEmail": html.window.localStorage.getItem('kUserEmail')!,
                       "raisedByEmpID": widget.model.observationRaisedByEmpUnqId.toString(),
                       "imgURL": widget.model.imageCompliance
                     };

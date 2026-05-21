@@ -37,9 +37,9 @@ import '../state/allDepart_state.dart';
 import '../state/allplant_state.dart';
 import '../state/employeeResponsibility_state.dart';
 import '../utils/app_color.dart';
-import 'dart:html';
+import 'package:web/web.dart' show window;
 import 'package:flutter/foundation.dart' show Uint8List, kIsWeb;
-import 'dart:html' as html;
+import 'package:web/web.dart' as html;
 
 class RegisterObservationPage extends StatefulWidget {
   const RegisterObservationPage({super.key});
@@ -148,8 +148,8 @@ class _RegisterObservationPageState extends State<RegisterObservationPage> {
     allPlantBloc.initState();
     allDepartBloc = AllDepartBloc(observationService);
     employeeResponsibilityBloc = EmployeeResponsibilityBloc(observationService);
-    employeeName = window.localStorage['kEmployeename'] ?? "";
-    employeeCode = window.localStorage['kEmployeeCode'] ?? "";
+    employeeName = window.localStorage.getItem('kEmployeename') ?? "";
+    employeeCode = window.localStorage.getItem('kEmployeeCode') ?? "";
     priorityBloc = PriorityBloc(observationService);
     priorityBloc.initState();
     locationBloc = LocationBloc(observationService);
@@ -371,7 +371,7 @@ class _RegisterObservationPageState extends State<RegisterObservationPage> {
                       ],
                     ),
                   ),
-                  if (html.window.localStorage['khseCode'] == '1' || html.window.localStorage['kempAuthPlantHead'] == '1')
+                  if (html.window.localStorage.getItem('khseCode') == '1' || html.window.localStorage.getItem('kempAuthPlantHead') == '1')
                     Padding(
                     padding: const EdgeInsets.all(20.0),
                     child: Row(
@@ -492,7 +492,7 @@ class _RegisterObservationPageState extends State<RegisterObservationPage> {
                       ],
                     ),
                   ),
-                  // if (html.window.localStorage['khseCode'] == '1' || html.window.localStorage['kempAuthPlantHead'] == '1')
+                  // if (html.window.localStorage.getItem('khseCode') == '1' || html.window.localStorage.getItem('kempAuthPlantHead') == '1')
                   //   Padding(
                   //     padding: const EdgeInsets.all(20.0),
                   //     child: Row(
@@ -1686,7 +1686,7 @@ class _RegisterObservationPageState extends State<RegisterObservationPage> {
                                     responsibleHODCode = "";
                                     stat.value = list[index].statName;
                                     statCode = list[index].statCode;
-                                    employeeResponsibilityBloc.initState(departCode, statCode,window.localStorage['kGradeCode']!);
+                                    employeeResponsibilityBloc.initState(departCode, statCode,window.localStorage.getItem('kGradeCode')!);
                                     Navigator.pop(context);
                                   },
                                   child: Padding(

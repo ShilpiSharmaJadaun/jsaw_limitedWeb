@@ -16,7 +16,7 @@ import 'package:responsive_builder/responsive_builder.dart';
 import '../pages/medicalOfficerResponse_page.dart';
 import '../pages/incident_Reporting_page.dart';
 import '../utils/app_color.dart';
-import 'dart:html' as html;
+import 'package:web/web.dart' as html;
 
 class AppDrawer extends StatelessWidget {
   final Function(int, String, Widget) onSelectPage;
@@ -27,8 +27,8 @@ class AppDrawer extends StatelessWidget {
   const AppDrawer({Key? key, required this.onSelectPage}) : super(key: key);
 
   List<_DrawerEntry> _getEntries() {
-    final khse = html.window.localStorage['khseCode'] == '1';
-    final reporting = html.window.localStorage['kreporting'] == '1';
+    final khse = html.window.localStorage.getItem('khseCode') == '1';
+    final reporting = html.window.localStorage.getItem('kreporting') == '1';
 
     return [
       const _DrawerEntry(

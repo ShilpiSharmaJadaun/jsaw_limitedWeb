@@ -14,11 +14,10 @@ import 'package:jsaw_limited/state/completeMedicalResponse_state.dart';
 import 'package:lottie/lottie.dart';
 import 'package:provider/provider.dart';
 import 'package:responsive_builder/responsive_builder.dart';
-import 'dart:html';
+import 'package:web/web.dart' show window;
 import '../bloc/all_filter_observation_bloc.dart';
 import '../service/incident_service.dart';
 import '../utils/app_color.dart';
-import 'dart:html' as html;
 
 class AllIncidentPage extends StatefulWidget {
   const AllIncidentPage({super.key});
@@ -40,7 +39,7 @@ class _AllIncidentPageState extends State<AllIncidentPage> {
   }
 
   int currentPage = 0;
-  late String raisedSessionID = window.localStorage['kRaisedSessionID'] ?? "";
+  late String raisedSessionID = window.localStorage.getItem('kRaisedSessionID') ?? "";
 
 
   @override

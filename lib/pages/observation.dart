@@ -1,5 +1,5 @@
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:flutter/material.dart' hide VoidCallback;
+import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 import 'package:jsaw_limited/bloc/all_filter_observation_bloc.dart';
@@ -52,8 +52,8 @@ import '../state/location_state.dart';
 import '../state/priority_state.dart';
 import '../state/responsibleHOD_state.dart';
 import 'edit_all_observation_page.dart';
-import 'dart:html';
-import 'dart:html' as html;
+import 'package:web/web.dart' show window;
+import 'package:web/web.dart' as html;
 import 'hseEditObservation_Page.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -131,7 +131,7 @@ class _ObservationPageState extends State<ObservationPage>
                     _tab(Icons.inbox_outlined, 'Received Observation'),
                     _tab(Icons.add_alert_outlined, 'Raised Observation'),
                     _tab(Icons.list_alt_outlined, 'All Observation'),
-                    if (html.window.localStorage['khseCode'] == '1')
+                    if (html.window.localStorage.getItem('khseCode') == '1')
                       _tab(Icons.edit_note, 'Edit Observation'),
                   ],
                 ),
@@ -142,7 +142,7 @@ class _ObservationPageState extends State<ObservationPage>
                       ReceivedObservationPage(),
                       RaisedObservationPage(),
                       const AllObservationPage(),
-                      if (html.window.localStorage['khseCode'] == '1')
+                      if (html.window.localStorage.getItem('khseCode') == '1')
                         HseEditObservationPage(),
                     ],
                   ),
@@ -211,7 +211,7 @@ class _AllObservationPageState extends State<AllObservationPage> {
   late String employeeName;
   late String employeeCode;
   late String allObservationSessionID =
-      window.localStorage['kAllSessionID'] ?? '';
+      window.localStorage.getItem('kAllSessionID') ?? '';
   late String statCode = '';
   late String departCode = '';
   late String responsibleCode = '';
@@ -256,8 +256,8 @@ class _AllObservationPageState extends State<AllObservationPage> {
     allPlantBloc = AllPlantBloc(observationService)..initState();
     allDepartBloc = AllDepartBloc(observationService);
     employeeResponsibilityBloc = EmployeeResponsibilityBloc(observationService);
-    employeeName = window.localStorage['kEmployeename'] ?? '';
-    employeeCode = window.localStorage['kEmployeeCode'] ?? '';
+    employeeName = window.localStorage.getItem('kEmployeename') ?? '';
+    employeeCode = window.localStorage.getItem('kEmployeeCode') ?? '';
     priorityBloc = PriorityBloc(observationService)..initState();
     locationBloc = LocationBloc(observationService);
     allHazardCatBloc = AllHazardCatBloc(dashboardService)..initState();
@@ -493,7 +493,7 @@ class _AllObservationPageState extends State<AllObservationPage> {
   // Filter Dialog — polished, grouped
   // ─────────────────────────────────────────────────────────────────────────
   Future<void> _openFilterDialog() async {
-    final empCode = window.localStorage['kEmployeeCode'] ?? '';
+    final empCode = window.localStorage.getItem('kEmployeeCode') ?? '';
     await showDialog(
       context: context,
       builder: (dialogContext) => _FilterDialog(
@@ -526,7 +526,7 @@ class _AllObservationPageState extends State<AllObservationPage> {
             uniqueId.value,
           );
           setState(() => currentPage = 0);
-          html.window.localStorage.remove('kAllSessionID');
+          html.window.localStorage.removeItem('kAllSessionID');
           startDateInput.clear();
           endDateInput.clear();
           _clearFormValues();
@@ -873,7 +873,7 @@ class _AllObservationPageState extends State<AllObservationPage> {
               employeeResponsibilityBloc.initState(
                   departCode,
                   statCode,
-                  window.localStorage['kDesgnCode']!);
+                  window.localStorage.getItem('kDesgnCode')!);
             },
           );
         },

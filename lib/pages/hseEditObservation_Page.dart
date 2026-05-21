@@ -6,8 +6,8 @@ import 'package:jsaw_limited/bloc/deleteObservation_bloc.dart';
 import 'package:lottie/lottie.dart';
 import 'package:provider/provider.dart';
 import 'package:responsive_builder/responsive_builder.dart';
-import 'dart:html';
-import 'dart:html' as html;
+import 'package:web/web.dart' show window;
+import 'package:web/web.dart' as html;
 import '../bloc/allDepart_bloc.dart';
 import '../bloc/all_filter_observation_bloc.dart';
 import '../bloc/allhazard_cat_bloc.dart';
@@ -104,7 +104,7 @@ class _HseEditObservationPageState extends State<HseEditObservationPage> {
 
   late String employeeName;
   late String employeeCode;
-  late String raisedSessionID = window.localStorage['kRaisedSessionID'] ?? "";
+  late String raisedSessionID = window.localStorage.getItem('kRaisedSessionID') ?? "";
   late String statCode = "";
   late String departCode = "";
   late String responsibleCode;
@@ -133,15 +133,15 @@ class _HseEditObservationPageState extends State<HseEditObservationPage> {
     filterObservationBloc= FilterObservationBloc(observationService);
     deleteObservationBloc = DeleteObservationBloc(observationService);
     // allObservationBloc.initState();
-    //filterObservationBloc.initState(currentPage,"", "", "", "", "", "", "", "", window.localStorage['kEmployeeCode'] ?? "");
+    //filterObservationBloc.initState(currentPage,"", "", "", "", "", "", "", "", window.localStorage.getItem('kEmployeeCode') ?? "");
     allPlantBloc = AllPlantBloc(observationService);
     allPlantBloc.initState();
     allFilterObservationBloc = AllFilterObservationBloc(observationService);
     allFilterObservationBloc.initState(currentPage, "", "", "", "", "", "PENDING", "", "", "", "", "");
     allDepartBloc = AllDepartBloc(observationService);
     employeeResponsibilityBloc = EmployeeResponsibilityBloc(observationService);
-    employeeName = window.localStorage['kEmployeename'] ?? "";
-    employeeCode = window.localStorage['kEmployeeCode'] ?? "";
+    employeeName = window.localStorage.getItem('kEmployeename') ?? "";
+    employeeCode = window.localStorage.getItem('kEmployeeCode') ?? "";
     priorityBloc = PriorityBloc(observationService);
     priorityBloc.initState();
     locationBloc = LocationBloc(observationService);
@@ -760,7 +760,7 @@ class _HseEditObservationPageState extends State<HseEditObservationPage> {
   }
 
   Future<void> openFilterDialog() async {
-    final employeeCode = window.localStorage['kEmployeeCode'] ?? "";  // Retrieve value before dialog
+    final employeeCode = window.localStorage.getItem('kEmployeeCode') ?? "";  // Retrieve value before dialog
     await _buildFilterDialog(context, employeeCode);  // Pass employeeCode to the dialog
   }
 
@@ -807,7 +807,7 @@ class _HseEditObservationPageState extends State<HseEditObservationPage> {
                   setState(() {
                     currentPage = 0;
                   });
-                  html.window.localStorage.remove('kRaisedSessionID');
+                  html.window.localStorage.removeItem('kRaisedSessionID');
                   startDateInput.clear();
                   endDateInput.clear();
                   clearFormValues();
@@ -1733,7 +1733,7 @@ class _HseEditObservationPageState extends State<HseEditObservationPage> {
                                   onTap: () {
                                     stat.value = list[index].statName;
                                     statCode = list[index].statCode;
-                                    employeeResponsibilityBloc.initState(departCode, statCode, window.localStorage['kGradeCode']!);
+                                    employeeResponsibilityBloc.initState(departCode, statCode, window.localStorage.getItem('kGradeCode')!);
                                     Navigator.pop(context);
                                   },
                                   child: Padding(

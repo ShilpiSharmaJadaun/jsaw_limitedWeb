@@ -5,14 +5,14 @@ import 'package:jsaw_limited/state/employeeAppReporting_state.dart';
 import 'package:jsaw_limited/state/employeeBasicDetail_state.dart';
 import 'package:jsaw_limited/state/employeeShift_state.dart';
 import '../error/api_error.dart';
-import 'dart:html';
+import 'package:web/web.dart' show window;
 
 class EmployeeShiftBloc extends Cubit<EmployeeShiftState> {
   EmployeeShiftBloc(this.incidentService) : super(EmployeeShiftState.initial());
 
   late IncidentService incidentService;
 
-  final employeeCode = window.localStorage['kEmployeeCode'] ?? "";
+  final employeeCode = window.localStorage.getItem('kEmployeeCode') ?? "";
 
   Future<void> initState() async {
     emit(EmployeeShiftState.loading(state.employeeShift));

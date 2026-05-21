@@ -5,14 +5,14 @@ import 'package:jsaw_limited/state/completeMedicalResponse_state.dart';
 import 'package:jsaw_limited/state/completeSafetyRemark_state.dart';
 import 'package:jsaw_limited/state/employeeAppReporting_state.dart';
 import '../error/api_error.dart';
-import 'dart:html';
+import 'package:web/web.dart' show window;
 
 class CompleteSafetyRemarkbloc extends Cubit<CompleteSafetyRemarkState> {
   CompleteSafetyRemarkbloc(this.incidentService) : super(CompleteSafetyRemarkState.initial());
 
   late IncidentService incidentService;
 
-  final employeeCode = window.localStorage['kEmployeeCode'] ?? "";
+  final employeeCode = window.localStorage.getItem('kEmployeeCode') ?? "";
 
   Future<void> initState() async {
     emit(CompleteSafetyRemarkState.loading(state.copmleteSafetyRemak));

@@ -24,7 +24,7 @@ import 'package:jsaw_limited/utils/app_color.dart';
 import 'package:lottie/lottie.dart';
 import 'package:provider/provider.dart';
 import 'package:responsive_builder/responsive_builder.dart';
-import 'dart:html' as html;
+import 'package:web/web.dart' as html;
 
 class LargeDashboardPage extends StatefulWidget {
   const LargeDashboardPage({super.key});
@@ -70,7 +70,7 @@ class _LargeDashboardPageState extends State<LargeDashboardPage> {
     top3hazardBloc.initState();
     updatePasswordBloc = UpdatePasswordBloc(passwordService);
     // Check the employee password status in local storage
-    var empPassStatus = html.window.localStorage['kEmployeePassStatus'].toString();
+    var empPassStatus = html.window.localStorage.getItem('kEmployeePassStatus').toString();
 
     if (empPassStatus == '0') {
       // If the status is 0, show the password change dialog
@@ -844,8 +844,8 @@ class _LargeDashboardPageState extends State<LargeDashboardPage> {
                                       String newPassword = newPasswordController.text;
                                       if (newPassword.isNotEmpty) {
                                         _updatepassword(
-                                            html.window.localStorage['kEmployeeCode'].toString(),
-                                            html.window.localStorage['kEmployeePassStatus'].toString(),
+                                            html.window.localStorage.getItem('kEmployeeCode').toString(),
+                                            html.window.localStorage.getItem('kEmployeePassStatus').toString(),
                                             newPasswordController.text);
                                         // Add your password saving logic here
                                         // After saving, close the dialog

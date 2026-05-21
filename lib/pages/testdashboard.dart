@@ -25,7 +25,7 @@ import 'package:jsaw_limited/utils/page_header.dart';
 import 'package:lottie/lottie.dart';
 import 'package:provider/provider.dart';
 import 'package:responsive_builder/responsive_builder.dart';
-import 'dart:html' as html;
+import 'package:web/web.dart' as html;
 
 class TestDashboardPage extends StatefulWidget {
   const TestDashboardPage({super.key});
@@ -68,7 +68,7 @@ class _TestDashboardPageState extends State<TestDashboardPage> {
     top3hazardBloc.initState();
     updatePasswordBloc = UpdatePasswordBloc(passwordService);
 
-    var empPassStatus = html.window.localStorage['kEmployeePassStatus'].toString();
+    var empPassStatus = html.window.localStorage.getItem('kEmployeePassStatus').toString();
     if (empPassStatus == '0') {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         _showPasswordChangeDialog(context);
@@ -833,8 +833,8 @@ class _TestDashboardPageState extends State<TestDashboardPage> {
                                   String newPassword = newPasswordController.text;
                                   if (newPassword.isNotEmpty) {
                                     _updatepassword(
-                                      html.window.localStorage['kEmployeeCode'].toString(),
-                                      html.window.localStorage['kEmployeePassStatus'].toString(),
+                                      html.window.localStorage.getItem('kEmployeeCode').toString(),
+                                      html.window.localStorage.getItem('kEmployeePassStatus').toString(),
                                       newPasswordController.text,
                                     );
                                     Navigator.pop(context);

@@ -35,7 +35,7 @@ import '../state/priority_state.dart';
 import '../state/responsibleHOD_state.dart';
 import '../utils/app_color.dart';
 import '../utils/page_header.dart';
-import 'dart:html';
+import 'package:web/web.dart' show window;
 import 'dart:typed_data';
 
 import 'image_picker.dart';
@@ -1113,7 +1113,7 @@ class _EditRaisedObservationsPageState extends State<EditRaisedObservationsPage>
                                     department.value = list[index].statName;
                                     stateCode = list[index].statCode;
                                     departCode = list[index].deptCode;
-                                    employeeResponsibilityBloc.initState(departCode, stateCode,window.localStorage['kDesgnCode']!);
+                                    employeeResponsibilityBloc.initState(departCode, stateCode,window.localStorage.getItem('kDesgnCode')!);
                                     locationBloc.initState(departCode);
                                     Navigator.pop(context);
                                   },

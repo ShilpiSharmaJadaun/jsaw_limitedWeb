@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:jsaw_limited/bloc/changeEmail_bloc.dart';
 import 'package:jsaw_limited/bloc/changepassword_bloc.dart';
 import 'package:jsaw_limited/service/password_service.dart';
-import 'dart:html' as html;
+import 'package:web/web.dart' as html;
 import 'package:provider/provider.dart';
 
 class ChangePasswordPage extends StatefulWidget {
@@ -50,7 +50,7 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> with SingleTick
           tabs: [
             const Tab(text: "Change Password", icon: Icon(Icons.password),),
             const Tab(text: "Change Email", icon: Icon(Icons.email),),
-            if (html.window.localStorage['kResetPasswordAuth'] == '1')
+            if (html.window.localStorage.getItem('kResetPasswordAuth') == '1')
             const Tab(text: "Reset Password", icon: Icon(Icons.email),),
           ],
         ),
@@ -76,8 +76,8 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> with SingleTick
         final newPassword = newPasswordController.text.trim();
         if (newPassword.isNotEmpty) {
           _updatePassword(
-            html.window.localStorage['kEmployeeCode'] ?? "",
-            html.window.localStorage['kEmployeePassStatus'] ?? "",
+            html.window.localStorage.getItem('kEmployeeCode') ?? "",
+            html.window.localStorage.getItem('kEmployeePassStatus') ?? "",
             newPassword,
           );
           ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Password Changed Successfully")));
@@ -101,7 +101,7 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> with SingleTick
         final newEmail = newEmailController.text.trim();
         if (newEmail.isNotEmpty) {
           _updateEmail(
-            html.window.localStorage['kEmployeeCode'] ?? "",
+            html.window.localStorage.getItem('kEmployeeCode') ?? "",
             newEmail,
           );
           ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Email Changed Successfully")));
@@ -124,7 +124,7 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> with SingleTick
         if (restPassword.isNotEmpty) {
           _updatePassword(
             employeeCodeController.text,
-            html.window.localStorage['kEmployeePassStatus'] ?? "",
+            html.window.localStorage.getItem('kEmployeePassStatus') ?? "",
             restPassword,
           );
           ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Password Changed Successfully")));

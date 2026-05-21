@@ -6,7 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../error/api_error.dart';
 import '../model/login_model.dart';
 import 'constant.dart';
-import 'dart:html'; // Import dart:html for web-specific features
+import 'package:web/web.dart' show window;
 
 class LoginService {
 
@@ -17,19 +17,19 @@ class LoginService {
       final response = await http.post(Uri.parse(url), body: json.encode(data), headers: headers);
       final responseBody = json.decode(response.body);
       if (responseBody["status"] == true) {
-        window.localStorage['kEmployeename'] = responseBody['model']['empName'];
-        window.localStorage['kEmployeeCode'] = responseBody['model']['empUnqId'];
-        window.localStorage['kEmployeePassStatus'] = responseBody['model']['empPassStatus'].toString();
-        window.localStorage['kUserEmail'] = responseBody['model']['email'].toString();
-        //window.localStorage['kstatCode'] = responseBody['model']['desgCode'].toString();
-        window.localStorage['kstatCode'] = responseBody['model']['statCode'].toString();
-        window.localStorage['kdeptCode'] = responseBody['model']['deptCode'].toString();
-        window.localStorage['kDesgnCode'] = responseBody['model']['desgCode'].toString();
-        window.localStorage['kGradeCode'] = responseBody['model']['gradeCode'].toString();
-        window.localStorage['khseCode'] = responseBody['model']['hseteamAuthorization'].toString();
-        window.localStorage['kempAuthPlantHead'] = responseBody['model']['employeeAuthorizationForPlantUnitHead'].toString();
-        window.localStorage['kreporting'] = responseBody['model']['reporting'].toString();
-        window.localStorage['kResetPasswordAuth'] = responseBody['model']['resetPasswordAuth'].toString();
+        window.localStorage.setItem('kEmployeename', responseBody['model']['empName']);
+        window.localStorage.setItem('kEmployeeCode', responseBody['model']['empUnqId']);
+        window.localStorage.setItem('kEmployeePassStatus', responseBody['model']['empPassStatus'].toString());
+        window.localStorage.setItem('kUserEmail', responseBody['model']['email'].toString());
+        //window.localStorage.setItem('kstatCode', responseBody['model']['desgCode'].toString());
+        window.localStorage.setItem('kstatCode', responseBody['model']['statCode'].toString());
+        window.localStorage.setItem('kdeptCode', responseBody['model']['deptCode'].toString());
+        window.localStorage.setItem('kDesgnCode', responseBody['model']['desgCode'].toString());
+        window.localStorage.setItem('kGradeCode', responseBody['model']['gradeCode'].toString());
+        window.localStorage.setItem('khseCode', responseBody['model']['hseteamAuthorization'].toString());
+        window.localStorage.setItem('kempAuthPlantHead', responseBody['model']['employeeAuthorizationForPlantUnitHead'].toString());
+        window.localStorage.setItem('kreporting', responseBody['model']['reporting'].toString());
+        window.localStorage.setItem('kResetPasswordAuth', responseBody['model']['resetPasswordAuth'].toString());
 
         // Get shared preferences instance
         // final SharedPreferences prefs = await SharedPreferences.getInstance();

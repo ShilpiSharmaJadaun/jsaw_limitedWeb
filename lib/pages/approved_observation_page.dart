@@ -39,9 +39,9 @@ import '../state/priority_state.dart';
 import '../state/responsibleHOD_state.dart';
 import '../state/uniqueId_state.dart';
 import '../utils/app_color.dart';
-import 'dart:html' as html;
+import 'package:web/web.dart' as html;
 import 'approve_observation_Detail_page.dart';
-import 'dart:html';
+import 'package:web/web.dart' show window;
 
 
 class ApprovedObservationPage extends StatefulWidget {
@@ -99,7 +99,7 @@ class _ApprovedObservationPageState extends State<ApprovedObservationPage> {
 
   late String employeeName;
   late String employeeCode;
-  late String sessionID = window.localStorage['ksessionID'] ?? "";
+  late String sessionID = window.localStorage.getItem('ksessionID') ?? "";
   late String statCode = "";
   late String departCode = "";
   late String responsibleCode;
@@ -138,16 +138,16 @@ class _ApprovedObservationPageState extends State<ApprovedObservationPage> {
     final dashboardService = Provider.of<DashboardService>(context, listen: false);
 
     approveComplianceBloc = ApproveComplianceBloc(observationService);
-    String? employeeCode = html.window.localStorage['kEmployeeCode'];
+    String? employeeCode = html.window.localStorage.getItem('kEmployeeCode');
     approveComplianceBloc.initState();
 
     allPlantBloc = AllPlantBloc(observationService);
     allPlantBloc.initState();
     allDepartBloc = AllDepartBloc(observationService);
     employeeResponsibilityBloc = EmployeeResponsibilityBloc(observationService);
-    employeeName = window.localStorage['kEmployeename'] ?? "";
-    employeeCode = window.localStorage['kEmployeeCode'] ?? "";
-    // sessionID = window.localStorage['ksessionID'] ?? "";
+    employeeName = window.localStorage.getItem('kEmployeename') ?? "";
+    employeeCode = window.localStorage.getItem('kEmployeeCode') ?? "";
+    // sessionID = window.localStorage.getItem('ksessionID') ?? "";
     priorityBloc = PriorityBloc(observationService);
     priorityBloc.initState();
     locationBloc = LocationBloc(observationService);
@@ -675,7 +675,7 @@ class _ApprovedObservationPageState extends State<ApprovedObservationPage> {
   }
 
   Future<void> openFilterDialog() async {
-    final employeeCode = window.localStorage['kEmployeeCode'] ?? "";  // Retrieve value before dialog
+    final employeeCode = window.localStorage.getItem('kEmployeeCode') ?? "";  // Retrieve value before dialog
     await _buildFilterDialog(context, employeeCode);  // Pass employeeCode to the dialog
   }
 
@@ -718,7 +718,7 @@ class _ApprovedObservationPageState extends State<ApprovedObservationPage> {
               ElevatedButton(
                 onPressed: () {
                   allFilterObservationBloc.initState(0,statCode, fromDateInput.text, endDateInput.text, location.value, departCode, "COMPLIANCE", hazard.value, "", '',"",uniqueId.value);
-                  html.window.localStorage.remove('ksessionID');
+                  html.window.localStorage.removeItem('ksessionID');
                   startDateInput.clear();
                   endDateInput.clear();
                   clearFormValues();
@@ -1638,7 +1638,7 @@ class _ApprovedObservationPageState extends State<ApprovedObservationPage> {
                                   onTap: () {
                                     stat.value = list[index].statName;
                                     statCode = list[index].statCode;
-                                    employeeResponsibilityBloc.initState(departCode, statCode, window.localStorage['kDesgnCode']!);
+                                    employeeResponsibilityBloc.initState(departCode, statCode, window.localStorage.getItem('kDesgnCode')!);
                                     Navigator.pop(context);
                                   },
                                   child: Padding(

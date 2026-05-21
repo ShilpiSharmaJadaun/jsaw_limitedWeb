@@ -2,14 +2,14 @@ import 'package:bloc/bloc.dart';
 import 'package:jsaw_limited/service/employee_reporting_service.dart';
 import 'package:jsaw_limited/state/employeeAppReporting_state.dart';
 import '../error/api_error.dart';
-import 'dart:html';
+import 'package:web/web.dart' show window;
 
 class EmployeeFromAppReportingBloc extends Cubit<EmployeeFromAppReportingState> {
   EmployeeFromAppReportingBloc(this.employeeReportingService) : super(EmployeeFromAppReportingState.initial());
 
   late EmployeeReportingService employeeReportingService;
 
-  final employeeCode = window.localStorage['kEmployeeCode'] ?? "";
+  final employeeCode = window.localStorage.getItem('kEmployeeCode') ?? "";
 
   Future<void> initState() async {
     emit(EmployeeFromAppReportingState.loading(state.appReporting));

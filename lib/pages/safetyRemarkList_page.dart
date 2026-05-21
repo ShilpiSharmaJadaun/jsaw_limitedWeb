@@ -17,11 +17,12 @@ import 'package:jsaw_limited/state/safetyRemarkList_state.dart';
 import 'package:lottie/lottie.dart';
 import 'package:provider/provider.dart';
 import 'package:responsive_builder/responsive_builder.dart';
-import 'dart:html';
+import 'dart:js_interop';
+import 'package:web/web.dart' show window;
 import '../bloc/all_filter_observation_bloc.dart';
 import '../service/incident_service.dart';
 import '../utils/app_color.dart';
-import 'dart:html' as html;
+import 'package:web/web.dart' as html;
 
 class SafetyRemarkListPage extends StatefulWidget {
   const SafetyRemarkListPage({super.key});
@@ -44,7 +45,7 @@ class _SafetyRemarkListPageState extends State<SafetyRemarkListPage> {
   }
 
   int currentPage = 0;
-  late String raisedSessionID = window.localStorage['kRaisedSessionID'] ?? "";
+  late String raisedSessionID = window.localStorage.getItem('kRaisedSessionID') ?? "";
 
 
   @override
@@ -82,12 +83,16 @@ class _SafetyRemarkListPageState extends State<SafetyRemarkListPage> {
           success: (uniqueId, bytes) {
             final safeName =
                 uniqueId.replaceAll(RegExp(r'[\\/:*?"<>|]'), '_');
-            final blob = html.Blob([bytes], 'application/pdf');
-            final url = html.Url.createObjectUrlFromBlob(blob);
-            html.AnchorElement(href: url)
+            final blob = html.Blob(
+              [bytes.toJS].toJS,
+              html.BlobPropertyBag(type: 'application/pdf'),
+            );
+            final url = html.URL.createObjectURL(blob);
+            html.HTMLAnchorElement()
+              ..href = url
               ..setAttribute('download', '$safeName.pdf')
               ..click();
-            html.Url.revokeObjectUrl(url);
+            html.URL.revokeObjectURL(url);
           },
           failed: (_, message) {
             ScaffoldMessenger.of(context).showSnackBar(

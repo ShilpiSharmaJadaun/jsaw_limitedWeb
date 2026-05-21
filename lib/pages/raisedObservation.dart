@@ -44,11 +44,11 @@ import '../state/employeeResponsibility_state.dart';
 import '../state/location_state.dart';
 import '../state/priority_state.dart';
 import '../state/responsibleHOD_state.dart';
-import 'dart:html';
+import 'package:web/web.dart' show window;
 
 import '../state/uniqueId_state.dart';
 import 'edit_raised_observations_page.dart';
-import 'dart:html' as html;
+import 'package:web/web.dart' as html;
 
 class RaisedObservationPage extends StatefulWidget {
   const RaisedObservationPage({super.key});
@@ -106,7 +106,7 @@ class _RaisedObservationPageState extends State<RaisedObservationPage> {
 
   late String employeeName;
   late String employeeCode;
-  late String raisedSessionID = window.localStorage['kRaisedSessionID'] ?? "";
+  late String raisedSessionID = window.localStorage.getItem('kRaisedSessionID') ?? "";
   late String statCode = "";
   late String departCode = "";
   late String responsibleCode;
@@ -134,15 +134,15 @@ class _RaisedObservationPageState extends State<RaisedObservationPage> {
     //allObservationBloc = AllObservationBloc(observationService);
     filterObservationBloc= FilterObservationBloc(observationService);
     // allObservationBloc.initState();
-    //filterObservationBloc.initState(currentPage,"", "", "", "", "", "", "", "", window.localStorage['kEmployeeCode'] ?? "");
+    //filterObservationBloc.initState(currentPage,"", "", "", "", "", "", "", "", window.localStorage.getItem('kEmployeeCode') ?? "");
     allPlantBloc = AllPlantBloc(observationService);
     allPlantBloc.initState();
     allFilterObservationBloc = AllFilterObservationBloc(observationService);
-    allFilterObservationBloc.initState(currentPage,"", "", "", "", "", "", "", "", window.localStorage['kEmployeeCode'] ?? "", "","");
+    allFilterObservationBloc.initState(currentPage,"", "", "", "", "", "", "", "", window.localStorage.getItem('kEmployeeCode') ?? "", "","");
     allDepartBloc = AllDepartBloc(observationService);
     employeeResponsibilityBloc = EmployeeResponsibilityBloc(observationService);
-    employeeName = window.localStorage['kEmployeename'] ?? "";
-    employeeCode = window.localStorage['kEmployeeCode'] ?? "";
+    employeeName = window.localStorage.getItem('kEmployeename') ?? "";
+    employeeCode = window.localStorage.getItem('kEmployeeCode') ?? "";
     priorityBloc = PriorityBloc(observationService);
     priorityBloc.initState();
     locationBloc = LocationBloc(observationService);
@@ -207,7 +207,7 @@ class _RaisedObservationPageState extends State<RaisedObservationPage> {
                 onPressed: () {
                   setState(() => currentPage = 0);
                   allFilterObservationBloc.initState(0, "", "", "", "", "", "", "", "",
-                      window.localStorage['kEmployeeCode'] ?? "", "", "");
+                      window.localStorage.getItem('kEmployeeCode') ?? "", "", "");
                 },
                 style: IconButton.styleFrom(
                   backgroundColor: kcgreen,
@@ -620,8 +620,8 @@ class _RaisedObservationPageState extends State<RaisedObservationPage> {
                                             "",
                                             "",
                                             "",
-                                            window.localStorage[
-                                                    'kEmployeeCode'] ??
+                                            window.localStorage
+                                                    .getItem('kEmployeeCode') ??
                                                 "",
                                             "",
                                             "");
@@ -861,7 +861,7 @@ class _RaisedObservationPageState extends State<RaisedObservationPage> {
   }
 
   Future<void> openFilterDialog() async {
-    final employeeCode = window.localStorage['kEmployeeCode'] ?? "";  // Retrieve value before dialog
+    final employeeCode = window.localStorage.getItem('kEmployeeCode') ?? "";  // Retrieve value before dialog
     await _buildFilterDialog(context, employeeCode);  // Pass employeeCode to the dialog
   }
 
@@ -909,7 +909,7 @@ class _RaisedObservationPageState extends State<RaisedObservationPage> {
                   setState(() {
                     currentPage = 0;
                   });
-                  html.window.localStorage.remove('kRaisedSessionID');
+                  html.window.localStorage.removeItem('kRaisedSessionID');
                   startDateInput.clear();
                   endDateInput.clear();
                   clearFormValues();
@@ -1835,7 +1835,7 @@ class _RaisedObservationPageState extends State<RaisedObservationPage> {
                                   onTap: () {
                                     stat.value = list[index].statName;
                                     statCode = list[index].statCode;
-                                    employeeResponsibilityBloc.initState(departCode, statCode, window.localStorage['kGradeCode']!);
+                                    employeeResponsibilityBloc.initState(departCode, statCode, window.localStorage.getItem('kGradeCode')!);
                                     Navigator.pop(context);
                                   },
                                   child: Padding(

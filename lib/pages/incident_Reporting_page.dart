@@ -28,7 +28,7 @@ import '../utils/app_color.dart';
 import 'approve_reject_table_page.dart';
 import 'image_picker.dart';
 import 'package:flutter/foundation.dart' show Uint8List;
-import 'dart:html';
+import 'package:web/web.dart' show window;
 import 'package:flutter/foundation.dart' show Uint8List, kIsWeb;
 
 import 'package:flutter/services.dart';
@@ -123,7 +123,7 @@ class _IncidentReportingPageState extends State<IncidentReportingPage> {
 
   ValueNotifier<String> location = ValueNotifier("");
 
-  String responsibleEngg = window.localStorage['kEmployeename'] ?? "";
+  String responsibleEngg = window.localStorage.getItem('kEmployeename') ?? "";
 
   late AllTypeIncidentBloc allTypeIncidentBloc;
 
@@ -151,9 +151,9 @@ class _IncidentReportingPageState extends State<IncidentReportingPage> {
     employeeResponsibilityBloc = EmployeeResponsibilityBloc(observationService);
 
     responsibleHODBloc = ResponsibleHODBloc(observationService);
-    responsibleHODBloc.initState(window.localStorage['kdepart']??"", window.localStorage['kstatCode']??"", window.localStorage['kGradeCode']??"", window.localStorage['kEmployeeCode']??"");
+    responsibleHODBloc.initState(window.localStorage.getItem('kdepart')??"", window.localStorage.getItem('kstatCode')??"", window.localStorage.getItem('kGradeCode')??"", window.localStorage.getItem('kEmployeeCode')??"");
 
-    String responsibleEngg = window.localStorage['kEmployeename'] ?? "";
+    String responsibleEngg = window.localStorage.getItem('kEmployeename') ?? "";
 
     allTypeIncidentBloc = AllTypeIncidentBloc(incidentService);
     allTypeIncidentBloc.initState();
@@ -1084,7 +1084,7 @@ class _IncidentReportingPageState extends State<IncidentReportingPage> {
                                 InkWell(
                                   onTap: () {
                                     location.value = list[index].locations;
-                                    employeeResponsibilityBloc.initState(window.localStorage['kdeptCode'] ?? "", window.localStorage['kstatCode']?? "",window.localStorage['kGradeCode'] ?? "");
+                                    employeeResponsibilityBloc.initState(window.localStorage.getItem('kdeptCode') ?? "", window.localStorage.getItem('kstatCode')?? "",window.localStorage.getItem('kGradeCode') ?? "");
 
                                     Navigator.pop(context);
                                   },
@@ -1232,7 +1232,7 @@ class _IncidentReportingPageState extends State<IncidentReportingPage> {
   //                                   responsibleHOD.value = "";
   //                                   responsibleCode = list[index].empUnqId;
   //                                   responsibleEnggDesignationCode = list[index].gradeCode;
-  //                                   responsibleHODBloc.initState(window.localStorage['kdepart']??"", window.localStorage['kstatCode']??"", responsibleEnggDesignationCode, responsibleCode);
+  //                                   responsibleHODBloc.initState(window.localStorage.getItem('kdepart')??"", window.localStorage.getItem('kstatCode')??"", responsibleEnggDesignationCode, responsibleCode);
   //                                   Navigator.pop(context);
   //                                 },
   //                                 child: Padding(

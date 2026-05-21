@@ -19,7 +19,7 @@ import '../model/allsafetyobservationraised_pieGrpah_model.dart';
 import '../model/observation_status_List_model.dart';
 import '../model/observationstatus_model.dart';
 import 'constant.dart';
-import 'dart:html';
+import 'package:web/web.dart' show window;
 
 class GraphService{
 
@@ -37,7 +37,7 @@ class GraphService{
       if(responseBody["status"] == true){
         final itemList = responseBody["model"] as List;
         print("Session ID: ${responseBody['sessionID']}");
-        window.localStorage['kgraph1session'] = responseBody['sessionID'].toString();
+        window.localStorage.setItem('kgraph1session', responseBody['sessionID'].toString());
         return itemList.map((e) => AllSafetyObservationByManagerandEnggModel.fromJson(e)).toList();
       }else{
         ApiError.fromResponse(responseBody["msg"]);
@@ -63,7 +63,7 @@ class GraphService{
       if(responseBody["status"] == true){
         final itemList = responseBody["model"] as List;
         print("Session ID: ${responseBody['sessionID']}");
-        window.localStorage['kgraph5session'] = responseBody['sessionID'].toString();
+        window.localStorage.setItem('kgraph5session', responseBody['sessionID'].toString());
         return itemList.map((e) => AllSafetyObservationRaisedByManagerandEnggModel.fromJson(e)).toList();
       }else{
         ApiError.fromResponse(responseBody["msg"]);
@@ -132,7 +132,7 @@ class GraphService{
 
     // Print the sessionID
     print("Session ID: ${data['sessionID']}");
-    window.localStorage['kGraph2session'] = data['sessionID'].toString();
+    window.localStorage.setItem('kGraph2session', data['sessionID'].toString());
     // Map the 'model' field to a List<Graph2Model>
     return (data['model'] as List<dynamic>)
         .map((json) => Graph2Model.fromJson(json))
@@ -162,7 +162,7 @@ class GraphService{
     try{
       final responseBody = json.decode(response.body);
       if(responseBody["status"] == true){
-        window.localStorage['kGraph3sessionID'] = responseBody['sessionID'].toString();
+        window.localStorage.setItem('kGraph3sessionID', responseBody['sessionID'].toString());
         final itemList = responseBody["model"] as List;
         return itemList.map((e) => UserWiseTableGraphModel.fromJson(e)).toList();
       }else{
@@ -186,7 +186,7 @@ class GraphService{
       final responseBody = json.decode(response.body);
       if(responseBody["status"] == true){
         print("Session ID: ${responseBody['sessionID']}");
-        window.localStorage['kGraph4sessionID'] = responseBody['sessionID'].toString();
+        window.localStorage.setItem('kGraph4sessionID', responseBody['sessionID'].toString());
         final itemList = responseBody["model"] as List;
         return itemList.map((e) => StationWiseGraphTableModel.fromJson(e)).toList();
       }else{
@@ -225,7 +225,7 @@ class GraphService{
       "startDate": "" ,
       "endDate": "" ,
       "designationName": "",
-      "sessionID": window.localStorage['kgraph1session'] ,
+      "sessionID": window.localStorage.getItem('kgraph1session') ,
     };
     try {
      final response = await http.post(Uri.parse(url), body: json.encode(body),headers: headers);
@@ -267,7 +267,7 @@ class GraphService{
       "startDate":"",
       "endDate":"",
       "designationName":"",
-      "sessionID": window.localStorage['kGraph2session'] ,
+      "sessionID": window.localStorage.getItem('kGraph2session') ,
     };
 
     try {
@@ -291,7 +291,7 @@ class GraphService{
       "startDate":"",
       "endDate":"",
       "designationName":"",
-      "sessionID": window.localStorage['kGraph3sessionID'] ,
+      "sessionID": window.localStorage.getItem('kGraph3sessionID') ,
       //116500
     };
 
@@ -315,7 +315,7 @@ class GraphService{
       "startDate":"",
       "endDate":"",
       "designationName":"",
-      "sessionID": window.localStorage['kGraph4sessionID'] ,
+      "sessionID": window.localStorage.getItem('kGraph4sessionID') ,
     };
     try {
       final response = await http.post(Uri.parse(url),body: json.encode(body), headers: headers);

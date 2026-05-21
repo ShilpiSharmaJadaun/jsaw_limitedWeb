@@ -24,8 +24,7 @@ import 'package:jsaw_limited/model/unithead_model.dart';
 import '../error/api_error.dart';
 import 'constant.dart';
 import 'package:http_parser/http_parser.dart';
-import 'dart:html' as html;
-import 'dart:html';
+import 'package:web/web.dart' as html;
 
 class ObservationService{
 
@@ -597,15 +596,15 @@ class ObservationService{
       final response = await http.post(Uri.parse(url),headers: getHeaders(),body: json.encode(body));
       final responseBody = json.decode(response.body);
       if(responseBody["status"] == true){
-        html.window.localStorage.remove('ksessionID');
-        html.window.localStorage.remove('kRaisedSessionID');
-        html.window.localStorage.remove('kReceivedsessionID');
-        html.window.localStorage.remove('kAllSessionID');
-        html.window.localStorage['ksessionID'] = responseBody['sessionID'].toString();
-        html.window.localStorage['kRaisedSessionID'] = responseBody['sessionID'].toString();
-        html.window.localStorage['kReceivedsessionID'] = responseBody['sessionID'].toString();
-        html.window.localStorage['kAllSessionID'] = responseBody['sessionID'].toString();
-        print(html.window.localStorage['kAllSessionID']);
+        html.window.localStorage.removeItem('ksessionID');
+        html.window.localStorage.removeItem('kRaisedSessionID');
+        html.window.localStorage.removeItem('kReceivedsessionID');
+        html.window.localStorage.removeItem('kAllSessionID');
+        html.window.localStorage.setItem('ksessionID', responseBody['sessionID'].toString());
+        html.window.localStorage.setItem('kRaisedSessionID', responseBody['sessionID'].toString());
+        html.window.localStorage.setItem('kReceivedsessionID', responseBody['sessionID'].toString());
+        html.window.localStorage.setItem('kAllSessionID', responseBody['sessionID'].toString());
+        print(html.window.localStorage.getItem('kAllSessionID'));
         return AllFilterObservationModel.fromJson(responseBody);
       }else{
         return const AllFilterObservationModel();
