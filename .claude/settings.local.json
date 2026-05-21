@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(flutter run *)",
+      "Bash(where git *)",
+      "Bash(where flutter *)",
+      "Bash(export PATH=\"/c/Program Files/Git/cmd:$PATH\")",
+      "PowerShell(flutter *)",
+      "PowerShell(Get-Command *)",
+      "PowerShell($env:PATH = \"C:\\\\Program Files\\\\Git\\\\cmd;\" + $env:PATH; & \"C:\\\\Program Files\\\\Git\\\\cmd\\\\git.exe\" -C E:\\\\flutter status 2>&1 | Select-Object -First 5)",
+      "PowerShell(flutter run *)",
+      "PowerShell(& \"C:\\\\Program Files\\\\Git\\\\cmd\\\\git.exe\" config --global --add safe.directory E:/flutter; & \"C:\\\\Program Files\\\\Git\\\\cmd\\\\git.exe\" config --global --get-all safe.directory)",
+      "PowerShell(flutter upgrade *)",
+      "PowerShell(flutter pub *)",
+      "PowerShell(flutter build *)"
+    ]
+  }
+}

@@ -24,6 +24,7 @@ class LoginModel {
   late final String? gradeCode;
   late final int? hod;
   late final bool? admin;
+  late final String? token;
 
   LoginModel({
     this.empUnqId,
@@ -43,6 +44,7 @@ class LoginModel {
     this.gradeCode,
     this.hod,
     this.admin,
+    this.token,
   });
 
   factory LoginModel.fromJson(Map<String, dynamic> json) =>

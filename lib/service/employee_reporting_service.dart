@@ -7,12 +7,13 @@ import 'package:jsaw_limited/model/employeefromAppReporting_model.dart';
 import 'package:http/http.dart' as http;
 import '../error/api_error.dart';
 import 'constant.dart';
+import 'auth_http.dart';
 
 class EmployeeReportingService{
 
   Future<List<EmployeeFromAppReportingModel>> getAllEmployeeReporting()async{
     const url = "${root}reportingto/allEmployeeFromAppReporting";
-    final response = await http.get(Uri.parse(url),headers: headers);
+    final response = await authHttp.get(Uri.parse(url),headers: getHeaders());
     try{
       final responseBody = json.decode(response.body);
       if(responseBody["status"] == true){
@@ -31,7 +32,7 @@ class EmployeeReportingService{
     const url = "${root}reportingto/findAllHodByEmp";
     final body = {"reportResEmpCode" : empCode};
     try {
-      final response = await http.post(Uri.parse(url), body: json.encode(body),headers: getHeaders());
+      final response = await authHttp.post(Uri.parse(url), body: json.encode(body),headers: getHeaders());
       final responseBody = json.decode(response.body);
       if (responseBody['status'] == true) {
         final itemList = responseBody["model"] as List;
@@ -47,7 +48,7 @@ class EmployeeReportingService{
 
   Future<List<AllEmployeeModel>> getAllEmployee()async{
     const url = "${root}employees/getAllEmployees";
-    final response = await http.get(Uri.parse(url),headers: headers);
+    final response = await authHttp.get(Uri.parse(url),headers: getHeaders());
     try{
       final responseBody = json.decode(response.body);
       if(responseBody["status"] == true){
@@ -68,7 +69,7 @@ class EmployeeReportingService{
     const url = '${root}reportingto/updateByEmpCode';
     final body = data;
     try {
-      final response = await http.post(Uri.parse(url), body: json.encode(body), headers: headers);
+      final response = await authHttp.post(Uri.parse(url), body: json.encode(body), headers: getHeaders());
       final responseBody = json.decode(response.body);
       if (responseBody['status'] == true) {
         return responseBody ['msg'];
@@ -87,7 +88,7 @@ class EmployeeReportingService{
     const url = '${root}reportingto/insertHodCode';
     final body = data;
     try {
-      final response = await http.post(Uri.parse(url), body: json.encode(body), headers: headers);
+      final response = await authHttp.post(Uri.parse(url), body: json.encode(body), headers: getHeaders());
       final responseBody = json.decode(response.body);
       if (responseBody['status'] == true) {
         return responseBody ['msg'];
@@ -106,7 +107,7 @@ class EmployeeReportingService{
     const url = '${root}reportingto/deleteByReportResEmpCode';
     final body = data;
     try {
-      final response = await http.post(Uri.parse(url), body: json.encode(body), headers: headers);
+      final response = await authHttp.post(Uri.parse(url), body: json.encode(body), headers: getHeaders());
       final responseBody = json.decode(response.body);
       if (responseBody['status'] == true) {
         return responseBody ['msg'];

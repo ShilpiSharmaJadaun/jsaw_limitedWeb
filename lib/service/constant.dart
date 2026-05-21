@@ -1,3 +1,4 @@
+import 'package:web/web.dart' show window;
 
 const root = 'http://103.107.26.146:8078/JSAW/';
 // const root = 'http://103.107.26.146:8079/JSAW/';
@@ -9,10 +10,11 @@ const headers = <String, String>{
 };
 
 Map<String, String> getHeaders(){
+  final token = window.localStorage.getItem('kAuthToken') ?? '';
   return {
     'Accept': 'Application/json',
     'Content-Type' : 'Application/json',
-    // "Authorization" : "Bearer $token"
+    if (token.isNotEmpty) 'Authorization': 'Bearer $token',
   };
 }
 

@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 import 'package:http/http.dart' as http;
+import 'auth_http.dart';
 import 'package:jsaw_limited/model/allBodyParts_model.dart';
 import 'package:jsaw_limited/model/allContractor_model.dart';
 import 'package:jsaw_limited/model/allIncident_model.dart';
@@ -22,7 +23,7 @@ class IncidentService{
 
   Future<List<AllContractorModel>> getAllContractorList()async{
     const url = "${root}incident/getAllContactor";
-    final response = await http.get(Uri.parse(url),headers: headers);
+    final response = await authHttp.get(Uri.parse(url),headers: getHeaders());
     try{
       final responseBody = json.decode(response.body);
       if(responseBody["status"] == true){
@@ -40,7 +41,7 @@ class IncidentService{
 
   Future<List<EmployeeBasicDetailModel>> getEmployeeBasicDetail()async{
     const url = "${root}employees/getEmployeesBasicDetails";
-    final response = await http.get(Uri.parse(url),headers: headers);
+    final response = await authHttp.get(Uri.parse(url),headers: getHeaders());
     try{
       final responseBody = json.decode(response.body);
       if(responseBody["status"] == true){
@@ -57,7 +58,7 @@ class IncidentService{
 
   Future<List<AllNatureInjuryModel>> getAllNatureInjuryDetail()async{
     const url = "${root}incident/getAllTypeOfInjury";
-    final response = await http.get(Uri.parse(url),headers: headers);
+    final response = await authHttp.get(Uri.parse(url),headers: getHeaders());
     try{
       final responseBody = json.decode(response.body);
       if(responseBody["status"] == true){
@@ -74,7 +75,7 @@ class IncidentService{
 
   Future<List<AllTypeIncidentModel>> getAllTypeOfIncident()async{
     const url = "${root}incident/getAllTypeOfIncident";
-    final response = await http.get(Uri.parse(url),headers: headers);
+    final response = await authHttp.get(Uri.parse(url),headers: getHeaders());
     try{
       final responseBody = json.decode(response.body);
       if(responseBody["status"] == true){
@@ -92,7 +93,7 @@ class IncidentService{
 
   Future<List<AllBodyPartsModel>> getAllBodyParts()async{
     const url = "${root}incident/getAllBodyParts";
-    final response = await http.get(Uri.parse(url),headers: headers);
+    final response = await authHttp.get(Uri.parse(url),headers: getHeaders());
     try{
       final responseBody = json.decode(response.body);
       if(responseBody["status"] == true){
@@ -110,7 +111,7 @@ class IncidentService{
 
   Future<List<EmployeeShiftModel>> getEmployeeShift()async{
     const url = "${root}mastShift/getAllShift";
-    final response = await http.get(Uri.parse(url),headers: headers);
+    final response = await authHttp.get(Uri.parse(url),headers: getHeaders());
     try{
       final responseBody = json.decode(response.body);
       if(responseBody["status"] == true){
@@ -152,6 +153,7 @@ class IncidentService{
 
     try {
       var request = http.MultipartRequest("POST", Uri.parse(url));
+      authHttp.attachAuth(request);
 
       if (fileBytes.isNotEmpty) {
         request.files.add(http.MultipartFile.fromBytes(
@@ -182,6 +184,7 @@ class IncidentService{
       request.fields['descpOfIncident'] = descpOfIncident;
       var res = await request.send();
       var results = await http.Response.fromStream(res);
+      authHttp.check(results);
       var finalres = jsonDecode(results.body) as Map<String, dynamic>;
 
       if (finalres['status'] == true) {
@@ -202,7 +205,7 @@ class IncidentService{
 
   Future<List<AllMedicalOfficerListModel>> getAllMedicalOfficerList()async{
     const url = "${root}incidentReport/getPendingForMedicalOfficer";
-    final response = await http.get(Uri.parse(url),headers: headers);
+    final response = await authHttp.get(Uri.parse(url),headers: getHeaders());
     try{
       final responseBody = json.decode(response.body);
       if(responseBody["status"] == true){
@@ -223,7 +226,7 @@ class IncidentService{
     const url = '${root}medicalOfficerResponse/saveMedicalOfficerResponse';
     final body = data;
     try {
-      final response = await http.post(Uri.parse(url), body: json.encode(body), headers: getHeaders());
+      final response = await authHttp.post(Uri.parse(url), body: json.encode(body), headers: getHeaders());
       if (response.statusCode < 200 || response.statusCode >= 300) {
         throw ApiError.fromResponse(
             'Server error ${response.statusCode}: ${response.body}');
@@ -256,7 +259,7 @@ class IncidentService{
 
   Future<List<SafetyRemarkListModel>> getSafetyRemarkList()async{
     const url = "${root}medicalOfficerResponse/getPendingForSafety";
-    final response = await http.get(Uri.parse(url),headers: headers);
+    final response = await authHttp.get(Uri.parse(url),headers: getHeaders());
     try{
       final responseBody = json.decode(response.body);
       if(responseBody["status"] == true){
@@ -295,7 +298,7 @@ class IncidentService{
 
   Future<List<CompleteSafetyRemarkModel>> getCompleteSafetyRemark()async{
     const url = "${root}safetyRemarks/getCompletedForSafety";
-    final response = await http.get(Uri.parse(url),headers: headers);
+    final response = await authHttp.get(Uri.parse(url),headers: getHeaders());
     try{
       final responseBody = json.decode(response.body);
       if(responseBody["status"] == true){
@@ -334,7 +337,7 @@ class IncidentService{
 
   Future<List<CompleteMedicalResponseModel>> getCompleteMedicalResponse()async{
     const url = "${root}medicalOfficerResponse/getCompletedForMedicalOfficer";
-    final response = await http.get(Uri.parse(url),headers: headers);
+    final response = await authHttp.get(Uri.parse(url),headers: getHeaders());
     try{
       final responseBody = json.decode(response.body);
       if(responseBody["status"] == true){
@@ -374,7 +377,7 @@ class IncidentService{
   Future<Uint8List?> downloadFirPdfByUid(String uniqueId) async {
     const url = "${root}firReport/downloadPdfByUid";
     try {
-      final response = await http.post(
+      final response = await authHttp.post(
         Uri.parse(url),
         body: json.encode({"uniqueId": uniqueId}),
         headers: getHeaders(),
@@ -413,7 +416,7 @@ class IncidentService{
     const url = '${root}safetyRemarks/saveSafetyRemarks';
     final body = data;
     try {
-      final response = await http.post(Uri.parse(url), body: json.encode(body), headers: getHeaders());
+      final response = await authHttp.post(Uri.parse(url), body: json.encode(body), headers: getHeaders());
       final responseBody = json.decode(response.body);
       if (responseBody['status'] == true) {
         return responseBody ['message'];
@@ -462,7 +465,7 @@ class IncidentService{
       "pageSize": pageSize,
     };
     try {
-      final response = await http.post(Uri.parse(url), body: json.encode(body), headers: getHeaders());
+      final response = await authHttp.post(Uri.parse(url), body: json.encode(body), headers: getHeaders());
       if (response.statusCode < 200 || response.statusCode >= 300) {
         throw ApiError.fromResponse(
             'Server error ${response.statusCode}: ${response.body}');

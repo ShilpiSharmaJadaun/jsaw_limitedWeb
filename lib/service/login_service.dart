@@ -30,6 +30,7 @@ class LoginService {
         window.localStorage.setItem('kempAuthPlantHead', responseBody['model']['employeeAuthorizationForPlantUnitHead'].toString());
         window.localStorage.setItem('kreporting', responseBody['model']['reporting'].toString());
         window.localStorage.setItem('kResetPasswordAuth', responseBody['model']['resetPasswordAuth'].toString());
+        window.localStorage.setItem('kAuthToken', responseBody['model']['token']?.toString() ?? '');
 
         // Get shared preferences instance
         // final SharedPreferences prefs = await SharedPreferences.getInstance();

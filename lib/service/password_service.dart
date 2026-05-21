@@ -6,6 +6,7 @@ import 'package:http/http.dart' as http;
 
 import '../error/api_error.dart';
 import 'constant.dart';
+import 'auth_http.dart';
 
 class PasswordService{
 
@@ -13,8 +14,8 @@ class PasswordService{
     const url = '${root}employees/updatePassword';
     final body = data;
     try {
-      final response = await http.post(Uri.parse(url),
-          body: json.encode(body), headers: headers);
+      final response = await authHttp.post(Uri.parse(url),
+          body: json.encode(body), headers: getHeaders());
       final responseBody = json.decode(response.body);
       if (responseBody['status'] == true) {
         return responseBody ['msg'];
@@ -33,8 +34,8 @@ class PasswordService{
     const url = '${root}employees/changePassword';
     final body = data;
     try {
-      final response = await http.post(Uri.parse(url),
-          body: json.encode(body), headers: headers);
+      final response = await authHttp.post(Uri.parse(url),
+          body: json.encode(body), headers: getHeaders());
       final responseBody = json.decode(response.body);
       if (responseBody['status'] == true) {
         return responseBody ['msg'];
@@ -55,8 +56,8 @@ class PasswordService{
     const url = '${root}employees/updateEmployeeEmail';
     final body = data;
     try {
-      final response = await http.post(Uri.parse(url),
-          body: json.encode(body), headers: headers);
+      final response = await authHttp.post(Uri.parse(url),
+          body: json.encode(body), headers: getHeaders());
       final responseBody = json.decode(response.body);
       if (responseBody['status'] == true) {
         return responseBody ['msg'];

@@ -23,6 +23,7 @@ import 'package:jsaw_limited/model/uniqueId_model.dart';
 import 'package:jsaw_limited/model/unithead_model.dart';
 import '../error/api_error.dart';
 import 'constant.dart';
+import 'auth_http.dart';
 import 'package:http_parser/http_parser.dart';
 import 'package:web/web.dart' as html;
 
@@ -31,7 +32,7 @@ class ObservationService{
   // Future<List<AllObservationModel>> getAllObservation()async{
   //   const url = "${root}observation/getObservationAssignToEngg";
   //   final data = {'responsibilityEnggCode': html.window.localStorage['kEmployeeCode'].toString(),};
-  //   final response = await http.post(Uri.parse(url), body: json.encode(data), headers: headers);
+  //   final response = await authHttp.post(Uri.parse(url), body: json.encode(data), headers: getHeaders());
   //   try{
   //     final responseBody = json.decode(response.body);
   //     if(responseBody["status"] == true){
@@ -48,7 +49,7 @@ class ObservationService{
 
   Future<List<AllObservationModel>> getAllObservationsTillDate()async{
     const url = "${root}observation/getAllObservation";
-    final response = await http.get(Uri.parse(url), headers: headers);
+    final response = await authHttp.get(Uri.parse(url), headers: getHeaders());
     try{
       final responseBody = json.decode(response.body);
       if(responseBody["status"] == true){
@@ -67,7 +68,7 @@ class ObservationService{
   Future<List<ObservationbyUniModel>> getAllObservationBYUINandEmployee(String UNI, String raisedBy)async{
     const url = "${root}observation/getObservationResponseByUIN";
     final data = {'uniqueIdentificationNumber': UNI, 'observationRaisedByEmpUnqId': raisedBy};
-    final response = await http.post(Uri.parse(url), body: json.encode(data),headers: headers);
+    final response = await authHttp.post(Uri.parse(url), body: json.encode(data),headers: getHeaders());
     try{
       final responseBody = json.decode(response.body);
       if(responseBody["status"] == true){
@@ -87,7 +88,7 @@ class ObservationService{
   Future<List<AllPlantModel>> getAllPlant()async{
     const url = "${root}department/getAllDepartment";
     final data = {};
-    final response = await http.post(Uri.parse(url), body: json.encode(data),headers: headers);
+    final response = await authHttp.post(Uri.parse(url), body: json.encode(data),headers: getHeaders());
     try{
       final responseBody = json.decode(response.body);
       if(responseBody["status"] == true){
@@ -107,7 +108,7 @@ class ObservationService{
   Future<List<AllDepartmentModel>> getDepartment(String deptCode)async{
     const url = "${root}stations/getAllStationByDeptCode";
     final data = {'deptCode' : deptCode};
-    final response = await http.post(Uri.parse(url), body: json.encode(data),headers: headers);
+    final response = await authHttp.post(Uri.parse(url), body: json.encode(data),headers: getHeaders());
     try{
       final responseBody = json.decode(response.body);
       if(responseBody["status"] == true){
@@ -127,7 +128,7 @@ class ObservationService{
   Future<List<EmployeeResponsibilityModel>> getResponsibilityEmployee(String deptCode, String stateCode, String gradeCode, String empUqn)async{
     const url = "${root}employees/getEmployeeForResponsibility";
     final data = {'deptCode' : deptCode, "statCode" : stateCode, "gradeCode" : gradeCode, "empUnqId":empUqn };
-    final response = await http.post(Uri.parse(url), body: json.encode(data),headers: headers);
+    final response = await authHttp.post(Uri.parse(url), body: json.encode(data),headers: getHeaders());
     try{
       final responseBody = json.decode(response.body);
       if(responseBody["status"] == true){
@@ -146,7 +147,7 @@ class ObservationService{
 
   Future<List<AllWorkGroupModel>> getAllWorkGroup()async{
     const url = "${root}workgroup/findAllWorkGroup";
-    final response = await http.get(Uri.parse(url),headers: headers);
+    final response = await authHttp.get(Uri.parse(url),headers: getHeaders());
     try{
       final responseBody = json.decode(response.body);
       if(responseBody["status"] == true){
@@ -165,7 +166,7 @@ class ObservationService{
 
   Future<List<PriorityModel>> getPriority()async{
     const url = "${root}priorityStatus/getAllPriority";
-    final response = await http.get(Uri.parse(url),headers: headers);
+    final response = await authHttp.get(Uri.parse(url),headers: getHeaders());
     try{
       final responseBody = json.decode(response.body);
       if(responseBody["status"] == true){
@@ -185,7 +186,7 @@ class ObservationService{
   Future<List<LocationModel>> getAllLocation(String deptCode)async{
     const url = "${root}locations/findAllLocationByDeptCode";
     final data = {'deptCode' : deptCode};
-    final response = await http.post(Uri.parse(url), body: json.encode(data),headers: headers);
+    final response = await authHttp.post(Uri.parse(url), body: json.encode(data),headers: getHeaders());
     try{
       final responseBody = json.decode(response.body);
       if(responseBody["status"] == true){
@@ -203,7 +204,7 @@ class ObservationService{
   //all type hazard
   Future<List<AllTypeHazardModel>> getAllTypehazard()async{
     const url = "${root}hazardCategory/getAllTypeAHazardCategories";
-    final response = await http.get(Uri.parse(url),headers: headers);
+    final response = await authHttp.get(Uri.parse(url),headers: getHeaders());
     try{
       final responseBody = json.decode(response.body);
       if(responseBody["status"] == true){
@@ -223,7 +224,7 @@ class ObservationService{
   Future<List<RaisedObservationModel>> getAllRaisedObservation(String empUnqCode)async{
     const url = "${root}observation/getObservationByEmpId";
     final data = {'observationRaisedByEmpUnqId' : empUnqCode};
-    final response = await http.post(Uri.parse(url), body: json.encode(data),headers: headers);
+    final response = await authHttp.post(Uri.parse(url), body: json.encode(data),headers: getHeaders());
     try{
       final responseBody = json.decode(response.body);
       if(responseBody["status"] == true){
@@ -279,6 +280,7 @@ class ObservationService{
 
     try {
       var request = http.MultipartRequest("POST", Uri.parse(url));
+      authHttp.attachAuth(request);
 
       if (fileBytes.isNotEmpty) {
         request.files.add(http.MultipartFile.fromBytes(
@@ -324,6 +326,7 @@ class ObservationService{
 
       var res = await request.send();
       var results = await http.Response.fromStream(res);
+      authHttp.check(results);
       var finalres = jsonDecode(results.body) as Map<String, dynamic>;
 
       if (finalres['status'] == true) {
@@ -342,7 +345,7 @@ class ObservationService{
     const url = '${root}observation/observationsUpdate';
     final body = data;
     try {
-      final response = await http.patch(Uri.parse(url), body: json.encode(body), headers: getHeaders());
+      final response = await authHttp.patch(Uri.parse(url), body: json.encode(body), headers: getHeaders());
       final responseBody = json.decode(response.body);
       if (responseBody['status'] == true) {
         return responseBody ['message'];
@@ -374,6 +377,7 @@ class ObservationService{
 
     try {
       var request = http.MultipartRequest("POST", Uri.parse(url));
+      authHttp.attachAuth(request);
 
       if (fileBytes.isNotEmpty) {
         request.files.add(http.MultipartFile.fromBytes(
@@ -396,6 +400,7 @@ class ObservationService{
 
       var res = await request.send();
       var results = await http.Response.fromStream(res);
+      authHttp.check(results);
       var finalres = jsonDecode(results.body) as Map<String, dynamic>;
 
       if (finalres['status'] == true) {
@@ -414,7 +419,7 @@ class ObservationService{
 
   Future<List<SuggestionFeedbackModel>> getSuggestionFeedbackList()async{
     const url = "${root}complaint/getAllComplaint";
-    final response = await http.get(Uri.parse(url),headers: headers);
+    final response = await authHttp.get(Uri.parse(url),headers: getHeaders());
     try{
       final responseBody = json.decode(response.body);
       if(responseBody["status"] == true){
@@ -446,6 +451,7 @@ class ObservationService{
 
     try {
       var request = http.MultipartRequest("POST", Uri.parse(url));
+      authHttp.attachAuth(request);
 
       if (fileBytes.isNotEmpty) {
         request.files.add(http.MultipartFile.fromBytes(
@@ -468,6 +474,7 @@ class ObservationService{
 
       var res = await request.send();
       var results = await http.Response.fromStream(res);
+      authHttp.check(results);
       var finalres = jsonDecode(results.body) as Map<String, dynamic>;
 
       if (finalres['status'] == true) {
@@ -487,7 +494,7 @@ class ObservationService{
     const url = "${root}observation/getAllObservationByStatus";
     final data = {'status' : 'COMPLIANCE'};
      try{
-       final response = await http.post(Uri.parse(url),headers: headers, body: json.encode(data));
+       final response = await authHttp.post(Uri.parse(url),headers: getHeaders(), body: json.encode(data));
        final responseBody = json.decode(response.body);
       if(responseBody["status"] == true){
         final itemList = responseBody["model"] as List;
@@ -508,7 +515,7 @@ class ObservationService{
     const url = "${root}observation/updateObservationResponse2";
     final body = data;
     try {
-      final response = await http.post(Uri.parse(url), body: json.encode(body), headers: headers);
+      final response = await authHttp.post(Uri.parse(url), body: json.encode(body), headers: getHeaders());
       final responseBody = json.decode(response.body);
       if (responseBody['status'] == true) {
         return responseBody ['msg'];
@@ -528,7 +535,7 @@ class ObservationService{
     const url = '${root}priorityStatus/updatsePrioritysDiscription';
     final body = data;
     try {
-      final response = await http.patch(Uri.parse(url), body: json.encode(body), headers: getHeaders());
+      final response = await authHttp.patch(Uri.parse(url), body: json.encode(body), headers: getHeaders());
       final responseBody = json.decode(response.body);
       if (responseBody['status'] == true) {
         return responseBody ['msg'];
@@ -559,7 +566,7 @@ class ObservationService{
       "observationRaisedByEmpUnqId": observationRaisedByEmpUnqId
     };
     try {
-      final response = await http.post(Uri.parse(url),headers: getHeaders(),body: json.encode(body));
+      final response = await authHttp.post(Uri.parse(url),headers: getHeaders(),body: json.encode(body));
       final responseBody = json.decode(response.body);
       if(responseBody["status"] == true){
         final itemList = responseBody["model"] as List;
@@ -593,7 +600,7 @@ class ObservationService{
       "uniqueIdentificationNumber": uniqueId
     };
     try {
-      final response = await http.post(Uri.parse(url),headers: getHeaders(),body: json.encode(body));
+      final response = await authHttp.post(Uri.parse(url),headers: getHeaders(),body: json.encode(body));
       final responseBody = json.decode(response.body);
       if(responseBody["status"] == true){
         html.window.localStorage.removeItem('ksessionID');
@@ -623,7 +630,7 @@ class ObservationService{
   Future<List<EmployeeResponsibilityModel>> getResponsibleHOD(String deptCode, String stateCode, String gradeCode, String responsibleEnggCode)async{
     const url = "${root}reportingto/findAllHodByEmp";
     final data = {'deptCode' : deptCode, "statCode" : stateCode, "gradeCode" : gradeCode, "reportResEmpCode" :responsibleEnggCode };
-    final response = await http.post(Uri.parse(url), body: json.encode(data),headers: headers);
+    final response = await authHttp.post(Uri.parse(url), body: json.encode(data),headers: getHeaders());
     try{
       final responseBody = json.decode(response.body);
       if(responseBody["status"] == true){
@@ -642,7 +649,7 @@ class ObservationService{
 
   Future<List<UniqueIdModel>> getUniqueIdList()async{
     const url = "${root}observation/getAllObservation";
-    final response = await http.get(Uri.parse(url),headers: headers);
+    final response = await authHttp.get(Uri.parse(url),headers: getHeaders());
     try{
       final responseBody = json.decode(response.body);
       if(responseBody["status"] == true){
@@ -665,7 +672,7 @@ class ObservationService{
     const url = "${root}plantHead/findPlantHeadByPlantCode";
     final data = {'plantCode' : plantCode};
 
-    final response = await http.post(Uri.parse(url),body: json.encode(data),headers: headers);
+    final response = await authHttp.post(Uri.parse(url),body: json.encode(data),headers: getHeaders());
     try{
       final responseBody = json.decode(response.body);
       if(responseBody["status"] == true){
@@ -687,7 +694,7 @@ class ObservationService{
     const url = "${root}unitHead/findAllUnitHead";
     final data = {'unitPlantCode' : "001"};
 
-    final response = await http.post(Uri.parse(url),body: json.encode(data),headers: headers);
+    final response = await authHttp.post(Uri.parse(url),body: json.encode(data),headers: getHeaders());
     try{
       final responseBody = json.decode(response.body);
       if(responseBody["status"] == true){
@@ -705,10 +712,10 @@ class ObservationService{
   //generate Excel
   Future<GenerateExcelModel?> generateExcel(String sessionID)async{
     const url = "${root}observation/genrateExcelFileForAllObsevation";
-    // final response = await http.get(Uri.parse(url), headers: headers);
+    // final response = await authHttp.get(Uri.parse(url), headers: getHeaders());
      final body = {"sessionID" : sessionID};
     try {
-      final response = await http.post(Uri.parse(url), body: json.encode(body),headers: getHeaders());
+      final response = await authHttp.post(Uri.parse(url), body: json.encode(body),headers: getHeaders());
       final responseBody = json.decode(response.body);
       if (responseBody['status'] == true) {
         return GenerateExcelModel.fromJson(responseBody["model"]);
@@ -731,6 +738,7 @@ class ObservationService{
 
     try {
       var request = http.MultipartRequest("POST", Uri.parse(url));
+      authHttp.attachAuth(request);
 
       if (fileBytes.isNotEmpty) {
         request.files.add(http.MultipartFile.fromBytes(
@@ -745,6 +753,7 @@ class ObservationService{
 
       var res = await request.send();
       var results = await http.Response.fromStream(res);
+      authHttp.check(results);
       var finalres = jsonDecode(results.body) as Map<String, dynamic>;
 
       if (finalres['status'] == true) {
@@ -763,7 +772,7 @@ class ObservationService{
     const url = '${root}observation/deleteObservation';
     final body = data;
     try {
-      final response = await http.delete(Uri.parse(url), body: json.encode(body), headers: headers);
+      final response = await authHttp.delete(Uri.parse(url), body: json.encode(body), headers: getHeaders());
       final responseBody = json.decode(response.body);
       if (responseBody['status'] == true) {
         return responseBody ['msg'];

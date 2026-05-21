@@ -7,6 +7,7 @@ import 'package:jsaw_limited/model/observationstatus_model.dart';
 import 'package:jsaw_limited/model/top3hazard_model.dart';
 import '../error/api_error.dart';
 import 'constant.dart';
+import 'auth_http.dart';
 import 'package:http/http.dart' as http;
 
 class DashboardService{
@@ -14,7 +15,7 @@ class DashboardService{
   Future<List<AllTodayObservationModel>> getAllTodayObservation(String hazardCategory)async{
     const url = "${root}observation/getAllTodayObservation";
     final data = {'hazardCategory': hazardCategory};
-    final response = await http.post(Uri.parse(url), body: json.encode(data),headers: headers);
+    final response = await authHttp.post(Uri.parse(url), body: json.encode(data),headers: getHeaders());
     try{
       final responseBody = json.decode(response.body);
       if(responseBody["status"] == true){
@@ -32,7 +33,7 @@ class DashboardService{
 
   Future<List<AllHazardCatModel>> getAllHazardList()async{
     const url = "${root}hazardCategory/getAllHazardCategory";
-    final response = await http.get(Uri.parse(url),headers: headers);
+    final response = await authHttp.get(Uri.parse(url),headers: getHeaders());
     try{
       final responseBody = json.decode(response.body);
       if(responseBody["status"] == true){
@@ -51,7 +52,7 @@ class DashboardService{
 
     const url = "${root}observation/getObservationStatusCounts";
 
-    final response = await http.get(Uri.parse(url),headers: headers);
+    final response = await authHttp.get(Uri.parse(url),headers: getHeaders());
     try{
       final responseBody = json.decode(response.body);
       if(responseBody["status"] == true){
@@ -68,7 +69,7 @@ class DashboardService{
 
   Future<List<Top3HazardModel>> gettop3hazard()async{
     const url = "${root}observation/getTop3HazardCategories";
-    final response = await http.get(Uri.parse(url),headers: headers);
+    final response = await authHttp.get(Uri.parse(url),headers: getHeaders());
     try{
       final responseBody = json.decode(response.body);
       if(responseBody["status"] == true){

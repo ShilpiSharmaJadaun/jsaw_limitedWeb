@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:jsaw_limited/model/allSafetyObservationByManager_Graph_model.dart';
 import 'package:http/http.dart' as http;
+import 'auth_http.dart';
 import 'package:jsaw_limited/model/departmentgraphExport_model.dart';
 import 'package:jsaw_limited/model/graph2_model.dart';
 import 'package:jsaw_limited/model/hazardGraphExport_model.dart';
@@ -30,7 +31,7 @@ class GraphService{
       "endDate": endDate ,
       "designationName": ""
     };
-    final response = await http.post(Uri.parse(url),headers: headers, body: json.encode(body));
+    final response = await authHttp.post(Uri.parse(url),headers: getHeaders(), body: json.encode(body));
     try{
       final responseBody = json.decode(response.body);
 
@@ -56,7 +57,7 @@ class GraphService{
       "endDate": endDate ,
       "sessionID": ""
     };
-    final response = await http.post(Uri.parse(url),headers: headers, body: json.encode(body));
+    final response = await authHttp.post(Uri.parse(url),headers: getHeaders(), body: json.encode(body));
     try{
       final responseBody = json.decode(response.body);
 
@@ -80,7 +81,7 @@ class GraphService{
       "startDate": startDate ,
       "endDate": endDate ,
     };
-    final response = await http.post(Uri.parse(url),headers: headers, body: json.encode(body));
+    final response = await authHttp.post(Uri.parse(url),headers: getHeaders(), body: json.encode(body));
     try{
       final responseBody = json.decode(response.body);
 
@@ -100,7 +101,7 @@ class GraphService{
 
     const url = "${root}observation/getObservationStatusCountsList";
 
-    final response = await http.get(Uri.parse(url),headers: headers);
+    final response = await authHttp.get(Uri.parse(url),headers: getHeaders());
     try{
       final responseBody = json.decode(response.body);
       if(responseBody["status"] == true){
@@ -123,7 +124,7 @@ class GraphService{
       "designationName": ""
     };
     try {
-      final response = await http.post(Uri.parse(url), headers: headers, body: json.encode(body));
+      final response = await authHttp.post(Uri.parse(url), headers: getHeaders(), body: json.encode(body));
 
       if (response.statusCode == 200) {
 
@@ -158,7 +159,7 @@ class GraphService{
       "endDate": endDate ,
       "designationName": designationCode
     };
-    final response = await http.post(Uri.parse(url),headers: headers, body: json.encode(body));
+    final response = await authHttp.post(Uri.parse(url),headers: getHeaders(), body: json.encode(body));
     try{
       final responseBody = json.decode(response.body);
       if(responseBody["status"] == true){
@@ -181,7 +182,7 @@ class GraphService{
       "endDate": endDate ,
       "designationName": ""
     };
-    final response = await http.post(Uri.parse(url),body: json.encode(body),headers: headers);
+    final response = await authHttp.post(Uri.parse(url),body: json.encode(body),headers: getHeaders());
     try{
       final responseBody = json.decode(response.body);
       if(responseBody["status"] == true){
@@ -204,7 +205,7 @@ class GraphService{
       "startDate": startDate ,
       "endDate": endDate ,
     };
-    final response = await http.post(Uri.parse(url),body: json.encode(body),headers: headers);
+    final response = await authHttp.post(Uri.parse(url),body: json.encode(body),headers: getHeaders());
     try{
       final responseBody = json.decode(response.body);
       if(responseBody["status"] == true){
@@ -228,7 +229,7 @@ class GraphService{
       "sessionID": window.localStorage.getItem('kgraph1session') ,
     };
     try {
-     final response = await http.post(Uri.parse(url), body: json.encode(body),headers: headers);
+     final response = await authHttp.post(Uri.parse(url), body: json.encode(body),headers: getHeaders());
       final responseBody = json.decode(response.body);
       if (responseBody['status'] == true) {
         return DepartmentgraphExportModel.fromJson(responseBody["model"]);
@@ -248,7 +249,7 @@ class GraphService{
       "endDate": "" ,
     };
     try {
-      final response = await http.post(Uri.parse(url), body: json.encode(body),headers: headers);
+      final response = await authHttp.post(Uri.parse(url), body: json.encode(body),headers: getHeaders());
       final responseBody = json.decode(response.body);
       if (responseBody['status'] == true) {
         return HazardGraphExportModel.fromJson(responseBody["model"]);
@@ -271,7 +272,7 @@ class GraphService{
     };
 
     try {
-      final response = await http.post(Uri.parse(url),body: json.encode(body), headers: headers);
+      final response = await authHttp.post(Uri.parse(url),body: json.encode(body), headers: getHeaders());
       final responseBody = json.decode(response.body);
       if (responseBody['status'] == true) {
         return StationWiseGraphExportModel.fromJson(responseBody["model"]);
@@ -296,7 +297,7 @@ class GraphService{
     };
 
     try {
-      final response = await http.post(Uri.parse(url),body: json.encode(body), headers: headers);
+      final response = await authHttp.post(Uri.parse(url),body: json.encode(body), headers: getHeaders());
       final responseBody = json.decode(response.body);
       if (responseBody['status'] == true) {
         return UserWiseTableExport.fromJson(responseBody["model"]);
@@ -318,7 +319,7 @@ class GraphService{
       "sessionID": window.localStorage.getItem('kGraph4sessionID') ,
     };
     try {
-      final response = await http.post(Uri.parse(url),body: json.encode(body), headers: headers);
+      final response = await authHttp.post(Uri.parse(url),body: json.encode(body), headers: getHeaders());
       final responseBody = json.decode(response.body);
       if (responseBody['status'] == true) {
         return StationWiseTableExportModel.fromJson(responseBody["model"]);
@@ -333,7 +334,7 @@ class GraphService{
 
   Future<List<AllDesignationModel>> getAllDesignation()async{
     const url = "${root}observation/getAllDesignation";
-    final response = await http.get(Uri.parse(url),headers: headers);
+    final response = await authHttp.get(Uri.parse(url),headers: getHeaders());
     try{
       final responseBody = json.decode(response.body);
       if(responseBody["status"] == true){

@@ -25,15 +25,18 @@ import 'package:jsaw_limited/service/observation_service.dart';
 import 'package:jsaw_limited/service/password_service.dart';
 import 'package:jsaw_limited/utils/app_color.dart';
 import 'package:provider/provider.dart';
-import 'package:responsive_builder/responsive_builder.dart';
+import 'package:responsive_builder/responsive_builder.dart' hide WidgetBuilder;
 import 'package:flutter_web_plugins/flutter_web_plugins.dart';
 import 'package:localstorage/localstorage.dart';
+import 'package:web/web.dart' show window;
 import 'bloc/allSafetyObservationByManagerGraph_bloc.dart';
 import 'bloc/allSafetyObservationRaisedByManagerPieChart_bloc.dart';
 import 'bloc/graph2_bloc.dart';
 import 'routes/app_routes.dart';
 
 final localStorage = LocalStorage('my_app');
+
+final navigatorKey = GlobalKey<NavigatorState>();
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -78,6 +81,7 @@ class MyApp extends StatelessWidget {
       preferDesktop: true,
       builder: (context) {
         return MaterialApp(
+          navigatorKey: navigatorKey,
          // scrollBehavior: const MaterialScrollBehavior().copyWith(scrollbars: true, physics: ScrollPhysics(parent: AlwaysScrollableScrollPhysics())),
           debugShowCheckedModeBanner: false,
           theme: ThemeData(
@@ -93,63 +97,75 @@ class MyApp extends StatelessWidget {
             ),
           ),
           initialRoute: AppRoutes.loginPage,
-          routes: {
-            '/dashboardSelection': (context) => const CommonNavigationPage(
-              title: 'Dashboard',
-              child: DashboardselectionPage()
-            ),
-            '/observationPage': (context) => const CommonNavigationPage(
-              title: 'Observation',
-              child: ObservationPage(),
-            ),
-            '/graphPage': (context) => const CommonNavigationPage(
-              title: 'Graph',
-              child: GraphPage(),
-            ),
-            '/resgiaterObservationPage': (context) => const CommonNavigationPage(
-              title: 'Raise Observation',
-              child: RegisterObservationPage(),
-            ),
-            '/approvedObservationPage': (context) => const CommonNavigationPage(
-              title: 'Approve Observation',
-              child: ApprovedObservationPage(),
-            ),
-            '/approveClose/ReopenPageTable': (context) => const CommonNavigationPage(
-              title: 'Approve Observation',
-              child: ApproveRejectTablePage(),
-            ),
+          onGenerateRoute: (settings) {
+            final pages = <String, WidgetBuilder>{
+              '/dashboardSelection': (context) => const CommonNavigationPage(
+                title: 'Dashboard',
+                child: DashboardselectionPage()
+              ),
+              '/observationPage': (context) => const CommonNavigationPage(
+                title: 'Observation',
+                child: ObservationPage(),
+              ),
+              '/graphPage': (context) => const CommonNavigationPage(
+                title: 'Graph',
+                child: GraphPage(),
+              ),
+              '/resgiaterObservationPage': (context) => const CommonNavigationPage(
+                title: 'Raise Observation',
+                child: RegisterObservationPage(),
+              ),
+              '/approvedObservationPage': (context) => const CommonNavigationPage(
+                title: 'Approve Observation',
+                child: ApprovedObservationPage(),
+              ),
+              '/approveClose/ReopenPageTable': (context) => const CommonNavigationPage(
+                title: 'Approve Observation',
+                child: ApproveRejectTablePage(),
+              ),
+              '/priorityChangesPage': (context) => const CommonNavigationPage(
+                title: 'Priority Changes',
+                child: PriorityChangesPage(),
+              ),
+              '/suggestionFeedbackPage': (context) => const CommonNavigationPage(
+                title: 'Suggestions',
+                child: SuggestionFeedbackPage(),
+              ),
+              '/editObservationPage': (context) => CommonNavigationPage(
+                title: 'Suggestions',
+                child: EditRaisedObservationsPage(filterObservationModel: const FilterObservationModel()),
+              ),
+              '/approveClose/ReopenPage': (context) => const CommonNavigationPage(
+                title: 'Approve Close/Reopen',
+                child: ApprovedObservationPage(),
+              ),
+              '/changepasswordPage': (context) => const CommonNavigationPage(
+                title: 'Change Pass/ Email',
+                child: ChangePasswordPage(),
+              ),
+              '/employeeReportingPage': (context) => const CommonNavigationPage(
+                title: 'Employee Reporting',
+                child: EmployeeReportingPage(),
+              ),
+              AppRoutes.loginPage: (context) => const LoginPage(),
+            };
 
-            '/suggestionFeedbackPage': (context) => const CommonNavigationPage(
-              title: 'Suggestion',
-              child: SuggestionFeedbackPage(),
-            ),
-            '/priorityChangesPage': (context) => const CommonNavigationPage(
-              title: 'Priority Changes',
-              child: PriorityChangesPage(),
-            ),
-            '/suggestionFeedbackPage': (context) => const CommonNavigationPage(
-              title: 'Suggestions',
-              child: SuggestionFeedbackPage(),
-            ),
-            '/editObservationPage': (context) => CommonNavigationPage(
-              title: 'Suggestions',
-              child: EditRaisedObservationsPage(filterObservationModel: const FilterObservationModel()),
-            ),
-            '/approveClose/ReopenPage': (context) => const CommonNavigationPage(
-              title: 'Approve Close/Reopen',
-              child: ApprovedObservationPage(),
-            ),
-            '/changepasswordPage': (context) => const CommonNavigationPage(
-              title: 'Change Pass/ Email',
-              child: ChangePasswordPage(),
-            ),
+            final builder = pages[settings.name];
+            if (builder == null) return null;
 
-            '/employeeReportingPage': (context) => const CommonNavigationPage(
-              title: 'Employee Reporting',
-              child: EmployeeReportingPage(),
-            ),
+            if (settings.name == AppRoutes.loginPage) {
+              return MaterialPageRoute(builder: builder, settings: settings);
+            }
 
-            AppRoutes.loginPage: (context) => const LoginPage(),
+            final token = window.localStorage.getItem('kAuthToken');
+            if (token == null || token.isEmpty) {
+              return MaterialPageRoute(
+                builder: (_) => const LoginPage(),
+                settings: const RouteSettings(name: AppRoutes.loginPage),
+              );
+            }
+
+            return MaterialPageRoute(builder: builder, settings: settings);
           },
 
         );

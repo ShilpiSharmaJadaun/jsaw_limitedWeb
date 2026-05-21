@@ -24,6 +24,7 @@ LoginModel _$LoginModelFromJson(Map<String, dynamic> json) => LoginModel(
       gradeCode: json['gradeCode'] as String?,
       hod: (json['hod'] as num?)?.toInt(),
       admin: json['admin'] as bool?,
+      token: json['token'] as String?,
     );
 
 Map<String, dynamic> _$LoginModelToJson(LoginModel instance) {
@@ -52,5 +53,6 @@ Map<String, dynamic> _$LoginModelToJson(LoginModel instance) {
   writeNotNull('gradeCode', instance.gradeCode);
   writeNotNull('hod', instance.hod);
   writeNotNull('admin', instance.admin);
+  writeNotNull('token', instance.token);
   return val;
 }
