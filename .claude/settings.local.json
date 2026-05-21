@@ -12,7 +12,22 @@
       "PowerShell(& \"C:\\\\Program Files\\\\Git\\\\cmd\\\\git.exe\" config --global --add safe.directory E:/flutter; & \"C:\\\\Program Files\\\\Git\\\\cmd\\\\git.exe\" config --global --get-all safe.directory)",
       "PowerShell(flutter upgrade *)",
       "PowerShell(flutter pub *)",
-      "PowerShell(flutter build *)"
+      "PowerShell(flutter build *)",
+      "Bash(flutter devices *)",
+      "Read(//c/Program Files/Zulu/zulu-17/bin/**)",
+      "Bash(\"C:/Program Files/Zulu/zulu-17/bin/java.exe\" -version)",
+      "PowerShell(Get-Content *)",
+      "PowerShell(\"User JAVA_HOME = \" + [Environment]::GetEnvironmentVariable\\('JAVA_HOME','User'\\); \"Machine JAVA_HOME = \" + [Environment]::GetEnvironmentVariable\\('JAVA_HOME','Machine'\\); \"User PATH \\(first 200 chars\\) = \" + \\([Environment]::GetEnvironmentVariable\\('Path','User'\\)\\).Substring\\(0,[Math]::Min\\(200,[Environment]::GetEnvironmentVariable\\('Path','User'\\).Length\\)\\); \"Machine PATH \\(first 400 chars\\) = \" + \\([Environment]::GetEnvironmentVariable\\('Path','Machine'\\)\\).Substring\\(0,[Math]::Min\\(400,[Environment]::GetEnvironmentVariable\\('Path','Machine'\\).Length\\)\\))",
+      "PowerShell($proc = Start-Process pwsh -ArgumentList '-NoProfile','-ExecutionPolicy','Bypass','-File','C:\\\\Users\\\\lalit\\\\AppData\\\\Local\\\\Temp\\\\fix_path.ps1' -Verb RunAs -PassThru -WindowStyle Hidden; $proc.WaitForExit\\(\\); \"Exit code: $\\($proc.ExitCode\\)\")",
+      "Bash(./gradlew.bat --stop)",
+      "Bash(flutter config *)",
+      "Bash(export JAVA_HOME=\"C:\\\\\\\\Program Files\\\\\\\\Zulu\\\\\\\\zulu-17\")",
+      "Bash(export PATH=\"/c/Program Files/Zulu/zulu-17/bin:$PATH\")",
+      "Bash(where java *)",
+      "Bash(java -version)",
+      "Bash(flutter doctor *)",
+      "Bash(flutter clean *)",
+      "Bash(flutter build *)"
     ]
   }
 }

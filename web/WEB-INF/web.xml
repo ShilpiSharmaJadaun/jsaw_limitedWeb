@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app xmlns="https://jakarta.ee/xml/ns/jakartaee"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="https://jakarta.ee/xml/ns/jakartaee
+                             https://jakarta.ee/xml/ns/jakartaee/web-app_5_0.xsd"
+         version="5.0">
+
+    <display-name>jlimited Flutter Web</display-name>
+
+    <!--
+      Cache strategy for Flutter web on Tomcat:
+        - HTML / JSON / JS / WASM are forced to revalidate on every load so
+          a fresh deploy is picked up immediately. Tomcat replies 304 when
+          the file hasn't changed, so the real cost is one round-trip per
+          file, not a re-download.
+        - Images and fonts can cache for a year (they almost never change).
+    -->
+    <filter>
+        <filter-name>FlutterCacheControl</filter-name>
+        <filter-class>org.apache.catalina.filters.ExpiresFilter</filter-class>
+        <init-param>
+            <param-name>ExpiresByType text/html</param-name>
+            <param-value>access plus 0 seconds</param-value>
+        </init-param>
+        <init-param>
+            <param-name>ExpiresByType application/json</param-name>
+            <param-value>access plus 0 seconds</param-value>
+        </init-param>
+        <init-param>
+            <param-name>ExpiresByType application/javascript</param-name>
+            <param-value>access plus 0 seconds</param-value>
+        </init-param>
+        <init-param>
+            <param-name>ExpiresByType application/wasm</param-name>
+            <param-value>access plus 0 seconds</param-value>
+        </init-param>
+        <init-param>
+            <param-name>ExpiresByType image</param-name>
+            <param-value>access plus 1 year</param-value>
+        </init-param>
+        <init-param>
+            <param-name>ExpiresByType font</param-name>
+            <param-value>access plus 1 year</param-value>
+        </init-param>
+    </filter>
+    <filter-mapping>
+        <filter-name>FlutterCacheControl</filter-name>
+        <url-pattern>/*</url-pattern>
+    </filter-mapping>
+
+    <!-- MIME types Tomcat sometimes misses for Flutter web -->
+    <mime-mapping>
+        <extension>wasm</extension>
+        <mime-type>application/wasm</mime-type>
+    </mime-mapping>
+    <mime-mapping>
+        <extension>js</extension>
+        <mime-type>application/javascript</mime-type>
+    </mime-mapping>
+    <mime-mapping>
+        <extension>mjs</extension>
+        <mime-type>application/javascript</mime-type>
+    </mime-mapping>
+    <mime-mapping>
+        <extension>json</extension>
+        <mime-type>application/json</mime-type>
+    </mime-mapping>
+
+    <welcome-file-list>
+        <welcome-file>index.html</welcome-file>
+    </welcome-file-list>
+</web-app>
