@@ -10,12 +10,15 @@ class InputField extends StatefulWidget {
   final IconData? icon;
   final bool obscureText;
   final DeviceScreenType _deviceType;
+  final ValueChanged<String>? onSubmitted;
+  final TextInputAction? textInputAction;
+  final FocusNode? focusNode;
 
-  const   InputField({Key? key, required this.controller, required this.hintText, this.icon, required this.obscureText}) :
+  const   InputField({Key? key, required this.controller, required this.hintText, this.icon, required this.obscureText, this.onSubmitted, this.textInputAction, this.focusNode}) :
         _deviceType = DeviceScreenType.desktop,
         super(key: key);
 
-  const   InputField.mobile({Key? key, required this.controller, required this.hintText, this.icon, required this.obscureText}) :
+  const   InputField.mobile({Key? key, required this.controller, required this.hintText, this.icon, required this.obscureText, this.onSubmitted, this.textInputAction, this.focusNode}) :
         _deviceType = DeviceScreenType.mobile,
         super(key: key);
 
@@ -47,8 +50,11 @@ class _InputFieldState extends State<InputField> {
       shape: _border(),
       child: TextField(
         controller: widget.controller,
+        focusNode: widget.focusNode,
         obscureText: _obscureText,
         textAlign: TextAlign.start,
+        onSubmitted: widget.onSubmitted,
+        textInputAction: widget.textInputAction,
         style: const TextStyle(
             fontSize:  18,
             fontWeight: FontWeight.bold,

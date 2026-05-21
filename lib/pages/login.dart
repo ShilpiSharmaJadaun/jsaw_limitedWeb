@@ -22,12 +22,29 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
 
   late TextEditingController mobileUserTextController = TextEditingController();
   late TextEditingController mobilePassTextController = TextEditingController();
+  final FocusNode _passwordFocus = FocusNode();
   late final LoginPageBloc bloc;
 
   void initState(){
     super.initState();
     final loginService = Provider.of<LoginService>(context, listen: false);
     bloc = LoginPageBloc(loginService);
+  }
+
+  @override
+  void dispose() {
+    _passwordFocus.dispose();
+    super.dispose();
+  }
+
+  void _submitLogin() {
+    if (mobileUserTextController.text.isEmpty || mobilePassTextController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter both User Code and Password.')),
+      );
+      return;
+    }
+    bloc.logIn(mobileUserTextController.text, mobilePassTextController.text);
   }
 
 
@@ -193,6 +210,8 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                 controller: mobileUserTextController,
                 hintText: "Enter User Code",
                 icon: Icons.person_outline_rounded, obscureText: false,
+                textInputAction: TextInputAction.next,
+                onSubmitted: (_) => _passwordFocus.requestFocus(),
               ),
             ),
             Padding(
@@ -201,6 +220,9 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                 controller: mobilePassTextController,
                 hintText: "Enter Password",
                 icon: Icons.password_outlined, obscureText: true,
+                focusNode: _passwordFocus,
+                textInputAction: TextInputAction.done,
+                onSubmitted: (_) => _submitLogin(),
               ),
             ),
             // Padding(
@@ -294,14 +316,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
           orElse: () {
             return  Center(
               child: ElevatedButton(
-                onPressed: (){
-                  if (mobileUserTextController.text.isEmpty || mobilePassTextController.text.isEmpty) {
-                    ScaffoldMessenger.of(context)
-                        .showSnackBar(const SnackBar(content: Text('Please enter both User Code and Password.')));
-                    return;
-                  }
-                 bloc.logIn(mobileUserTextController.text, mobilePassTextController.text);
-                },
+                onPressed: _submitLogin,
                 style: ElevatedButton.styleFrom(
                     backgroundColor: kcRed,
                     maximumSize: const Size(150, 40),
