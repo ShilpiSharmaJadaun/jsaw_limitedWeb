@@ -1,19 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<web-app xmlns="https://jakarta.ee/xml/ns/jakartaee"
+<web-app xmlns="http://xmlns.jcp.org/xml/ns/javaee"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="https://jakarta.ee/xml/ns/jakartaee
-                             https://jakarta.ee/xml/ns/jakartaee/web-app_5_0.xsd"
-         version="5.0">
+         xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/javaee
+                             http://xmlns.jcp.org/xml/ns/javaee/web-app_4_0.xsd"
+         version="4.0">
 
     <display-name>jlimited Flutter Web</display-name>
 
     <!--
-      Cache strategy for Flutter web on Tomcat:
-        - HTML / JSON / JS / WASM are forced to revalidate on every load so
-          a fresh deploy is picked up immediately. Tomcat replies 304 when
-          the file hasn't changed, so the real cost is one round-trip per
-          file, not a re-download.
-        - Images and fonts can cache for a year (they almost never change).
+      Cache strategy for Flutter web on Tomcat 9:
+        HTML / JSON / JS / WASM revalidate on every load so a fresh deploy
+        is picked up immediately. Tomcat replies 304 when the file hasn't
+        changed, so the real cost is one round-trip per file, not a re-download.
+        Images and fonts can cache for a year (they almost never change).
     -->
     <filter>
         <filter-name>FlutterCacheControl</filter-name>
