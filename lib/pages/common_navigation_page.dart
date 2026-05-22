@@ -15,6 +15,11 @@ class CommonNavigationPage extends StatefulWidget {
     required this.child,
   }) : super(key: key);
 
+  /// Swap the in-app content from anywhere (e.g. the header avatar).
+  /// Set by the active navigation host so non-drawer widgets can navigate
+  /// without pushing a separate route on top of the scaffold.
+  static void Function(String title, Widget page)? showPage;
+
   @override
   _CommonNavigationPageState createState() => _CommonNavigationPageState();
 }
@@ -32,6 +37,16 @@ class _CommonNavigationPageState extends State<CommonNavigationPage> {
     super.initState();
     title = widget.title;
     content = widget.initialChild ?? widget.child;
+    CommonNavigationPage.showPage = (newTitle, newContent) {
+      if (!mounted) return;
+      _updateContent(newTitle, newContent, _getRouteFromTitle(newTitle));
+    };
+  }
+
+  @override
+  void dispose() {
+    CommonNavigationPage.showPage = null;
+    super.dispose();
   }
 
   void _updateContent(
@@ -131,6 +146,8 @@ class _CommonNavigationPageState extends State<CommonNavigationPage> {
         return '/changepasswordPage';
       case 'Employee Reporting':
         return '/employeeReportingPage';
+      case 'Profile':
+        return '/profilePage';
       case 'Approve Close/Reopen Table':
         return '/approveClose/ReopenPageTable';
         default:

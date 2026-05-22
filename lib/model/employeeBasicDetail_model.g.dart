@@ -19,6 +19,7 @@ _$EmployeeBasicDetailModelImpl _$$EmployeeBasicDetailModelImplFromJson(
       age: (json['age'] as num?)?.toInt() ?? 0,
       contCode: json['contCode'] as String? ?? "",
       contName: json['contName'] as String? ?? "",
+      wrkGrp: json['wrkGrp'] as String? ?? "",
     );
 
 Map<String, dynamic> _$$EmployeeBasicDetailModelImplToJson(
@@ -34,4 +35,5 @@ Map<String, dynamic> _$$EmployeeBasicDetailModelImplToJson(
       'age': instance.age,
       'contCode': instance.contCode,
       'contName': instance.contName,
+      'wrkGrp': instance.wrkGrp,
     };

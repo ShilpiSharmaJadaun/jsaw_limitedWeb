@@ -242,11 +242,11 @@ class GraphService{
     return const DepartmentgraphExportModel();
   }
 
-  Future<HazardGraphExportModel?> generateHazardGraphExport()async{
+  Future<HazardGraphExportModel?> generateHazardGraphExport(String startDate, String endDate)async{
     const url = "${root}observation/HazardGraphExport";
     final body = {
-      "startDate": "" ,
-      "endDate": "" ,
+      "startDate": startDate,
+      "endDate": endDate,
     };
     try {
       final response = await authHttp.post(Uri.parse(url), body: json.encode(body),headers: getHeaders());

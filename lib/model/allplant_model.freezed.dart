@@ -150,13 +150,14 @@ class __$$AllPlantModelImplCopyWithImpl<$Res>
 
 /// @nodoc
 @JsonSerializable()
-class _$AllPlantModelImpl implements _AllPlantModel {
+class _$AllPlantModelImpl extends _AllPlantModel {
   const _$AllPlantModelImpl(
       {this.deptCode = '',
       this.deptName = '',
       this.unitCode = 0,
       this.workGroup = '',
-      this.location = ''});
+      this.location = ''})
+      : super._();
 
   factory _$AllPlantModelImpl.fromJson(Map<String, dynamic> json) =>
       _$$AllPlantModelImplFromJson(json);
@@ -216,21 +217,16 @@ class _$AllPlantModelImpl implements _AllPlantModel {
       this,
     );
   }
-
-  @override
-  bool isSearched(String query) {
-    // TODO: implement isSearched
-    throw UnimplementedError();
-  }
 }
 
-abstract class _AllPlantModel implements AllPlantModel {
+abstract class _AllPlantModel extends AllPlantModel {
   const factory _AllPlantModel(
       {final String deptCode,
       final String deptName,
       final int unitCode,
       final String workGroup,
       final String location}) = _$AllPlantModelImpl;
+  const _AllPlantModel._() : super._();
 
   factory _AllPlantModel.fromJson(Map<String, dynamic> json) =
       _$AllPlantModelImpl.fromJson;

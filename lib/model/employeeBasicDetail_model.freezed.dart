@@ -31,6 +31,7 @@ mixin _$EmployeeBasicDetailModel {
   int get age => throw _privateConstructorUsedError;
   String get contCode => throw _privateConstructorUsedError;
   String get contName => throw _privateConstructorUsedError;
+  String get wrkGrp => throw _privateConstructorUsedError;
 
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
   @JsonKey(ignore: true)
@@ -54,7 +55,8 @@ abstract class $EmployeeBasicDetailModelCopyWith<$Res> {
       String gradeCode,
       int age,
       String contCode,
-      String contName});
+      String contName,
+      String wrkGrp});
 }
 
 /// @nodoc
@@ -81,6 +83,7 @@ class _$EmployeeBasicDetailModelCopyWithImpl<$Res,
     Object? age = null,
     Object? contCode = null,
     Object? contName = null,
+    Object? wrkGrp = null,
   }) {
     return _then(_value.copyWith(
       empCode: null == empCode
@@ -123,6 +126,10 @@ class _$EmployeeBasicDetailModelCopyWithImpl<$Res,
           ? _value.contName
           : contName // ignore: cast_nullable_to_non_nullable
               as String,
+      wrkGrp: null == wrkGrp
+          ? _value.wrkGrp
+          : wrkGrp // ignore: cast_nullable_to_non_nullable
+              as String,
     ) as $Val);
   }
 }
@@ -146,7 +153,8 @@ abstract class _$$EmployeeBasicDetailModelImplCopyWith<$Res>
       String gradeCode,
       int age,
       String contCode,
-      String contName});
+      String contName,
+      String wrkGrp});
 }
 
 /// @nodoc
@@ -172,6 +180,7 @@ class __$$EmployeeBasicDetailModelImplCopyWithImpl<$Res>
     Object? age = null,
     Object? contCode = null,
     Object? contName = null,
+    Object? wrkGrp = null,
   }) {
     return _then(_$EmployeeBasicDetailModelImpl(
       empCode: null == empCode
@@ -214,6 +223,10 @@ class __$$EmployeeBasicDetailModelImplCopyWithImpl<$Res>
           ? _value.contName
           : contName // ignore: cast_nullable_to_non_nullable
               as String,
+      wrkGrp: null == wrkGrp
+          ? _value.wrkGrp
+          : wrkGrp // ignore: cast_nullable_to_non_nullable
+              as String,
     ));
   }
 }
@@ -231,7 +244,8 @@ class _$EmployeeBasicDetailModelImpl implements _EmployeeBasicDetailModel {
       this.gradeCode = "",
       this.age = 0,
       this.contCode = "",
-      this.contName = ""});
+      this.contName = "",
+      this.wrkGrp = ""});
 
   factory _$EmployeeBasicDetailModelImpl.fromJson(Map<String, dynamic> json) =>
       _$$EmployeeBasicDetailModelImplFromJson(json);
@@ -266,10 +280,13 @@ class _$EmployeeBasicDetailModelImpl implements _EmployeeBasicDetailModel {
   @override
   @JsonKey()
   final String contName;
+  @override
+  @JsonKey()
+  final String wrkGrp;
 
   @override
   String toString() {
-    return 'EmployeeBasicDetailModel(empCode: $empCode, empName: $empName, statCode: $statCode, statName: $statName, deptCode: $deptCode, deptName: $deptName, gradeCode: $gradeCode, age: $age, contCode: $contCode, contName: $contName)';
+    return 'EmployeeBasicDetailModel(empCode: $empCode, empName: $empName, statCode: $statCode, statName: $statName, deptCode: $deptCode, deptName: $deptName, gradeCode: $gradeCode, age: $age, contCode: $contCode, contName: $contName, wrkGrp: $wrkGrp)';
   }
 
   @override
@@ -293,13 +310,14 @@ class _$EmployeeBasicDetailModelImpl implements _EmployeeBasicDetailModel {
             (identical(other.contCode, contCode) ||
                 other.contCode == contCode) &&
             (identical(other.contName, contName) ||
-                other.contName == contName));
+                other.contName == contName) &&
+            (identical(other.wrkGrp, wrkGrp) || other.wrkGrp == wrkGrp));
   }
 
   @JsonKey(ignore: true)
   @override
   int get hashCode => Object.hash(runtimeType, empCode, empName, statCode,
-      statName, deptCode, deptName, gradeCode, age, contCode, contName);
+      statName, deptCode, deptName, gradeCode, age, contCode, contName, wrkGrp);
 
   @JsonKey(ignore: true)
   @override
@@ -327,7 +345,8 @@ abstract class _EmployeeBasicDetailModel implements EmployeeBasicDetailModel {
       final String gradeCode,
       final int age,
       final String contCode,
-      final String contName}) = _$EmployeeBasicDetailModelImpl;
+      final String contName,
+      final String wrkGrp}) = _$EmployeeBasicDetailModelImpl;
 
   factory _EmployeeBasicDetailModel.fromJson(Map<String, dynamic> json) =
       _$EmployeeBasicDetailModelImpl.fromJson;
@@ -352,6 +371,8 @@ abstract class _EmployeeBasicDetailModel implements EmployeeBasicDetailModel {
   String get contCode;
   @override
   String get contName;
+  @override
+  String get wrkGrp;
   @override
   @JsonKey(ignore: true)
   _$$EmployeeBasicDetailModelImplCopyWith<_$EmployeeBasicDetailModelImpl>

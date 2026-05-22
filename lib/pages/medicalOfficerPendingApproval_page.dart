@@ -318,12 +318,13 @@ class _MedicalOfficerPendingApprovalPageState extends State<MedicalOfficerPendin
                             ),
                             IconButton(
                                 onPressed: () async{
+                                  final savedUniqueId = model[index].uniqueId;
                                   final shouldRefresh = await Navigator.of(context).push<bool>(
                                     MaterialPageRoute(builder: (context) => MedicalOfficerPage(allMedicalOfficerListModel: model[index],),
                                         fullscreenDialog: true),
                                   );
                                   if (shouldRefresh == true) {
-                                    allMedicalOfficerListBloc.initState();
+                                    allMedicalOfficerListBloc.removeByUniqueId(savedUniqueId);
                                   }
                                 },
                                 icon: const Icon(

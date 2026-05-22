@@ -5,6 +5,8 @@ part 'allplant_model.freezed.dart';
 
 @freezed
 class AllPlantModel with _$AllPlantModel{
+  const AllPlantModel._();
+
   const factory AllPlantModel({
 
     @Default('') String deptCode,

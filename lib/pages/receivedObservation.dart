@@ -197,95 +197,92 @@ class _ReceivedObservationPageState extends State<ReceivedObservationPage> {
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
           child: Row(
-            mainAxisAlignment: MainAxisAlignment.end,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              IconButton(
-                onPressed: () {
-                  setState(() => currentPage = 0);
-                  allFilterObservationBloc.initState(0, "", "", "", "", "", "", "",
-                      window.localStorage.getItem('kEmployeeCode') ?? "", "", "", "");
-                },
-                style: IconButton.styleFrom(
-                  backgroundColor: kcgreen,
-                  foregroundColor: kcMediumGrey,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                ),
-                tooltip: 'Refresh',
-                icon: const Icon(Icons.refresh),
-              ),
-              const SizedBox(width: 8),
               ElevatedButton.icon(
-                onPressed: () {
-                  uniqueIdBloc.initState();
-                  openFilterDialog();
-                },
+                onPressed: model.totalItems != 0 && currentPage > 0 ? _previousPage : null,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: kcvoilet,
                   foregroundColor: kcWhite,
-                  fixedSize: const Size(160, 40),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(6),
-                  ),
+                  disabledBackgroundColor: kcVeryLightGrey,
+                  disabledForegroundColor: kcLightGrey,
+                  elevation: 0,
+                  fixedSize: const Size(140, 40),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
                 ),
-                icon: const Icon(Icons.filter_alt_outlined, size: 18),
-                label: const Text("Filter"),
+                icon: const Icon(Icons.chevron_left, size: 18),
+                label: const Text("Previous"),
+              ),
+              Text(
+                model.totalItems == 0
+                    ? "No records"
+                    : "Page ${currentPage + 1} of ${model.totalPages}",
+                style: const TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: kcValueDark,
+                ),
+              ),
+              Row(
+                children: [
+                  IconButton(
+                    onPressed: () {
+                      setState(() => currentPage = 0);
+                      allFilterObservationBloc.initState(0, "", "", "", "", "", "", "",
+                          window.localStorage.getItem('kEmployeeCode') ?? "", "", "", "");
+                    },
+                    style: IconButton.styleFrom(
+                      backgroundColor: kcgreen,
+                      foregroundColor: kcMediumGrey,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                    ),
+                    tooltip: 'Refresh',
+                    icon: const Icon(Icons.refresh),
+                  ),
+                  const SizedBox(width: 8),
+                  ElevatedButton.icon(
+                    onPressed: () {
+                      uniqueIdBloc.initState();
+                      openFilterDialog();
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: kcvoilet,
+                      foregroundColor: kcWhite,
+                      fixedSize: const Size(120, 40),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                    ),
+                    icon: const Icon(Icons.filter_alt_outlined, size: 18),
+                    label: const Text("Filter"),
+                  ),
+                  const SizedBox(width: 8),
+                  ElevatedButton.icon(
+                    onPressed: model.totalItems != 0 && currentPage < model.totalPages - 1
+                        ? _nextPage
+                        : null,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: kcvoilet,
+                      foregroundColor: kcWhite,
+                      disabledBackgroundColor: kcVeryLightGrey,
+                      disabledForegroundColor: kcLightGrey,
+                      elevation: 0,
+                      fixedSize: const Size(140, 40),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                    ),
+                    icon: const Icon(Icons.chevron_right, size: 18),
+                    label: const Text("Next"),
+                  ),
+                ],
               ),
             ],
           ),
         ),
         const Divider(height: 1, color: kcVeryLightGrey),
-        if (model.totalItems != 0)
-          Padding(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                ElevatedButton.icon(
-                  onPressed: currentPage > 0 ? _previousPage : null,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: kcvoilet,
-                    foregroundColor: kcWhite,
-                    disabledBackgroundColor: kcVeryLightGrey,
-                    disabledForegroundColor: kcLightGrey,
-                    elevation: 0,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                  ),
-                  icon: const Icon(Icons.chevron_left, size: 18),
-                  label: const Text("Previous"),
-                ),
-                Text(
-                  "Page ${currentPage + 1} of ${model.totalPages}",
-                  style: const TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    color: kcValueDark,
-                  ),
-                ),
-                ElevatedButton.icon(
-                  onPressed: currentPage < model.totalPages - 1
-                      ? _nextPage
-                      : null,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: kcvoilet,
-                    foregroundColor: kcWhite,
-                    disabledBackgroundColor: kcVeryLightGrey,
-                    disabledForegroundColor: kcLightGrey,
-                    elevation: 0,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                  ),
-                  icon: const Icon(Icons.chevron_right, size: 18),
-                  label: const Text("Next"),
-                ),
-              ],
-            ),
-          ),
         Expanded(
           child: ListView.builder(
               padding:

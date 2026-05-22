@@ -22,5 +22,12 @@ class SafetyRemarkListBloc extends Cubit<SafetyRemarkListState> {
       emit(SafetyRemarkListState.failed(state.safetyRemarkListModel, error.message));
     }
   }
+
+  void removeByIncidentUniqueId(String incidentUniqueId) {
+    final updated = state.safetyRemarkListModel
+        .where((item) => item.incidentUniqueId != incidentUniqueId)
+        .toList();
+    emit(SafetyRemarkListState.success(updated));
+  }
 }
 

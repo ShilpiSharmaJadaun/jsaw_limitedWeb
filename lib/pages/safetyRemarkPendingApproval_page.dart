@@ -389,12 +389,13 @@ class _SafetyRemarkPendingApprovalPageState extends State<SafetyRemarkPendingApp
                               ),
                               IconButton(
                                   onPressed: () async{
+                                    final savedUniqueId = model[index].incidentUniqueId;
                                     final shouldRefresh = await Navigator.of(context).push<bool>(
                                       MaterialPageRoute(builder: (context) => SafetyRemarkPage(safetyRemarkListModel: model[index],),
                                           fullscreenDialog: true),
                                     );
                                     if (shouldRefresh == true) {
-                                      safetyRemarkListBloc.initState();
+                                      safetyRemarkListBloc.removeByIncidentUniqueId(savedUniqueId);
                                     }
                                   },
                                   icon: const Icon(

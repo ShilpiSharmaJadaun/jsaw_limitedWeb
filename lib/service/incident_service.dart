@@ -135,6 +135,8 @@ class IncidentService{
       String employeeCode,
       String employeeName,
       String age,
+      String gender,
+      String wrkGrp,
       String contractorName,
       String contCode,
       String plant,
@@ -146,7 +148,6 @@ class IncidentService{
       String responsibleHod,
       String contactNumber,
       String incidentType,
-      String workInjury,
       String descpOfIncident,
       ) async {
     const url = "${root}incidentReport/saveNewIncidentReport";
@@ -169,6 +170,8 @@ class IncidentService{
       request.fields['employeeCode'] = employeeCode;
       request.fields['employeeName'] = employeeName;
       request.fields['age'] = age;
+      request.fields['gender'] = gender;
+      request.fields['wrkGrp'] = wrkGrp;
       request.fields['contractorName'] = contractorName;
       request.fields['contCode'] = contCode;
       request.fields['plant'] = plant;
@@ -180,7 +183,6 @@ class IncidentService{
       request.fields['responsibleHod'] = responsibleHod;
       request.fields['contactNumber'] = contactNumber;
       request.fields['incidentType'] = incidentType;
-      request.fields['workInjury'] = workInjury;
       request.fields['descpOfIncident'] = descpOfIncident;
       var res = await request.send();
       var results = await http.Response.fromStream(res);

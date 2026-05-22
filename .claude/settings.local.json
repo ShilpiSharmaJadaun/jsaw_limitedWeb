@@ -27,7 +27,14 @@
       "Bash(java -version)",
       "Bash(flutter doctor *)",
       "Bash(flutter clean *)",
-      "Bash(flutter build *)"
+      "Bash(flutter build *)",
+      "Bash(grep -E --line-buffered \"Launching|Debug service|Flutter run key|Error|Failed|Exception|overflow|RenderFlex|file:///\")",
+      "Bash(grep -E --line-buffered \"overflow|RenderFlex|Exception|Error|file:///\")",
+      "Bash(grep -E --line-buffered \"Launching|Debug service|Flutter run key|overflow|RenderFlex|file:///\")",
+      "Bash(flutter pub *)",
+      "Bash(git *)",
+      "Bash(python *)",
+      "Bash(awk END{print NR} *)"
     ]
   }
 }

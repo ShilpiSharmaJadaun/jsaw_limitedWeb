@@ -57,7 +57,6 @@ class _IncidentReportingPageState extends State<IncidentReportingPage> {
   late final TextEditingController detailsController;
 
   TextEditingController dateTimeController = TextEditingController();
-  TextEditingController workInjuryController = TextEditingController();
 
   Future<void> _selectDateTime(BuildContext context) async {
     DateTime? selectedDate = await showDatePicker(
@@ -120,6 +119,9 @@ class _IncidentReportingPageState extends State<IncidentReportingPage> {
 
   ValueNotifier<String> contractorID = ValueNotifier("");
   ValueNotifier<String> employeeShiftDetail = ValueNotifier("");
+
+  ValueNotifier<String> wrkGrp = ValueNotifier("");
+  ValueNotifier<String> gender = ValueNotifier("");
 
   ValueNotifier<String> location = ValueNotifier("");
 
@@ -343,6 +345,41 @@ class _IncidentReportingPageState extends State<IncidentReportingPage> {
                   ],
                 ),
 
+                const SizedBox(height: 20),
+
+                /// 🔹 Gender (dropdown) + Work Group (auto from employee)
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    Expanded(
+                      child: Row(
+                        children: [
+                          _fieldIcon(Icons.wc, const Color(0xFFEC4899), const Color(0xFFFCE7F3)),
+                          const Text("*", style: TextStyle(color: Colors.red, fontSize: 18)),
+                          _buildHeadingText("Gender"),
+                          Expanded(child: _buildGenderDropdown()),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 20),
+                    Expanded(
+                      child: Row(
+                        children: [
+                          _fieldIcon(Icons.groups, const Color(0xFF6366F1), const Color(0xFFE0E7FF)),
+                          const Text("*", style: TextStyle(color: Colors.red, fontSize: 18)),
+                          _buildHeadingText("Work Group"),
+                          Expanded(
+                            child: ValueListenableBuilder<String>(
+                              valueListenable: wrkGrp,
+                              builder: (_, v, __) => _buildInfoText(v.isEmpty ? "-" : v),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+
                 /// Row 5 : Plant + Dept
                 const SizedBox(height: 20),
 
@@ -477,24 +514,6 @@ class _IncidentReportingPageState extends State<IncidentReportingPage> {
                         ],
                       ),
                     ),
-                    const SizedBox(width: 20),
-                    Expanded(
-                      child: ValueListenableBuilder<String>(
-                        valueListenable: typeOfIncident,
-                        builder: (context, value, _) {
-                          if (!value.toUpperCase().contains("IOW")) {
-                            return const SizedBox.shrink();
-                          }
-                          return Row(
-                            children: [
-                              _fieldIcon(Icons.groups_outlined, const Color(0xFF06B6D4), const Color(0xFFCFFAFE)),
-                              _buildHeadingText("Work on Injury "),
-                              Expanded(child: _buildWorkInjuryTextField()),
-                            ],
-                          );
-                        },
-                      ),
-                    ),
                   ],
                 ),
 
@@ -567,6 +586,8 @@ class _IncidentReportingPageState extends State<IncidentReportingPage> {
     location.value = "";
     typeOfIncident.value = "";
     responsibleHOD.value = "";
+    wrkGrp.value = "";
+    gender.value = "";
 
     // NOTE: responsibleEngg is NOT cleared — it comes from localStorage (logged-in user)
     // NOTE: responsibleHODCode is tied to the HOD dropdown selection, so clear it
@@ -628,6 +649,15 @@ class _IncidentReportingPageState extends State<IncidentReportingPage> {
                 child: InkWell(
                   borderRadius: BorderRadius.circular(12),
                   onTap: () async {
+                    if (_selectedImage == null || _selectedImage!.isEmpty) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text("Please select the incident image first."),
+                          duration: Duration(seconds: 2),
+                        ),
+                      );
+                      return;
+                    }
                     await saveIncidentReportingBloc.saveObservation(
                        _selectedImage ?? Uint8List(0),
                       dateTimeController.text,
@@ -635,6 +665,8 @@ class _IncidentReportingPageState extends State<IncidentReportingPage> {
                       employeeCode.value,
                       employeeName.value,
                       age.value,
+                      gender.value,
+                      wrkGrp.value,
                       contractorName.value,
                       contractorID.value,
                       department.value,
@@ -646,8 +678,7 @@ class _IncidentReportingPageState extends State<IncidentReportingPage> {
                       responsibleHOD.value,
                       mobileController.text,
                       typeOfIncident.value,
-                      workInjuryController.text,
-                      detailsController.text,
+                      detailsController.text
                     );
                   },
                   child: const Padding(
@@ -789,6 +820,7 @@ class _IncidentReportingPageState extends State<IncidentReportingPage> {
                                     plantCode.value = list[index].statCode;
                                     department.value = list[index].deptName;
                                     departmentId.value = list[index].deptCode;
+                                    wrkGrp.value = list[index].wrkGrp;
                                     locationBloc.initState(departmentId.value);
 
                                     Navigator.pop(context);
@@ -1677,18 +1709,99 @@ class _IncidentReportingPageState extends State<IncidentReportingPage> {
 
 
 
-  Widget _buildWorkInjuryTextField() {
-    return TextFormField(
-      controller: workInjuryController,
-      maxLines: 10,
-      minLines: 1,
-
-      decoration: InputDecoration(
-        hintText: "Enter details",
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
+  Widget _buildGenderDropdown() {
+    const options = ["Male", "Female"];
+    return Padding(
+      padding: const EdgeInsets.all(5),
+      child: InkWell(
+        onTap: () async {
+          final selected = await showDialog<String>(
+            context: context,
+            builder: (context) {
+              return AlertDialog(
+                shape: const RoundedRectangleBorder(
+                  borderRadius: BorderRadius.all(Radius.circular(5)),
+                ),
+                title: const Text(
+                  "Select Gender",
+                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                ),
+                content: SizedBox(
+                  width: 210,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: options.map((opt) {
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          InkWell(
+                            onTap: () => Navigator.pop(context, opt),
+                            child: Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: Text(opt),
+                            ),
+                          ),
+                          const Padding(
+                            padding: EdgeInsets.symmetric(horizontal: 8),
+                            child: Divider(
+                              height: 0.8,
+                              thickness: 1,
+                              color: kcDarkGreyColor,
+                            ),
+                          ),
+                        ],
+                      );
+                    }).toList(),
+                  ),
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: const Text(
+                      "close",
+                      style: TextStyle(color: kcDarkGreyColor, fontSize: 18),
+                    ),
+                  ),
+                ],
+              );
+            },
+          );
+          if (selected != null) {
+            gender.value = selected;
+          }
+        },
+        child: SizedBox(
+          width: 200,
+          height: 30,
+          child: Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(8.0),
+              color: kcWhite,
+            ),
+            child: ValueListenableBuilder<String>(
+              valueListenable: gender,
+              builder: (context, value, child) => Padding(
+                padding: const EdgeInsets.all(2.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    SizedBox(
+                      child: Text(
+                        value.isEmpty ? "Select Gender" : value,
+                        textAlign: TextAlign.center,
+                        maxLines: 4,
+                        style: TextStyle(
+                          color: value.isEmpty ? kcDarkGreyColor : kcLightGrey,
+                        ),
+                      ),
+                    ),
+                    const Icon(Icons.arrow_drop_down_sharp),
+                  ],
+                ),
+              ),
+            ),
+          ),
         ),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
       ),
     );
   }

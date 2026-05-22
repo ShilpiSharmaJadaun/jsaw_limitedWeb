@@ -9,6 +9,7 @@ import 'package:jsaw_limited/pages/graph_page.dart';
 import 'package:jsaw_limited/pages/investigation_team_page.dart';
 import 'package:jsaw_limited/pages/observation.dart';
 import 'package:jsaw_limited/pages/priority_changes_page.dart';
+import 'package:jsaw_limited/pages/profile_page.dart';
 import 'package:jsaw_limited/pages/register_observation_page.dart';
 import 'package:jsaw_limited/pages/safetyRemarkResponse_page.dart';
 import 'package:jsaw_limited/pages/suggestion_page.dart';
@@ -113,6 +114,12 @@ class AppDrawer extends StatelessWidget {
           icon: Icons.mail_outline,
           page: SuggestionFeedbackPage(),
         ),
+      const _DrawerEntry(
+        section: 'Account',
+        title: 'Profile',
+        icon: Icons.person_outline,
+        page: ProfilePage(),
+      ),
       const _DrawerEntry(
         section: 'Account',
         title: 'Change Pass / Email',

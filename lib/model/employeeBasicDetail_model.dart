@@ -16,6 +16,7 @@ class EmployeeBasicDetailModel with _$EmployeeBasicDetailModel{
     @Default(0) int age,
     @Default("") String contCode,
     @Default("") String contName,
+    @Default("") String wrkGrp,
   }) = _EmployeeBasicDetailModel;
 
   factory EmployeeBasicDetailModel.fromJson(Map<String, dynamic> json) => _$EmployeeBasicDetailModelFromJson(json);

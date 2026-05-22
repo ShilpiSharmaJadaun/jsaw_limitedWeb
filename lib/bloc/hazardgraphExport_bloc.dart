@@ -11,10 +11,10 @@ class HazardGraphExportBloc extends Cubit<HazardGraphExportState>{
 
   late GraphService graphService;
 
-  Future<void> initState()async {
+  Future<void> initState([String startDate = "", String endDate = ""])async {
     try{
       emit(HazardGraphExportState.loading(state.hazardGraphExport));
-      final generateExcel = await graphService.generateHazardGraphExport();
+      final generateExcel = await graphService.generateHazardGraphExport(startDate, endDate);
       emit(HazardGraphExportState.success(generateExcel!, generateExcel.url));
     }on ApiError catch (error) {
       emit(HazardGraphExportState.failed(state.hazardGraphExport, error.message));

@@ -21,5 +21,12 @@ class AllMedicalOfficerListBloc extends Cubit<AllMedicalOfficerListState> {
       emit(AllMedicalOfficerListState.failed(state.allMedicalOfficerList, error.message));
     }
   }
+
+  void removeByUniqueId(String uniqueId) {
+    final updated = state.allMedicalOfficerList
+        .where((item) => item.uniqueId != uniqueId)
+        .toList();
+    emit(AllMedicalOfficerListState.success(updated));
+  }
 }
 

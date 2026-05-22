@@ -19,6 +19,8 @@ class SaveIncidentReportingBloc extends Cubit<SaveIncidentReportingState> {
       String employeeCode,
       String employeeName,
       String age,
+      String gender,
+      String wrkGrp,
       String contractorName,
       String contCode,
       String plant,
@@ -30,7 +32,6 @@ class SaveIncidentReportingBloc extends Cubit<SaveIncidentReportingState> {
       String responsibleHod,
       String contactNumber,
       String incidentType,
-      String workInjury,
       String descpOfIncident,
       ) async {
     emit(SaveIncidentReportingState.loading(state.saveIncident));
@@ -42,6 +43,8 @@ class SaveIncidentReportingBloc extends Cubit<SaveIncidentReportingState> {
         employeeCode,
         employeeName,
         age,
+        gender,
+        wrkGrp,
          contractorName,
         contCode,
         plant, plantCode,
@@ -52,7 +55,6 @@ class SaveIncidentReportingBloc extends Cubit<SaveIncidentReportingState> {
         responsibleHod,
         contactNumber,
         incidentType,
-        workInjury,
         descpOfIncident,
       );
       emit(SaveIncidentReportingState.success(state.saveIncident, msg!));

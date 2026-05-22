@@ -37,6 +37,10 @@ class _HazardGraphState extends State<HazardGraph> {
   TextEditingController endDateInput = TextEditingController();
   TextEditingController fromDateInput = TextEditingController();
 
+  // Persisted applied filter values (controllers get cleared after Apply).
+  String _appliedStartDate = "";
+  String _appliedEndDate = "";
+
   @override
   void initState() {
     super.initState();
@@ -353,7 +357,9 @@ class _HazardGraphState extends State<HazardGraph> {
 
                   if(startDateInput.text.isNotEmpty && endDateInput.text.isNotEmpty){
 
-                    dialogContext.read<HazardGraphBloc>().initState(startDateInput.text + " 00:00:00",endDateInput.text + " 23:59:59",);
+                    _appliedStartDate = startDateInput.text + " 00:00:00";
+                    _appliedEndDate = endDateInput.text + " 23:59:59";
+                    dialogContext.read<HazardGraphBloc>().initState(_appliedStartDate, _appliedEndDate);
                     // Clear inputs
                     startDateInput.clear();
                     endDateInput.clear();
@@ -485,7 +491,7 @@ class _HazardGraphState extends State<HazardGraph> {
               padding: const EdgeInsets.all(8.0),
               child: ElevatedButton(
                   onPressed: () {
-                    hazardGraphExportBloc.initState();
+                    hazardGraphExportBloc.initState(_appliedStartDate, _appliedEndDate);
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: kcWhite,

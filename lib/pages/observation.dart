@@ -293,7 +293,91 @@ class _AllObservationPageState extends State<AllObservationPage> {
   }
 
   // ─────────────────────────────────────────────────────────────────────────
-  // Toolbar
+  // Top bar (single row: Prev | Page | Refresh + Filter + Export + Next)
+  // ─────────────────────────────────────────────────────────────────────────
+  Widget _buildTopBar(AllFilterObservationModel model) {
+    final hasPrev = currentPage > 0;
+    final hasNext = currentPage < model.totalPages - 1;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      decoration: const BoxDecoration(
+        color: kcWhite,
+        border: Border(bottom: BorderSide(color: kcVeryLightGrey, width: 1)),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          _pageButton(
+            icon: Icons.chevron_left_rounded,
+            label: 'Prev',
+            enabled: hasPrev,
+            onPressed: _previousPage,
+          ),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            decoration: BoxDecoration(
+              color: kcvoilet.withValues(alpha: 0.06),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: kcvoilet.withValues(alpha: 0.15), width: 1),
+            ),
+            child: Text(
+              'Page ${currentPage + 1} of ${model.totalPages}',
+              style: const TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: kcvoilet,
+              ),
+            ),
+          ),
+          Row(
+            children: [
+              _toolbarIconButton(
+                icon: Icons.refresh_rounded,
+                tooltip: 'Refresh',
+                color: kcgreen,
+                onPressed: () {
+                  setState(() => currentPage = 0);
+                  allFilterObservationBloc.initState(
+                      0, '', '', '', '', '', '', '', '', '', '', '');
+                },
+              ),
+              const SizedBox(width: 10),
+              ElevatedButton.icon(
+                onPressed: () {
+                  uniqueIdBloc.initState();
+                  _openFilterDialog();
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: kcvoilet,
+                  foregroundColor: kcWhite,
+                  fixedSize: const Size(120, 38),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8)),
+                  elevation: 0,
+                ),
+                icon: const Icon(Icons.filter_alt_outlined, size: 16),
+                label: const Text('Filter',
+                    style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
+              ),
+              const SizedBox(width: 10),
+              _buildDownloadExcel(model.sessionID),
+              const SizedBox(width: 10),
+              _pageButton(
+                icon: Icons.chevron_right_rounded,
+                label: 'Next',
+                enabled: hasNext,
+                onPressed: _nextPage,
+                iconAfter: true,
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // Toolbar (legacy — kept for backwards reference, no longer used)
   // ─────────────────────────────────────────────────────────────────────────
   Widget _buildToolbar(String sessionID) {
     return Container(
@@ -471,8 +555,7 @@ class _AllObservationPageState extends State<AllObservationPage> {
   Widget _buildContent(AllFilterObservationModel model) {
     return Column(
       children: [
-        _buildToolbar(model.sessionID),
-        _buildPaginationBar(model),
+        _buildTopBar(model),
         const Divider(height: 1),
         ListView.builder(
           padding:

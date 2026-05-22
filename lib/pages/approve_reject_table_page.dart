@@ -233,52 +233,91 @@ class _ApproveRejectTablePageState extends State<ApproveRejectTablePage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          SizedBox(
-            width: 1000,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: ElevatedButton(onPressed: (){
-                    uniqueIdBloc.initState();
-                    openFilterDialog();
-                  },
-                      style: ElevatedButton.styleFrom(backgroundColor: kcRed, fixedSize: const Size(200, 40)),
-                      child: const Text("Filter", style: TextStyle(color: kcWhite),)),
-                ),
-                TextButton(onPressed: (){
-                  setState(() {
-                    currentPage = 0;
-                  });
-                  allFilterObservationBloc.initState(0,"", "", "", "", "", "COMPLIANCE", "", "", "","","");
-                }, child: const Row(
-                  children: [
-                    Text("Refresh"),
-                    Icon(Icons.refresh)
-                  ],
-                )),
-              ],
-            ),
-          ),
-          const Divider(),
           Padding(
-            padding: const EdgeInsets.all(8.0),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                ElevatedButton(onPressed: _previousPage, style: ElevatedButton.styleFrom(backgroundColor: kcmegenta), child: const Text("Previous", style: TextStyle(fontWeight: FontWeight.w600, color: kcWhite),),),
+                ElevatedButton.icon(
+                  onPressed: model.totalItems != 0 && currentPage > 0 ? _previousPage : null,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: kcvoilet,
+                    foregroundColor: kcWhite,
+                    disabledBackgroundColor: kcVeryLightGrey,
+                    disabledForegroundColor: kcLightGrey,
+                    elevation: 0,
+                    fixedSize: const Size(140, 40),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+                  ),
+                  icon: const Icon(Icons.chevron_left, size: 18),
+                  label: const Text("Previous"),
+                ),
+                Text(
+                  model.totalItems == 0
+                      ? "No records"
+                      : "Page $currentPage of ${model.totalPages}",
+                  style: const TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: kcValueDark,
+                  ),
+                ),
                 Row(
                   children: [
-                    Text(" Page $currentPage ",),
-                    Text("  Out of " + model.totalPages.toString()+" "),
+                    Container(
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFD4F4DD),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: IconButton(
+                        tooltip: 'Refresh',
+                        onPressed: () {
+                          setState(() {
+                            currentPage = 0;
+                          });
+                          allFilterObservationBloc.initState(0, "", "", "", "", "", "COMPLIANCE", "", "", "", "", "");
+                        },
+                        icon: Icon(Icons.refresh, color: kcStatGreen),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    ElevatedButton.icon(
+                      onPressed: () {
+                        uniqueIdBloc.initState();
+                        openFilterDialog();
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: kcvoilet,
+                        foregroundColor: kcWhite,
+                        fixedSize: const Size(120, 40),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+                      ),
+                      icon: const Icon(Icons.filter_alt_outlined, size: 18),
+                      label: const Text("Filter"),
+                    ),
+                    const SizedBox(width: 8),
+                    ElevatedButton.icon(
+                      onPressed: model.totalItems != 0 && currentPage < model.totalPages
+                          ? _nextPage
+                          : null,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: kcvoilet,
+                        foregroundColor: kcWhite,
+                        disabledBackgroundColor: kcVeryLightGrey,
+                        disabledForegroundColor: kcLightGrey,
+                        elevation: 0,
+                        fixedSize: const Size(140, 40),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+                      ),
+                      icon: const Icon(Icons.chevron_right, size: 18),
+                      label: const Text("Next"),
+                    ),
                   ],
                 ),
-                ElevatedButton(onPressed: _nextPage, style: ElevatedButton.styleFrom(backgroundColor: kcmegenta), child: const Text("Next", style: TextStyle(fontWeight: FontWeight.w600, color: kcWhite),)),
               ],
             ),
           ),
+          const Divider(height: 1, color: kcVeryLightGrey),
           Padding(
             padding: const EdgeInsets.all(8.0),
             child: SizedBox(
