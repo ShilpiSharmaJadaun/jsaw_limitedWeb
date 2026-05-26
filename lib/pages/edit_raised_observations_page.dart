@@ -171,7 +171,7 @@ class _EditRaisedObservationsPageState extends State<EditRaisedObservationsPage>
             crossAxisAlignment: CrossAxisAlignment.center,
             mainAxisSize: MainAxisSize.min,
             children: [
-              PageHeader("Edit Observations"),
+              const SubPageHeader("Edit Observations"),
               _buildObservation(),
               Padding(
                 padding: const EdgeInsets.all(10.0),

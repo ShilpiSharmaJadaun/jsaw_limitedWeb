@@ -249,6 +249,58 @@ class IncidentService{
     }
   }
 
+  /// Update an existing Investigation Report.
+  /// Pass [newImageBytes] only to replace the image; pass [clearImage]=true to
+  /// remove it. Leave both alone to keep the current image.
+  Future<String?> updateInvestigationReport({
+    required int id,
+    required String incidentUniqueId,
+    required String reportDate,
+    required List<Map<String, String>> team,
+    required List<String> rootCauses,
+    required List<Map<String, dynamic>> capa,
+    Uint8List? newImageBytes,
+    bool clearImage = false,
+  }) async {
+    const url = "${root}investigationReport/updateInvestigationReport";
+    try {
+      var request = http.MultipartRequest("POST", Uri.parse(url));
+      authHttp.attachAuth(request);
+
+      if (newImageBytes != null) {
+        request.files.add(http.MultipartFile.fromBytes(
+          'image',
+          newImageBytes,
+          filename: 'upload.jpg',
+          contentType: MediaType('image', 'jpeg'),
+        ));
+      }
+
+      request.fields['id'] = id.toString();
+      request.fields['clearImage'] = clearImage ? 'true' : 'false';
+      request.fields['incidentUniqueId'] = incidentUniqueId;
+      request.fields['reportDate'] = reportDate;
+      request.fields['team'] = jsonEncode(team);
+      request.fields['rootCauses'] = jsonEncode(rootCauses);
+      request.fields['capa'] = jsonEncode(capa);
+
+      var res = await request.send();
+      var results = await http.Response.fromStream(res);
+      authHttp.check(results);
+      var finalres = jsonDecode(results.body) as Map<String, dynamic>;
+
+      if (finalres['status'] == true) {
+        return finalres['msg']?.toString();
+      } else {
+        throw Exception(finalres['msg']?.toString() ?? 'Update failed');
+      }
+    } catch (e) {
+      if (e is String) throw Exception(e);
+      throw Exception(
+          "An error occurred while updating the investigation report: $e");
+    }
+  }
+
   Future<
       ({
         List<InvestigationReportResponse> items,

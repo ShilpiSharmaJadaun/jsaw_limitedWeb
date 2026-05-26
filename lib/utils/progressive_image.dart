@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 
+import 'app_color.dart';
+import 'image_lightbox.dart';
+
 class ProgressiveImage extends StatelessWidget {
   const ProgressiveImage({
     super.key,
@@ -9,6 +12,8 @@ class ProgressiveImage extends StatelessWidget {
     this.alignment = Alignment.center,
     this.width,
     this.height,
+    this.expandable = true,
+    this.showExpandHint = true,
   });
 
   final String highUrl;
@@ -18,6 +23,14 @@ class ProgressiveImage extends StatelessWidget {
   final double? width;
   final double? height;
 
+  /// When true (default), tapping the image opens it in a full-screen
+  /// pinch-zoomable lightbox. Set to false to keep the image static.
+  final bool expandable;
+
+  /// When true (default), a small "Expand" pill is overlaid on the image's
+  /// top-right corner so users discover the tap target.
+  final bool showExpandHint;
+
   Widget _error(BuildContext _, Object __, StackTrace? ___) => Container(
         width: width,
         height: height,
@@ -25,14 +38,6 @@ class ProgressiveImage extends StatelessWidget {
         alignment: Alignment.center,
         child: Icon(Icons.broken_image_outlined,
             color: Colors.grey.shade400, size: 48),
-      );
-
-  Widget _spinner() => Container(
-        width: width,
-        height: height,
-        color: Colors.grey.shade100,
-        alignment: Alignment.center,
-        child: const CircularProgressIndicator(strokeWidth: 2),
       );
 
   @override
@@ -65,10 +70,7 @@ class ProgressiveImage extends StatelessWidget {
             errorBuilder: _error,
           );
 
-    // Always-visible spinner beneath the image so callers see a loading
-    // indicator while the network image is being fetched. The image is
-    // painted on top and hides the spinner once it arrives.
-    return SizedBox(
+    final body = SizedBox(
       width: width,
       height: height,
       child: Stack(
@@ -80,6 +82,47 @@ class ProgressiveImage extends StatelessWidget {
             child: const CircularProgressIndicator(strokeWidth: 2),
           ),
           image,
+          if (expandable && showExpandHint && highUrl.isNotEmpty)
+            const Positioned(
+              right: 6,
+              top: 6,
+              child: _ExpandPill(),
+            ),
+        ],
+      ),
+    );
+
+    if (!expandable || highUrl.isEmpty) return body;
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: () =>
+          showImageLightbox(context, highUrl: highUrl, lowUrl: lowUrl),
+      child: body,
+    );
+  }
+}
+
+class _ExpandPill extends StatelessWidget {
+  const _ExpandPill();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        color: Colors.black.withOpacity(0.55),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: const Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.zoom_in, size: 11, color: kcWhite),
+          SizedBox(width: 3),
+          Text(
+            'Expand',
+            style: TextStyle(
+                color: kcWhite, fontSize: 10, fontWeight: FontWeight.w600),
+          ),
         ],
       ),
     );

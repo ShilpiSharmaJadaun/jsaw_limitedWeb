@@ -6,6 +6,60 @@ import '../pages/common_navigation_page.dart';
 import '../pages/profile_page.dart';
 import 'app_color.dart';
 
+/// Slim header for *nested* pages (e.g. detail / edit screens pushed inside a
+/// nested Navigator). Just a back arrow + title — no profile avatar, since the
+/// outer [PageHeader] already shows it. Used to avoid duplicate top bars.
+class SubPageHeader extends StatelessWidget {
+  final String title;
+  const SubPageHeader(this.title, {super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.fromLTRB(10, 10, 10, 0),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(14),
+        gradient: const LinearGradient(
+          colors: [Color(0xFFFF7B2C), Color(0xFFEF4A8B), Color(0xFF8B5CF6)],
+          begin: Alignment.centerLeft,
+          end: Alignment.centerRight,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFFEF4A8B).withOpacity(0.18),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 4),
+      child: Row(
+        children: [
+          IconButton(
+            icon: const Icon(Icons.arrow_back, color: Colors.white, size: 22),
+            onPressed: () => Navigator.of(context).maybePop(true),
+            tooltip: 'Back',
+          ),
+          const SizedBox(width: 4),
+          Expanded(
+            child: Text(
+              title,
+              style: const TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w700,
+                color: kcWhite,
+                letterSpacing: 0.3,
+              ),
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class PageHeader extends StatelessWidget {
   final String title;
   PageHeader(this.title, {super.key});
@@ -15,11 +69,22 @@ class PageHeader extends StatelessWidget {
     //print(  MediaQuery.of(context).size.width - 200);
     final empName = window.localStorage.getItem('kEmployeename') ?? '';
     return Padding(
-      padding: const EdgeInsets.only(top: 10),
+      padding: const EdgeInsets.fromLTRB(10, 10, 10, 0),
       child: Container(
-        width: MediaQuery.of(context).size.width - 200,
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(colors: [navyBlue, cream, golden]),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(14),
+          gradient: const LinearGradient(
+            colors: [Color(0xFFFF7B2C), Color(0xFFEF4A8B), Color(0xFF8B5CF6)],
+            begin: Alignment.centerLeft,
+            end: Alignment.centerRight,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFFEF4A8B).withOpacity(0.18),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            ),
+          ],
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.start,

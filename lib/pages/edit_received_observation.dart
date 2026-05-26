@@ -154,7 +154,7 @@ class _EditReceivedObservationsPageState extends State<EditReceivedObservationsP
             crossAxisAlignment: CrossAxisAlignment.center,
             mainAxisSize: MainAxisSize.min,
             children: [
-              PageHeader("Received Observations Details"),
+              const SubPageHeader("Received Observations Details"),
               _buildObservation(),
               const Padding(
                 padding: EdgeInsets.all(10.0),

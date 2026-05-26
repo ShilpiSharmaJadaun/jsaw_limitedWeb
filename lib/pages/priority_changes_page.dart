@@ -1,4 +1,3 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:jsaw_limited/bloc/priorityUpdate_bloc.dart';
@@ -6,11 +5,9 @@ import 'package:jsaw_limited/state/priorityUpdate_state.dart';
 import 'package:provider/provider.dart';
 
 import '../bloc/priority_bloc.dart';
-import '../bloc/suggestion_bloc.dart';
 import '../model/priority_model.dart';
 import '../service/observation_service.dart';
 import '../state/priority_state.dart';
-import '../state/suggestion_state.dart';
 import '../utils/app_color.dart';
 
 class PriorityChangesPage extends StatefulWidget {
@@ -21,424 +18,375 @@ class PriorityChangesPage extends StatefulWidget {
 }
 
 class _PriorityChangesPageState extends State<PriorityChangesPage> {
-
-  late String priorityColor = "";
-
   late final PriorityBloc priorityBloc;
-
-
   late final PriorityUpdateBloc priorityUpdateBloc;
 
-  ValueNotifier<String> priority = ValueNotifier("Select Priority");
-
-  TextEditingController lowController = TextEditingController();
-  TextEditingController highController = TextEditingController();
-  TextEditingController mediumController = TextEditingController();
+  // One controller per priority — keyed by status name so they survive rebuilds.
+  final Map<String, TextEditingController> _editControllers = {};
 
   @override
-  void initState(){
+  void initState() {
     super.initState();
-    final observationService = Provider.of<ObservationService>(context, listen: false);
+    final observationService =
+        Provider.of<ObservationService>(context, listen: false);
     priorityBloc = PriorityBloc(observationService);
     priorityUpdateBloc = PriorityUpdateBloc(observationService);
     priorityBloc.initState();
   }
 
+  @override
+  void dispose() {
+    for (final c in _editControllers.values) {
+      c.dispose();
+    }
+    super.dispose();
+  }
+
+  TextEditingController _controllerFor(String key) {
+    return _editControllers.putIfAbsent(key, () => TextEditingController());
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: SingleChildScrollView(
+    return Container(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [kcDashboardBg1, kcDashboardBg2],
+        ),
+      ),
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(20),
         child: Center(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Padding(
-                        padding: EdgeInsets.symmetric(vertical: 20, horizontal: 20),
-                        child: Text("Priority", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: _buildPriority(),
-                      ),
-                      // const Padding(
-                      //   padding: EdgeInsets.symmetric(vertical: 20, horizontal: 20),
-                      //   child: Text("Description", style:  TextStyle(fontWeight: FontWeight.bold, fontSize: 16),),
-                      // ),
-                      // _buildTextFiled(suggestionController,"Description", 6),
-                      //_buildSubmit()
-                    ],
-                  )
-
-                ],
-              )
-
-            ],
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 1080),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                BlocConsumer<PriorityUpdateBloc, PriorityUpdateState>(
+                  bloc: priorityUpdateBloc,
+                  listener: (_, state) {
+                    state.maybeWhen(
+                      success: (_, message) {
+                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                          content: Text(message ?? 'Updated successfully'),
+                          backgroundColor: const Color(0xFF10B981),
+                        ));
+                      },
+                      failed: (_, message) {
+                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                          content: Text(message),
+                          backgroundColor: kcRed,
+                        ));
+                      },
+                      orElse: () {},
+                    );
+                  },
+                  builder: (_, __) => _buildPriorityList(),
+                ),
+              ],
+            ),
           ),
         ),
       ),
     );
   }
 
-  // Submit Button
+  // ============ Priority list ============
+  Widget _buildPriorityList() {
+    return BlocBuilder<PriorityBloc, PriorityState>(
+      bloc: priorityBloc,
+      builder: (_, state) => state.when(
+        loading: (_) => const Padding(
+          padding: EdgeInsets.all(40),
+          child: Center(child: CircularProgressIndicator()),
+        ),
+        content: _renderCards,
+        success: _renderCards,
+        failed: (form, msg) => Column(
+          children: [
+            _renderCards(form),
+            if (msg.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.only(top: 8),
+                child: Text(msg,
+                    style: const TextStyle(color: kcRed, fontSize: 12)),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
 
-  _buildSubmit(String priorityName, TextEditingController description){
-    return BlocConsumer<PriorityUpdateBloc, PriorityUpdateState>(
+  Widget _renderCards(List<PriorityModel> priorities) {
+    if (priorities.isEmpty) {
+      return Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          children: const [
+            Icon(Icons.flag_outlined, size: 56, color: kcLabelGrey),
+            SizedBox(height: 8),
+            Text('No priorities configured',
+                style: TextStyle(color: kcLabelGrey)),
+          ],
+        ),
+      );
+    }
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        for (final p in priorities) _priorityCard(p),
+      ],
+    );
+  }
+
+  // ============ Card per priority ============
+  Widget _priorityCard(PriorityModel p) {
+    final color = _hexToColor(p.priorityStatusColour);
+    final controller = _controllerFor(p.priorityStatusName);
+    return Container(
+      margin: const EdgeInsets.only(bottom: 14),
+      decoration: BoxDecoration(
+        color: kcWhite,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: color.withOpacity(0.3)),
+        boxShadow: [
+          BoxShadow(
+            color: color.withOpacity(0.10),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Container(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [color.withOpacity(0.18), color.withOpacity(0.04)],
+                begin: Alignment.centerLeft,
+                end: Alignment.centerRight,
+              ),
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(14),
+                topRight: Radius.circular(14),
+              ),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: color,
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: color.withOpacity(0.35),
+                        blurRadius: 8,
+                        offset: const Offset(0, 3),
+                      ),
+                    ],
+                  ),
+                  child: const Icon(Icons.flag, color: kcWhite, size: 18),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        p.priorityStatusName,
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w800,
+                          color: color,
+                          letterSpacing: 0.3,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Row(
+                        children: [
+                          const Icon(Icons.schedule,
+                              size: 12, color: kcLabelGrey),
+                          const SizedBox(width: 4),
+                          Text(
+                            'Current deadline: ',
+                            style: const TextStyle(
+                                fontSize: 11,
+                                color: kcLabelGrey,
+                                fontWeight: FontWeight.w500),
+                          ),
+                          Text(
+                            p.priorityStatusDeadline.isEmpty
+                                ? '—'
+                                : p.priorityStatusDeadline,
+                            style: const TextStyle(
+                                fontSize: 12,
+                                color: kcValueDark,
+                                fontWeight: FontWeight.w700),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(14),
+            child: LayoutBuilder(
+              builder: (ctx, c) {
+                final wide = c.maxWidth > 540;
+                final field = _deadlineField(controller, color);
+                final button = _updateButton(p, controller, color);
+                if (wide) {
+                  return Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Expanded(child: field),
+                      const SizedBox(width: 12),
+                      button,
+                    ],
+                  );
+                }
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    field,
+                    const SizedBox(height: 10),
+                    button,
+                  ],
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _deadlineField(TextEditingController controller, Color color) {
+    return TextField(
+      controller: controller,
+      style: const TextStyle(
+          fontSize: 14, fontWeight: FontWeight.w600, color: kcValueDark),
+      decoration: InputDecoration(
+        isDense: true,
+        hintText: 'New deadline (e.g. 24 hours)',
+        prefixIcon: Icon(Icons.update, size: 18, color: color),
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 10, vertical: 14),
+        filled: true,
+        fillColor: kcDashboardBg1,
+        hintStyle: const TextStyle(
+            fontSize: 12, color: kcMediumGrey, fontWeight: FontWeight.w500),
+        border: _border(color, focused: false),
+        enabledBorder: _border(color, focused: false),
+        focusedBorder: _border(color, focused: true),
+      ),
+    );
+  }
+
+  Widget _updateButton(
+      PriorityModel p, TextEditingController controller, Color color) {
+    return BlocBuilder<PriorityUpdateBloc, PriorityUpdateState>(
       bloc: priorityUpdateBloc,
-      listener: (_, state) {
-        state.maybeWhen(
-          success: (_, message) {
-            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-              content: Text(message ?? "Sent Successfully"),
-            ));
-          },
-          failed: (_, message) {
-            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
-          },
-          orElse: () {},
+      builder: (_, state) {
+        final loading = state.maybeWhen(
+          loading: (_) => true,
+          orElse: () => false,
         );
-      },
-      builder: (context, state) {
-        return state.maybeWhen(
-          loading: (_) {
-            return const Center(child: CircularProgressIndicator());
-          },
-          orElse: () {
-            return Align(
-              alignment: Alignment.bottomCenter,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 50),
-                child: ElevatedButton(
-                  onPressed: () async {
+        return DecoratedBox(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(10),
+            gradient: LinearGradient(
+              colors: [color, color.withOpacity(0.75)],
+              begin: Alignment.centerLeft,
+              end: Alignment.centerRight,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: color.withOpacity(0.32),
+                blurRadius: 8,
+                offset: const Offset(0, 3),
+              ),
+            ],
+          ),
+          child: ElevatedButton.icon(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.transparent,
+              shadowColor: Colors.transparent,
+              foregroundColor: kcWhite,
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 22, vertical: 14),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10)),
+            ),
+            onPressed: loading
+                ? null
+                : () async {
+                    if (controller.text.trim().isEmpty) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content:
+                              Text('Please enter a new deadline first.'),
+                          backgroundColor: kcRed,
+                        ),
+                      );
+                      return;
+                    }
                     final data = {
-                      "priorityStatusName": priorityName,
-                      "priorityStatusDeadline": description.text,
+                      'priorityStatusName': p.priorityStatusName,
+                      'priorityStatusDeadline': controller.text.trim(),
                     };
                     await priorityUpdateBloc.initState(data);
+                    if (!mounted) return;
                     priorityBloc.initState();
-                    description.clear();
-
+                    controller.clear();
                   },
-                  style: ElevatedButton.styleFrom(
-                      backgroundColor: kcvoilet,
-                      fixedSize: const Size(200, 40)
-                  ), child: const Text("Update",
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: kcWhite),
-                ),),
-              ),
-            );
-
-
-            Center(
-              child: Padding(
-                padding: const EdgeInsets.all(10.0),
-                child: ElevatedButton(
-                  onPressed: () async {
-
-                  },
-                  child: const Text("Update Changes"),
-                ),
-              ),
-            );
-          },
+            icon: loading
+                ? const SizedBox(
+                    width: 16,
+                    height: 16,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      valueColor: AlwaysStoppedAnimation(kcWhite),
+                    ),
+                  )
+                : const Icon(Icons.check_circle_outline, size: 18),
+            label: const Text('Update',
+                style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 0.3)),
+          ),
         );
       },
     );
-
-
-
-
   }
 
-
-  //Priority
-
-  Widget _buildPriority(){
-    return  BlocConsumer<PriorityBloc, PriorityState>(
-      bloc: priorityBloc,
-      listener: (_, state){},
-      builder: (_, state){
-        return state.when(
-            loading: _buildLoading6,
-            content: _buildContent6,
-            success: _buildContent6,
-            failed: (form, __) => _buildContent6(form));
-      },
-    );
-  }
-
-  Widget _buildLoading6(List<PriorityModel> priorityModel){
-    return const CircularProgressIndicator();
-  }
-
-  Widget _buildContent6(List<PriorityModel> priorityModel){
-    return Padding(
-      padding: const EdgeInsets.all(2),
-      child: Container(
-        width: 1000,
-        //decoration: BoxDecoration(borderRadius: BorderRadius.circular(8.0),color: kcWhite),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            SizedBox(
-              width: 1000,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.all(2.0),
-                    child: Container(
-                      width: 100,
-                      decoration: BoxDecoration(color: hexToColor(priorityModel[0].priorityStatusColour), borderRadius: BorderRadius.circular(5) ),
-                      child: Padding(
-                        padding: const EdgeInsets.all(5.0),
-                        child: Center(
-                          child: Text(priorityModel[0].priorityStatusName,
-                            style: TextStyle(color: kcWhite),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.all(10.0),
-                    child: Text(priorityModel[0].priorityStatusDeadline,
-                      style: TextStyle(color: hexToColor(priorityModel[0].priorityStatusColour)),
-                    ),
-                  ),
-                  _buildTextFiled(highController, "Update Description", 1),
-                  _buildSubmit(priorityModel[0].priorityStatusName, highController)
-
-                ],
-              ),
-            ),
-            const Padding(
-              padding: EdgeInsets.all(8.0),
-              child: Divider(
-                height: 0.8,
-                thickness: 1,
-                color: kcDarkGreyColor,
-              ),
-            ),
-            SizedBox(
-              width: 1000,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.all(2.0),
-                    child: Container(
-                      width: 100,
-                      decoration: BoxDecoration(color: hexToColor(priorityModel[1].priorityStatusColour), borderRadius: BorderRadius.circular(5) ),
-                      child: Padding(
-                        padding: const EdgeInsets.all(5.0),
-                        child: Center(
-                          child: Text(priorityModel[1].priorityStatusName,
-                            style: TextStyle(color: kcWhite),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.all(10.0),
-                    child: Text(priorityModel[1].priorityStatusDeadline,
-                      style: TextStyle(color: hexToColor(priorityModel[1].priorityStatusColour)),
-                    ),
-                  ),
-                  _buildTextFiled(lowController, "Update Description", 1),
-                  _buildSubmit(priorityModel[1].priorityStatusName, lowController)
-
-                ],
-              ),
-            ),
-            const Padding(
-              padding: EdgeInsets.all(8.0),
-              child: Divider(
-                height: 0.8,
-                thickness: 1,
-                color: kcDarkGreyColor,
-              ),
-            ),
-            SizedBox(
-              width: 1000,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.all(2.0),
-                    child: Container(
-                      width: 100,
-                      decoration: BoxDecoration(color: hexToColor(priorityModel[2].priorityStatusColour), borderRadius: BorderRadius.circular(5) ),
-                      child: Padding(
-                        padding: const EdgeInsets.all(5.0),
-                        child: Center(
-                          child: Text(priorityModel[2].priorityStatusName,
-                            style: TextStyle(color: kcWhite),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.all(10.0),
-                    child: Text(priorityModel[2].priorityStatusDeadline,
-                      style: TextStyle(color: hexToColor(priorityModel[2].priorityStatusColour)),
-                    ),
-                  ),
-                  _buildTextFiled(mediumController, "Update Description", 1),
-                  _buildSubmit(priorityModel[2].priorityStatusName, mediumController)
-
-                ],
-              ),
-            ),
-            const Padding(
-              padding: EdgeInsets.all(8.0),
-              child: Divider(
-                height: 0.8,
-                thickness: 1,
-                color: kcDarkGreyColor,
-              ),
-            )
-          ],
-        )
+  OutlineInputBorder _border(Color color, {required bool focused}) {
+    return OutlineInputBorder(
+      borderRadius: BorderRadius.circular(10),
+      borderSide: BorderSide(
+        color: focused ? color : Colors.grey.shade300,
+        width: focused ? 1.4 : 1,
       ),
     );
-
   }
 
-  // Future<void> _buildPriorityDialog(List<PriorityModel> priorityModel) {
-  //   final priorityListNotifier = PrioritySearchableListNotifier(priorityModel);
-  //   return showDialog(
-  //       context: context,
-  //       builder: (context) {
-  //         return AlertDialog(
-  //           shape: const RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(5))),
-  //           title: Column(
-  //             crossAxisAlignment: CrossAxisAlignment.start,
-  //             children: [
-  //               const Text(
-  //                 "Select or search Department",
-  //                 style:
-  //                 TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-  //               ),
-  //               TextFormField(
-  //                 onChanged: priorityListNotifier.filterBasedOn,
-  //                 decoration: const InputDecoration(
-  //                     hintText: "search here...",
-  //                     prefixIcon: Icon(
-  //                       Icons.search,
-  //                       color: kcLightGrey,
-  //                     )),
-  //               )
-  //             ],
-  //           ),
-  //           content: SizedBox(
-  //               width: 210,
-  //               height: 800,
-  //               child:ValueListenableBuilder<List<PriorityModel>>(
-  //                   valueListenable: priorityListNotifier,
-  //                   builder: (context, list, widget){
-  //                     return ListView.builder(
-  //                         itemCount: list.length,
-  //                         shrinkWrap: true,
-  //                         itemBuilder: (context, index) {
-  //                           return Column(
-  //                             crossAxisAlignment: CrossAxisAlignment.start,
-  //                             children: [
-  //                               InkWell(
-  //                                 onTap: () {
-  //                                   priority.value = list[index].priorityStatusName;
-  //                                   priorityColor = list[index].priorityStatusColour;
-  //                                   Navigator.pop(context);
-  //                                 },
-  //                                 child: Padding(
-  //                                   padding: const EdgeInsets.all(2.0),
-  //                                   child: Text(list[index].priorityStatusName,
-  //                                   ),
-  //                                 ),
-  //                               ),
-  //                               const Padding(
-  //                                 padding: EdgeInsets.all(8.0),
-  //                                 child: Divider(
-  //                                   height: 0.8,
-  //                                   thickness: 1,
-  //                                   color: kcDarkGreyColor,
-  //                                 ),
-  //                               )
-  //                             ],
-  //                           );
-  //                         });
-  //                   }
-  //               )
-  //           ),
-  //           actions: [
-  //             Align(
-  //               alignment: Alignment.centerRight,
-  //               child: TextButton(
-  //                 onPressed: () {
-  //                   Navigator.pop(context);
-  //                 },
-  //                 child: const Text(
-  //                   "close",
-  //                   style: TextStyle(color: kcDarkGreyColor, fontSize: 18),
-  //                 ),
-  //               ),
-  //             )
-  //           ],
-  //         );
-  //       }
-  //   );
-  // }
-
-  Color hexToColor(String hexString) {
-    hexString = hexString.replaceFirst('#', '');
-    if (hexString.length == 6) {
-      hexString = 'FF$hexString';
+  Color _hexToColor(String hexString) {
+    if (hexString.isEmpty) return kcLightGrey;
+    var s = hexString.replaceFirst('#', '');
+    if (s.length == 6) s = 'FF$s';
+    try {
+      return Color(int.parse(s, radix: 16));
+    } catch (_) {
+      return kcLightGrey;
     }
-    return Color(int.parse(hexString, radix: 16));
   }
-
-  _buildTextFiled(TextEditingController controller, String title, int lines){
-    return SizedBox(
-      width: 300,
-      child: TextField(
-        controller: controller,
-        textAlign: TextAlign.start,
-        maxLines: null,
-        minLines: lines,
-        style: const TextStyle(
-            fontSize:  18,
-            fontWeight: FontWeight.bold,
-            color: kcvoilet
-        ),
-        decoration: InputDecoration(
-            hintText: title,
-            contentPadding: const EdgeInsets.only(bottom: 10, left: 10),
-            hintStyle:  const TextStyle(
-                fontSize: 12,
-                color: kcMediumGrey
-            ),
-            fillColor: Colors.transparent,
-            filled: true,
-            border: _border(),
-            focusedBorder: _border(),
-            enabledBorder: _border()
-        ),
-      ),
-    );
-  }
-
-  _border() => OutlineInputBorder(
-      borderRadius: BorderRadius.circular(5),
-      borderSide:   const BorderSide(color: kcDarkGreyColor,width: 1.5)
-  );
 }
-

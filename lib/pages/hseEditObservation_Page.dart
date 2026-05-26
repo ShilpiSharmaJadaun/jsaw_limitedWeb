@@ -44,6 +44,7 @@ import '../state/priority_state.dart';
 import '../state/responsibleHOD_state.dart';
 import '../state/uniqueId_state.dart';
 import '../utils/app_color.dart';
+import '../utils/progressive_image.dart';
 import 'edit_raised_observations_page.dart';
 
 class HseEditObservationPage extends StatefulWidget {
@@ -440,18 +441,10 @@ class _HseEditObservationPageState extends State<HseEditObservationPage> {
                   child: SizedBox(
                     width: 220,
                     height: 200,
-                    child: FadeInImage(
-                      placeholder: NetworkImage(item.lowQualityImageUrl),
-                      image: NetworkImage(item.imageNumber),
-                      fadeInDuration: const Duration(milliseconds: 300),
-                      fadeOutDuration: const Duration(milliseconds: 300),
+                    child: ProgressiveImage(
+                      highUrl: item.imageNumber,
+                      lowUrl: item.lowQualityImageUrl,
                       fit: BoxFit.cover,
-                      imageErrorBuilder: (_, __, ___) => Container(
-                        color: Colors.grey.shade100,
-                        alignment: Alignment.center,
-                        child: Icon(Icons.broken_image_outlined,
-                            color: Colors.grey.shade400, size: 48),
-                      ),
                     ),
                   ),
                 ),

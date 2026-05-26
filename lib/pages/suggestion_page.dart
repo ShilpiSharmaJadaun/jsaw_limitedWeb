@@ -8,20 +8,15 @@ import 'package:jsaw_limited/state/suggestion_feedback_state.dart';
 import 'package:jsaw_limited/state/suggestion_state.dart';
 import 'package:jsaw_limited/utils/progressive_image.dart';
 import 'package:provider/provider.dart';
-import 'package:responsive_builder/responsive_builder.dart';
-import '../bloc/allobservation_bloc.dart';
 import '../bloc/priority_bloc.dart';
 import '../model/priority_model.dart';
 import '../service/observation_service.dart';
 import '../state/priority_state.dart';
 import '../utils/app_color.dart';
-import '../utils/app_drawer.dart';
-import '../utils/page_header.dart';
 import 'package:flutter/foundation.dart' show Uint8List, kIsWeb;
 import 'image_picker.dart';
 import 'package:web/web.dart' as html;
 import 'dart:io' as io;
-
 
 class SuggestionFeedbackPage extends StatefulWidget {
   const SuggestionFeedbackPage({super.key});
@@ -30,121 +25,102 @@ class SuggestionFeedbackPage extends StatefulWidget {
   State<SuggestionFeedbackPage> createState() => _SuggestionFeedbackPageState();
 }
 
-class _SuggestionFeedbackPageState extends State<SuggestionFeedbackPage> with SingleTickerProviderStateMixin{
-
-
-
-  // Currently selected drawer index
-  int _selectedDrawerIndex = 1;
-
-  // late final AllObservationBloc allObservationBloc;
-
+class _SuggestionFeedbackPageState extends State<SuggestionFeedbackPage>
+    with SingleTickerProviderStateMixin {
   late TabController tabController;
 
+  @override
   void initState() {
     super.initState();
-    // final observationService = Provider.of<ObservationService>(context, listen: false);
-    // allObservationBloc = AllObservationBloc(observationService);
-    // allObservationBloc.initState();
     tabController = TabController(length: 2, vsync: this);
-    tabController.addListener(() {
-      setState(() {});
-    });
+    tabController.addListener(() => setState(() {}));
   }
 
+  @override
+  void dispose() {
+    tabController.dispose();
+    super.dispose();
+  }
 
+  @override
   Widget build(BuildContext context) {
-    return WillPopScope(
-      onWillPop: () async => true,
-      child: Scaffold(
-        backgroundColor: kcDashboardBg1,
-        body: Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [kcDashboardBg1, kcDashboardBg2],
+    return Container(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [kcDashboardBg1, kcDashboardBg2],
+        ),
+      ),
+      child: Column(
+        children: [
+          const SizedBox(height: 12),
+          Container(
+            margin: const EdgeInsets.symmetric(horizontal: 20),
+            decoration: BoxDecoration(
+              color: kcWhite,
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(14),
+                topRight: Radius.circular(14),
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.04),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: TabBar(
+              controller: tabController,
+              labelColor: kcOrange,
+              unselectedLabelColor: kcLabelGrey,
+              indicatorColor: kcOrange,
+              indicatorWeight: 3,
+              tabs: const [
+                Tab(
+                  icon: Icon(Icons.edit_note_outlined),
+                  text: 'Create Complaint',
+                ),
+                Tab(
+                  icon: Icon(Icons.inbox_outlined),
+                  text: 'Raised Complaints',
+                ),
+              ],
             ),
           ),
-          child: Column(
-            children: [
-              const SizedBox(height: 12),
-              Container(
-                margin: const EdgeInsets.symmetric(horizontal: 20),
-                decoration: BoxDecoration(
-                  color: kcWhite,
-                  borderRadius: const BorderRadius.only(
-                    topLeft: Radius.circular(12),
-                    topRight: Radius.circular(12),
+          Expanded(
+            child: Container(
+              margin: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+              decoration: BoxDecoration(
+                color: kcWhite,
+                borderRadius: const BorderRadius.only(
+                  bottomLeft: Radius.circular(14),
+                  bottomRight: Radius.circular(14),
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.04),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
                   ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.04),
-                      blurRadius: 6,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
-                ),
-                child: TabBar(
-                  controller: tabController,
-                  labelColor: kcOrange,
-                  unselectedLabelColor: kcLabelGrey,
-                  indicatorColor: kcOrange,
-                  indicatorWeight: 3,
-                  tabs: const [
-                    Tab(
-                      icon: Icon(Icons.feedback_outlined),
-                      text: 'Create Complaint',
-                    ),
-                    Tab(
-                      icon: Icon(Icons.list_alt_outlined),
-                      text: 'Raised Complaints',
-                    ),
-                  ],
-                ),
+                ],
               ),
-              Expanded(
-                child: Container(
-                  margin: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-                  decoration: BoxDecoration(
-                    color: kcWhite,
-                    borderRadius: const BorderRadius.only(
-                      bottomLeft: Radius.circular(12),
-                      bottomRight: Radius.circular(12),
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.04),
-                        blurRadius: 6,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: TabBarView(
-                    controller: tabController,
-                    children: const [
-                      SuggestionPage(),
-                      RaisedSuggestionPage(),
-                    ],
-                  ),
-                ),
+              child: TabBarView(
+                controller: tabController,
+                children: const [
+                  SuggestionPage(),
+                  RaisedSuggestionPage(),
+                ],
               ),
-            ],
+            ),
           ),
-        ),
+        ],
       ),
     );
   }
 
-
-  // Titles for each drawer item
-  static const drawerTitles = <String>[
-    'Dashboard',
-    'Observation',
-  ];
-
 }
-
 
 class SuggestionPage extends StatefulWidget {
   const SuggestionPage({super.key});
@@ -154,369 +130,447 @@ class SuggestionPage extends StatefulWidget {
 }
 
 class _SuggestionPageState extends State<SuggestionPage> {
-
-  TextEditingController titleController = TextEditingController();
-  TextEditingController suggestionController = TextEditingController();
-  TextEditingController dateTimeController = TextEditingController();
-  // Titles for each drawer item
-  static const drawerTitles = <String>['Dashboard', 'Observation', 'Graph',' Register Observation', "Any Suggestion"];
-
-  // Currently selected drawer index
-  final int _selectedDrawerIndex = 4;
+  final TextEditingController titleController = TextEditingController();
+  final TextEditingController suggestionController = TextEditingController();
+  final TextEditingController dateTimeController = TextEditingController();
 
   late String priorityColor = "";
-
   late final PriorityBloc priorityBloc;
-
   late final SaveSuggestionBloc saveSuggestionBloc;
-
-  ValueNotifier<String> priority = ValueNotifier("Select Priority");
+  final ValueNotifier<String> priority = ValueNotifier("Select Priority");
 
   Uint8List? _selectedImage;
 
   void _onImagePicked(dynamic image, [Uint8List? webImageBytes]) {
-    setState(() {
-      _selectedImage = webImageBytes;
-    });
+    setState(() => _selectedImage = webImageBytes);
   }
 
   @override
-  void initState(){
+  void initState() {
     super.initState();
-    final observationService = Provider.of<ObservationService>(context, listen: false);
+    final observationService =
+        Provider.of<ObservationService>(context, listen: false);
     priorityBloc = PriorityBloc(observationService);
     saveSuggestionBloc = SaveSuggestionBloc(observationService);
     priorityBloc.initState();
   }
 
+  @override
+  void dispose() {
+    titleController.dispose();
+    suggestionController.dispose();
+    dateTimeController.dispose();
+    priority.dispose();
+    super.dispose();
+  }
+
   String determineOperatingSystem() {
     if (kIsWeb) {
-      // Web platform
-      return html.window.navigator.userAgent.contains('Mobi') ? 'Mobile Web' : 'Desktop Web';
-    } else if (io.Platform.isAndroid) {
-      return 'Android';
-    } else if (io.Platform.isIOS) {
-      return 'iOS';
-    } else if (io.Platform.isWindows) {
-      return 'Windows';
-    } else if (io.Platform.isMacOS) {
-      return 'macOS';
-    } else if (io.Platform.isLinux) {
-      return 'Linux';
-    } else {
-      return 'Unknown';
-    }
+      return html.window.navigator.userAgent.contains('Mobi')
+          ? 'Mobile Web'
+          : 'Desktop Web';
+    } else if (io.Platform.isAndroid) return 'Android';
+    else if (io.Platform.isIOS) return 'iOS';
+    else if (io.Platform.isWindows) return 'Windows';
+    else if (io.Platform.isMacOS) return 'macOS';
+    else if (io.Platform.isLinux) return 'Linux';
+    return 'Unknown';
   }
 
   Future<void> _selectDateTime(BuildContext context) async {
-    DateTime? selectedDate = await showDatePicker(
+    final selectedDate = await showDatePicker(
       context: context,
       initialDate: DateTime.now(),
       firstDate: DateTime(2000),
       lastDate: DateTime(2100),
     );
-
-    if (selectedDate != null) {
-      TimeOfDay? selectedTime = await showTimePicker(
-        context: context,
-        initialTime: TimeOfDay.now(),
-      );
-
-      if (selectedTime != null) {
-        final DateTime fullDateTime = DateTime(
-          selectedDate.year,
-          selectedDate.month,
-          selectedDate.day,
-          selectedTime.hour,
-          selectedTime.minute,
-        );
-
-        dateTimeController.text = DateFormat('yyyy-MM-dd HH:mm:ss').format(fullDateTime);
-      }
-    }
+    if (selectedDate == null) return;
+    if (!mounted) return;
+    final selectedTime = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.now(),
+    );
+    if (selectedTime == null) return;
+    final fullDateTime = DateTime(
+      selectedDate.year,
+      selectedDate.month,
+      selectedDate.day,
+      selectedTime.hour,
+      selectedTime.minute,
+    );
+    dateTimeController.text =
+        DateFormat('yyyy-MM-dd HH:mm:ss').format(fullDateTime);
   }
-
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: SafeArea(
-          child:SingleChildScrollView(
-            scrollDirection: Axis.vertical,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(20),
+      child: LayoutBuilder(
+        builder: (ctx, constraints) {
+          final twoCol = constraints.maxWidth > 880;
+          final imageCard = _imageCard();
+          final formCard = _formCard();
+          if (twoCol) {
+            return Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.all(10.0),
-                      child: Center(
-                        child: SizedBox(
-                            width: 400,
-                            height: 400,
-                            child: ImagePickerPage(onImagePicked: _onImagePicked)),
-                      ),
-                    ),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Padding(
-                          padding: EdgeInsets.symmetric(vertical: 20, horizontal: 20),
-                          child: Text("Title", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),),
-                        ),
-                        _buildTextFiled(titleController,"Title", 1),
-                        const SizedBox(
-                          width: 400,
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                            children: [
-                              Padding(
-                                padding: EdgeInsets.symmetric(vertical: 10, horizontal: 10),
-                                child: Text("Time of Occurance", style:  TextStyle(fontWeight: FontWeight.bold, fontSize: 16),),
-                              ),
-                              Padding(
-                                padding: EdgeInsets.symmetric(vertical: 20, horizontal: 20),
-                                child: Text("Priority", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),),
-                              ),
+                Expanded(flex: 4, child: imageCard),
+                const SizedBox(width: 16),
+                Expanded(flex: 6, child: formCard),
+              ],
+            );
+          }
+          return Column(
+            children: [
+              imageCard,
+              const SizedBox(height: 16),
+              formCard,
+            ],
+          );
+        },
+      ),
+    );
+  }
 
-                            ],
-                          ),
-                        ),
-                        SizedBox(
-                          width: 500,
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                            children: [
-                              Padding(
-                                padding: const EdgeInsets.all(8.0),
-                                child: _buildTime(),
-                              ),
-                              Padding(
-                                padding: const EdgeInsets.all(8.0),
-                                child: SizedBox(
-                                  width: 220,
-                                  child:  _buildPriority(),
-                                ),
-                              )
-                            ],
-                          ),
-                        ),
-                        const Padding(
-                          padding: EdgeInsets.symmetric(vertical: 20, horizontal: 20),
-                          child: Text("Description", style:  TextStyle(fontWeight: FontWeight.bold, fontSize: 16),),
-                        ),
-                        _buildTextFiled(suggestionController,"Description", 6),
-                        _buildSubmit()
+  // ============ Cards ============
+  Widget _imageCard() {
+    return _sectionCard(
+      title: 'Attach a screenshot',
+      subtitle: 'Helps us understand the issue at a glance',
+      icon: Icons.image_outlined,
+      accent: const Color(0xFFEC4899),
+      child: ImagePickerPage(onImagePicked: _onImagePicked),
+    );
+  }
+
+  Widget _formCard() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _sectionCard(
+          title: 'Title',
+          subtitle: 'A short summary of what happened',
+          icon: Icons.title_outlined,
+          accent: const Color(0xFF3B82F6),
+          child: _modernTextField(
+              titleController, 'e.g. App crashes when saving observation', 1),
+        ),
+        const SizedBox(height: 14),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: _sectionCard(
+                title: 'When did it happen?',
+                icon: Icons.event_outlined,
+                accent: const Color(0xFF8B5CF6),
+                child: _timeField(),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _sectionCard(
+                title: 'Priority',
+                icon: Icons.flag_outlined,
+                accent: const Color(0xFFF59E0B),
+                child: _buildPriority(),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 14),
+        _sectionCard(
+          title: 'Description',
+          subtitle: 'Steps to reproduce, expected vs actual behaviour…',
+          icon: Icons.description_outlined,
+          accent: const Color(0xFF10B981),
+          child: _modernTextField(
+              suggestionController, 'Describe the issue in detail…', 6),
+        ),
+        const SizedBox(height: 18),
+        _buildSubmit(),
+      ],
+    );
+  }
+
+  // ============ Section card shell ============
+  Widget _sectionCard({
+    required String title,
+    String? subtitle,
+    required IconData icon,
+    required Color accent,
+    required Widget child,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        color: kcWhite,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: Colors.grey.shade200),
+        boxShadow: [
+          BoxShadow(
+            color: accent.withOpacity(0.06),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Container(
+            padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [accent.withOpacity(0.10), Colors.transparent],
+                begin: Alignment.centerLeft,
+                end: Alignment.centerRight,
+              ),
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(14),
+                topRight: Radius.circular(14),
+              ),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: accent.withOpacity(0.15),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Icon(icon, color: accent, size: 18),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(title,
+                          style: const TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w800,
+                              color: kcValueDark)),
+                      if (subtitle != null) ...[
+                        const SizedBox(height: 2),
+                        Text(subtitle,
+                            style: const TextStyle(
+                                fontSize: 11,
+                                color: kcLabelGrey,
+                                fontWeight: FontWeight.w500)),
                       ],
-                    )
-
-                  ],
-                )
-
+                    ],
+                  ),
+                ),
               ],
             ),
-          ) ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(14),
+            child: child,
+          ),
+        ],
+      ),
     );
   }
 
-  //time of occurrence
-
-  _buildTime(){
-    return SizedBox(
-      width: 180,
-      child: GestureDetector(
-        onTap: () => _selectDateTime(context),
-        child: AbsorbPointer(
-          child: TextField(
-            controller: dateTimeController,
-            textAlign: TextAlign.start,
-            minLines: 1,
-            style: const TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w500,
-              color: kcvoilet,
-            ),
-            decoration: InputDecoration(
-              hintText: "Time of Occurrence",
-              contentPadding: const EdgeInsets.only(bottom: 10, left: 10),
-              hintStyle: const TextStyle(
-                fontSize: 12,
-                color: kcMediumGrey,
-              ),
-              fillColor: Colors.transparent,
-              filled: true,
-              border: _border(),
-              focusedBorder: _border(),
-              enabledBorder: _border(),
-            ),
+  // ============ Time field ============
+  Widget _timeField() {
+    return GestureDetector(
+      onTap: () => _selectDateTime(context),
+      child: AbsorbPointer(
+        child: TextField(
+          controller: dateTimeController,
+          style: const TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: kcValueDark),
+          decoration: InputDecoration(
+            isDense: true,
+            hintText: 'Pick date & time',
+            prefixIcon:
+                const Icon(Icons.schedule, size: 18, color: Color(0xFF8B5CF6)),
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 10, vertical: 14),
+            filled: true,
+            fillColor: kcDashboardBg1,
+            border: _roundedBorder(),
+            enabledBorder: _roundedBorder(),
+            focusedBorder: _roundedBorder(focused: true),
           ),
         ),
       ),
     );
   }
-  //Priority
 
-  Widget _buildPriority(){
-    return  BlocConsumer<PriorityBloc, PriorityState>(
+  // ============ Priority chip ============
+  Widget _buildPriority() {
+    return BlocConsumer<PriorityBloc, PriorityState>(
       bloc: priorityBloc,
-      listener: (_, state){},
-      builder: (_, state){
-        return state.when(
-            loading: _buildLoading6,
-            content: _buildContent6,
-            success: _buildContent6,
-            failed: (form, __) => _buildContent6(form));
-      },
-    );
-  }
-
-  Widget _buildLoading6(List<PriorityModel> priorityModel){
-    return const CircularProgressIndicator();
-  }
-
-  Widget _buildContent6(List<PriorityModel> priorityModel){
-    return Padding(
-      padding: const EdgeInsets.all(2),
-      child: InkWell(
-        onTap: (){
-          _buildPriorityDialog(priorityModel);
-        },
-        child: SizedBox(
-          width: 200,
-          height: 50,
-          child: Container(
-            width: 40,
-            decoration: BoxDecoration(borderRadius: BorderRadius.circular(8.0),color: kcWhite),
-            child: ValueListenableBuilder<String>(
-              valueListenable: priority,
-              builder: (context, value, child) => Padding(
-                padding: const EdgeInsets.all(2.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    SizedBox(
-                      width: 200,
-                      child: Text(
-                        priority.value,
-                        textAlign: TextAlign.center,
-                        maxLines: 1,
-                        style: TextStyle(color: (priority.value == "Select Priority") ? kcDarkGreyColor : hexToColor(priorityColor)),
-                      ),
-                    ),
-                    // const Icon(Icons.arrow_drop_down_sharp)
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ),
+      listener: (_, state) {},
+      builder: (_, state) => state.when(
+        loading: (_) => const SizedBox(
+            height: 44,
+            child: Center(child: CircularProgressIndicator(strokeWidth: 2))),
+        content: _priorityChip,
+        success: _priorityChip,
+        failed: (form, __) => _priorityChip(form),
       ),
     );
+  }
 
+  Widget _priorityChip(List<PriorityModel> priorityModel) {
+    return InkWell(
+      onTap: () => _buildPriorityDialog(priorityModel),
+      borderRadius: BorderRadius.circular(10),
+      child: ValueListenableBuilder<String>(
+        valueListenable: priority,
+        builder: (context, value, _) {
+          final selected = value != 'Select Priority';
+          final color = selected ? hexToColor(priorityColor) : kcLightGrey;
+          return Container(
+            padding:
+                const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            decoration: BoxDecoration(
+              color: selected
+                  ? color.withOpacity(0.10)
+                  : kcDashboardBg1,
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(
+                  color: selected ? color : Colors.grey.shade300,
+                  width: selected ? 1.4 : 1),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  width: 10,
+                  height: 10,
+                  decoration: BoxDecoration(
+                    color: color,
+                    shape: BoxShape.circle,
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    value,
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: selected ? color : kcLabelGrey,
+                      fontWeight: FontWeight.w700,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                Icon(Icons.arrow_drop_down,
+                    color: selected ? color : kcLabelGrey),
+              ],
+            ),
+          );
+        },
+      ),
+    );
   }
 
   Future<void> _buildPriorityDialog(List<PriorityModel> priorityModel) {
-    final priorityListNotifier = PrioritySearchableListNotifier(priorityModel);
     return showDialog(
-        context: context,
-        builder: (context) {
-          return AlertDialog(
-            shape: const RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(5))),
-            title: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  "Select or search Department",
-                  style:
-                  TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+      context: context,
+      builder: (ctx) => Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        child: SizedBox(
+          width: 360,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 14, 8, 8),
+                child: Row(
+                  children: [
+                    const Icon(Icons.flag_outlined,
+                        color: Color(0xFFF59E0B), size: 20),
+                    const SizedBox(width: 8),
+                    const Expanded(
+                      child: Text('Select priority',
+                          style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w800,
+                              color: kcValueDark)),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.close),
+                      onPressed: () => Navigator.pop(ctx),
+                    ),
+                  ],
                 ),
-                TextFormField(
-                  onChanged: priorityListNotifier.filterBasedOn,
-                  decoration: const InputDecoration(
-                      hintText: "search here...",
-                      prefixIcon: Icon(
-                        Icons.search,
-                        color: kcLightGrey,
-                      )),
-                )
-              ],
-            ),
-            content: SizedBox(
-                width: 210,
-                height: 800,
-                child:ValueListenableBuilder<List<PriorityModel>>(
-                    valueListenable: priorityListNotifier,
-                    builder: (context, list, widget){
-                      return ListView.builder(
-                          itemCount: list.length,
-                          shrinkWrap: true,
-                          itemBuilder: (context, index) {
-                            return Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                InkWell(
-                                  onTap: () {
-                                    priority.value = list[index].priorityStatusName;
-                                    priorityColor = list[index].priorityStatusColour;
-                                    Navigator.pop(context);
-                                  },
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(2.0),
-                                    child: Text(list[index].priorityStatusName,
-                                    ),
-                                  ),
-                                ),
-                                const Padding(
-                                  padding: EdgeInsets.all(8.0),
-                                  child: Divider(
-                                    height: 0.8,
-                                    thickness: 1,
-                                    color: kcDarkGreyColor,
-                                  ),
-                                )
-                              ],
-                            );
-                          });
-                    }
-                )
-            ),
-            actions: [
-              Align(
-                alignment: Alignment.centerRight,
-                child: TextButton(
-                  onPressed: () {
-                    Navigator.pop(context);
-                  },
-                  child: const Text(
-                    "close",
-                    style: TextStyle(color: kcDarkGreyColor, fontSize: 18),
-                  ),
-                ),
-              )
+              ),
+              const Divider(height: 1),
+              ListView.builder(
+                shrinkWrap: true,
+                itemCount: priorityModel.length,
+                itemBuilder: (_, i) {
+                  final p = priorityModel[i];
+                  final color = hexToColor(p.priorityStatusColour);
+                  return InkWell(
+                    onTap: () {
+                      priority.value = p.priorityStatusName;
+                      priorityColor = p.priorityStatusColour;
+                      Navigator.pop(ctx);
+                    },
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 12),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 14,
+                            height: 14,
+                            decoration: BoxDecoration(
+                              color: color,
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Text(p.priorityStatusName,
+                                style: TextStyle(
+                                    fontSize: 13,
+                                    color: color,
+                                    fontWeight: FontWeight.w700)),
+                          ),
+                          Text(p.priorityStatusDeadline,
+                              style: const TextStyle(
+                                  fontSize: 11, color: kcLabelGrey)),
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              ),
+              const SizedBox(height: 8),
             ],
-          );
-        }
+          ),
+        ),
+      ),
     );
   }
 
-  // Submit Button
-
-  _buildSubmit(){
+  // ============ Submit ============
+  Widget _buildSubmit() {
     return BlocConsumer<SaveSuggestionBloc, SaveSuggestionState>(
       bloc: saveSuggestionBloc,
       listener: (_, state) {
         state.maybeWhen(
           success: (_, message) {
             ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-              content: Text(message ?? "Complaint submitted successfully"),
+              content: Text(message ?? 'Complaint submitted successfully'),
               backgroundColor: kcobservationgreen,
             ));
             titleController.clear();
             suggestionController.clear();
             dateTimeController.clear();
-            priority.value = "Select Priority";
-            priorityColor = "";
+            priority.value = 'Select Priority';
+            priorityColor = '';
             setState(() => _selectedImage = null);
             RaisedSuggestionPage.refresh?.call();
           },
@@ -534,18 +588,38 @@ class _SuggestionPageState extends State<SuggestionPage> {
           loading: (_) => true,
           orElse: () => false,
         );
-        return Padding(
-          padding: const EdgeInsets.all(16),
-          child: SizedBox(
-            width: 400,
+        return SizedBox(
+          height: 50,
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(12),
+              gradient: const LinearGradient(
+                colors: [Color(0xFF10B981), Color(0xFF059669)],
+                begin: Alignment.centerLeft,
+                end: Alignment.centerRight,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFF10B981).withOpacity(0.32),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
             child: ElevatedButton.icon(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.transparent,
+                shadowColor: Colors.transparent,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12)),
+              ),
               onPressed: isLoading
                   ? null
                   : () async {
                       if (_selectedImage == null) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(
-                            content: Text('Please pick an image first.'),
+                            content: Text('Please attach a screenshot first.'),
                             backgroundColor: kcRed,
                           ),
                         );
@@ -556,12 +630,14 @@ class _SuggestionPageState extends State<SuggestionPage> {
                           titleController.text,
                           suggestionController.text,
                           dateTimeController.text,
-                          "1.1",
+                          '1.1',
                           determineOperatingSystem(),
                           priority.value,
-                          html.window.localStorage.getItem('kEmployeeCode') ?? "",
-                          html.window.localStorage.getItem('kEmployeename') ?? "",
-                          "pending");
+                          html.window.localStorage.getItem('kEmployeeCode') ??
+                              '',
+                          html.window.localStorage.getItem('kEmployeename') ??
+                              '',
+                          'pending');
                     },
               icon: isLoading
                   ? const SizedBox(
@@ -572,21 +648,14 @@ class _SuggestionPageState extends State<SuggestionPage> {
                         valueColor: AlwaysStoppedAnimation(kcWhite),
                       ),
                     )
-                  : const Icon(Icons.send_outlined, size: 18, color: kcWhite),
+                  : const Icon(Icons.send_outlined, color: kcWhite),
               label: const Text(
-                "Submit Complaint",
+                'Submit Complaint',
                 style: TextStyle(
                     fontSize: 15,
-                    fontWeight: FontWeight.w700,
-                    color: kcWhite),
-              ),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: kcobservationgreen,
-                padding: const EdgeInsets.symmetric(vertical: 14),
-                elevation: 0,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
-                ),
+                    fontWeight: FontWeight.w800,
+                    color: kcWhite,
+                    letterSpacing: 0.3),
               ),
             ),
           ),
@@ -595,65 +664,48 @@ class _SuggestionPageState extends State<SuggestionPage> {
     );
   }
 
-  Color hexToColor(String hexString) {
-    hexString = hexString.replaceFirst('#', '');
-    if (hexString.length == 6) {
-      hexString = 'FF$hexString';
-    }
-    return Color(int.parse(hexString, radix: 16));
-  }
-
-  _buildTextFiled(TextEditingController controller, String title, int lines){
-    return SizedBox(
-      width: 400,
-      child: TextField(
-        controller: controller,
-        textAlign: TextAlign.start,
-        maxLines: null,
-        minLines: lines,
-        style: const TextStyle(
-            fontSize:  18,
-            fontWeight: FontWeight.w500,
-            color: kcvoilet
-        ),
-        decoration: InputDecoration(
-            hintText: title,
-            contentPadding: const EdgeInsets.only(bottom: 10, left: 10),
-            hintStyle:  const TextStyle(
-                fontSize: 12,
-                color: kcMediumGrey
-            ),
-            fillColor: Colors.transparent,
-            filled: true,
-            border: _border(),
-            focusedBorder: _border(),
-            enabledBorder: _border()
-        ),
+  // ============ Shared field ============
+  Widget _modernTextField(
+      TextEditingController controller, String hint, int lines) {
+    return TextField(
+      controller: controller,
+      maxLines: lines == 1 ? 1 : null,
+      minLines: lines,
+      style: const TextStyle(
+          fontSize: 14, fontWeight: FontWeight.w500, color: kcValueDark),
+      decoration: InputDecoration(
+        isDense: true,
+        hintText: hint,
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+        filled: true,
+        fillColor: kcDashboardBg1,
+        hintStyle: const TextStyle(
+            fontSize: 12, color: kcMediumGrey, fontWeight: FontWeight.w500),
+        border: _roundedBorder(),
+        enabledBorder: _roundedBorder(),
+        focusedBorder: _roundedBorder(focused: true),
       ),
     );
   }
 
-  _border() => OutlineInputBorder(
-      borderRadius: BorderRadius.circular(5),
-      borderSide:   const BorderSide(color: kcDarkGreyColor,width: 1.5)
-  );
-}
+  OutlineInputBorder _roundedBorder({bool focused = false}) =>
+      OutlineInputBorder(
+        borderRadius: BorderRadius.circular(10),
+        borderSide: BorderSide(
+            color: focused ? kcvoilet : Colors.grey.shade300,
+            width: focused ? 1.4 : 1),
+      );
 
-class PrioritySearchableListNotifier extends ValueNotifier<List<PriorityModel>> {
-
-  PrioritySearchableListNotifier(super.value) {
-    initialValue = value;
-  }
-
-  late List<PriorityModel> initialValue;
-
-  void filterBasedOn(String query) {
-    if (query.isEmpty) {
-      value = initialValue;
-    } else {
-      value = initialValue.where((e) => e.priorityStatusName.toLowerCase().startsWith(query)).toList();
+  Color hexToColor(String hexString) {
+    if (hexString.isEmpty) return kcLightGrey;
+    var s = hexString.replaceFirst('#', '');
+    if (s.length == 6) s = 'FF$s';
+    try {
+      return Color(int.parse(s, radix: 16));
+    } catch (_) {
+      return kcLightGrey;
     }
-    notifyListeners();
   }
 }
 
@@ -669,13 +721,13 @@ class RaisedSuggestionPage extends StatefulWidget {
 }
 
 class _RaisedSuggestionPageState extends State<RaisedSuggestionPage> {
-
   late final SuggestionFeedbackBloc suggestionFeedbackBloc;
 
   @override
   void initState() {
     super.initState();
-    final observationService = Provider.of<ObservationService>(context, listen: false);
+    final observationService =
+        Provider.of<ObservationService>(context, listen: false);
     suggestionFeedbackBloc = SuggestionFeedbackBloc(observationService);
     suggestionFeedbackBloc.initState();
     RaisedSuggestionPage.refresh = () {
@@ -689,234 +741,254 @@ class _RaisedSuggestionPageState extends State<RaisedSuggestionPage> {
     super.dispose();
   }
 
-
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: kcDashboardBg1,
-      body: _buildObservation(),
-    );
-  }
-
-  _buildObservation() {
-    return BlocConsumer<SuggestionFeedbackBloc, SuggestionFeedbackState>(
-      bloc: suggestionFeedbackBloc,
-      listener: (_, state) {},
-      builder: (_, state) {
-        return state.when(
-            loading: _buildLoading,
-            content: _buildContent,
-            success: _buildContent,
-            failed: (form, __) => _buildContent(form));
-      },
-    );
-  }
-
-  Widget _buildLoading(List<SuggestionFeedbackModel> model) {
-    return const CircularProgressIndicator();
-  }
-
-  Widget _buildContent(List<SuggestionFeedbackModel> model){
-    return ListView.builder(
-      itemCount: model.length,
-      shrinkWrap: true,
-      physics: ScrollPhysics(),
-      itemBuilder: (BuildContext context, int index) {
-        return  Card(
-            color: kcWhite,
-            elevation: 20,
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.all(8),
-                    child: SizedBox(
-                      width: 200,
-                      height: 200,
-                      child: ProgressiveImage(
-                        highUrl: model[index].attachments,
-                        lowUrl: model[index].lowQualityImageUrl,
-                        fit: BoxFit.scaleDown,
-                      ),
-                    ),
-                  ),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    children: [
-                      SizedBox(
-                        width: 1000,
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.start,
-                          children: [
-                            Container(
-                              width: 500,
-                              child: Row(
-                                children: [
-                                  _buildHeadingText("Date of Occurance:"),
-                                  _buildTextBox(model[index].dateTimeOfOccurrence, kcRed),
-                                ],
-                              ),
-                            ),
-                            Container(
-                              width: 400,
-                              child: Row(
-                                children: [
-                                  _buildHeadingText("Status :"),
-                                  Padding(
-                                    padding:
-                                    const EdgeInsets.only(left: 2.0, right: 8),
-                                    child: Container(
-                                      decoration: const BoxDecoration(
-                                          boxShadow: [
-                                            BoxShadow(
-                                              color: Colors.black,
-                                              blurRadius: 2.0,
-                                              spreadRadius: 0.0,
-                                              offset: Offset(2.0, 2.0), // shadow direction: bottom right
-                                            )
-                                          ],
-                                          color: kcRed),
-                                      child: Padding(
-                                        padding: EdgeInsets.only(
-                                            left: 1.screenWidth,
-                                            right: 1.screenWidth),
-                                        child: Text(
-                                          model[index].status,
-                                          style:  const TextStyle(
-                                              color: kcWhite,
-                                              fontWeight: FontWeight.w500),
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            )
-
-
-                            // _buildHeadingText("Action Taken By :"),
-                            // _buildTextBox("responsibility", kcRed),
-                          ],
-                        ),
-                      ),
-                      SizedBox(
-                        width: 1000,
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.start,
-                          children: [
-                            Container(
-                              width: 500,
-                              child: Row(
-                                children: [
-                                  _buildHeadingText("Software Version:"),
-                                  _buildTextBox(model[index].softwareVersion, kcRed),
-                                ],
-                              ),
-                            ),
-                            Container(
-                              width: 500,
-                              child: Row(
-                                children: [
-                                  _buildHeadingText("Operating System:"),
-                                  _buildTextBox(model[index].operatingSystem, kcRed),
-                                ],
-                              ),
-                            ),
-
-
-                            // _buildHeadingText("Action Taken By :"),
-                            // _buildTextBox("responsibility", kcRed),
-                          ],
-                        ),
-                      ),
-                      Row(
-                        children: [
-                          Row(
-                            children: [
-                              Image.asset(
-                                "assets/images/observation.png",
-                                scale: 18,
-                              ),
-                              _buildHeadingText("Issue Title :"),
-                            ],
-                          ),
-                          SizedBox(
-                            width: 1000,
-                            child: Padding(
-                              padding:
-                              const EdgeInsets.all(1.0),
-                              child: Text(
-                                model[index].issueTitle,
-                                maxLines: 3,
-                                overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(
-                                    fontWeight: FontWeight.w400,
-                                    fontSize: 14,
-                                    color: Colors.black),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      Row(
-                        children: [
-                          Row(
-                            children: [
-                              Image.asset(
-                                "assets/images/suggestions.png",
-                                scale: 20,
-                              ),
-                              _buildHeadingText(
-                                  "Issue Description:"),
-                            ],
-                          ),
-                          SizedBox(
-                            width: 1000,
-                            child: Padding(
-                              padding:
-                              const EdgeInsets.all(10),
-                              child: Text(model[index].issueDescription,
-                                maxLines: 5,
-                                overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(
-                                    fontWeight: FontWeight.w400,
-                                    fontSize: 14,
-                                    color: Colors.black),
-                              ),
-                            ),
-                          ),
-
-                        ],
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ));},);
-  }
-
-  _buildHeadingText(String title){
-    return Padding(
-      padding: const EdgeInsets.all(5),
-      child: Text(title, style: const TextStyle( fontWeight: FontWeight.w400,
-          fontSize: 14,
-          color: Colors.black),),
-    );
-  }
-
-  _buildTextBox(String title, Color color){
-    return Padding(
-      padding: const EdgeInsets.all(5),
-      child: Padding(
-        padding: const EdgeInsets.only(left: 3, right: 3),
-        child: Text(title,
-          maxLines: 4,
-          textAlign: TextAlign.center,
-          overflow: TextOverflow.ellipsis,
-          style: TextStyle(fontWeight: FontWeight.w500, fontSize: 16,color: color),),
+    return Container(
+      color: kcWhite,
+      child: BlocConsumer<SuggestionFeedbackBloc, SuggestionFeedbackState>(
+        bloc: suggestionFeedbackBloc,
+        listener: (_, state) {},
+        builder: (_, state) => state.when(
+          loading: _loading,
+          content: _list,
+          success: _list,
+          failed: (form, __) => _list(form),
+        ),
       ),
+    );
+  }
+
+  Widget _loading(List<SuggestionFeedbackModel> _) =>
+      const Center(child: CircularProgressIndicator());
+
+  Widget _list(List<SuggestionFeedbackModel> model) {
+    if (model.isEmpty) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: const [
+              Icon(Icons.inbox_outlined, color: kcLabelGrey, size: 56),
+              SizedBox(height: 8),
+              Text('No complaints yet',
+                  style: TextStyle(
+                      color: kcLabelGrey, fontWeight: FontWeight.w600)),
+            ],
+          ),
+        ),
+      );
+    }
+    return ListView.builder(
+      padding: const EdgeInsets.all(20),
+      itemCount: model.length,
+      itemBuilder: (_, i) => _complaintCard(model[i]),
+    );
+  }
+
+  Color _statusColor(String status) {
+    switch (status.toLowerCase()) {
+      case 'pending':
+        return const Color(0xFFF59E0B);
+      case 'resolved':
+      case 'closed':
+      case 'success':
+        return const Color(0xFF10B981);
+      case 'inprogress':
+      case 'in progress':
+        return const Color(0xFF3B82F6);
+      default:
+        return const Color(0xFFEF4444);
+    }
+  }
+
+  Widget _complaintCard(SuggestionFeedbackModel item) {
+    final status = item.status;
+    final statusColor = _statusColor(status);
+    return Container(
+      margin: const EdgeInsets.only(bottom: 14),
+      decoration: BoxDecoration(
+        color: kcWhite,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: Colors.grey.shade200),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: LayoutBuilder(
+          builder: (ctx, c) {
+            final wide = c.maxWidth > 640;
+            final image = ClipRRect(
+              borderRadius: BorderRadius.circular(10),
+              child: SizedBox(
+                width: wide ? 200 : double.infinity,
+                height: 170,
+                child: ProgressiveImage(
+                  highUrl: item.attachments,
+                  lowUrl: item.lowQualityImageUrl,
+                  fit: BoxFit.cover,
+                ),
+              ),
+            );
+            final content = Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    _statusChip(status, statusColor),
+                    const SizedBox(width: 8),
+                    _chip(
+                        Icons.event_outlined,
+                        const Color(0xFF8B5CF6),
+                        'Occurred: ${item.dateTimeOfOccurrence}'),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                _kvRow(
+                    Icons.title_outlined,
+                    const Color(0xFF3B82F6),
+                    'Issue',
+                    item.issueTitle),
+                const SizedBox(height: 8),
+                _kvRow(
+                    Icons.description_outlined,
+                    const Color(0xFF10B981),
+                    'Description',
+                    item.issueDescription,
+                    maxLines: 3),
+                const SizedBox(height: 8),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 6,
+                  children: [
+                    _chip(
+                        Icons.devices_outlined,
+                        const Color(0xFFEC4899),
+                        item.operatingSystem),
+                    _chip(
+                        Icons.tag,
+                        const Color(0xFFF59E0B),
+                        'v${item.softwareVersion}'),
+                  ],
+                ),
+              ],
+            );
+            if (wide) {
+              return Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  image,
+                  const SizedBox(width: 12),
+                  Expanded(child: content),
+                ],
+              );
+            }
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                image,
+                const SizedBox(height: 12),
+                content,
+              ],
+            );
+          },
+        ),
+      ),
+    );
+  }
+
+  Widget _statusChip(String status, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.12),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: color.withOpacity(0.35)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 6,
+            height: 6,
+            decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+          ),
+          const SizedBox(width: 6),
+          Text(
+            status.isEmpty ? '—' : status,
+            style: TextStyle(
+                color: color, fontWeight: FontWeight.w700, fontSize: 11),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _chip(IconData icon, Color color, String text) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.10),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, color: color, size: 12),
+          const SizedBox(width: 4),
+          Text(text,
+              style: TextStyle(
+                  color: color,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 11)),
+        ],
+      ),
+    );
+  }
+
+  Widget _kvRow(IconData icon, Color color, String label, String value,
+      {int maxLines = 2}) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          padding: const EdgeInsets.all(6),
+          decoration: BoxDecoration(
+            color: color.withOpacity(0.12),
+            borderRadius: BorderRadius.circular(6),
+          ),
+          child: Icon(icon, color: color, size: 14),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(label,
+                  style: const TextStyle(
+                      fontSize: 11,
+                      color: kcLabelGrey,
+                      fontWeight: FontWeight.w600)),
+              const SizedBox(height: 2),
+              Text(
+                value.isEmpty ? '—' : value,
+                maxLines: maxLines,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                    fontSize: 13,
+                    color: kcValueDark,
+                    fontWeight: FontWeight.w600),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }

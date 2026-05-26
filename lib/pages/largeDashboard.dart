@@ -12,6 +12,7 @@ import 'package:jsaw_limited/model/alltoday_observation_model.dart';
 import 'package:jsaw_limited/model/observationstatus_model.dart';
 import 'package:jsaw_limited/model/top3hazard_model.dart';
 import 'package:jsaw_limited/pages/login.dart';
+import 'package:jsaw_limited/pages/common_navigation_page.dart';
 import 'package:jsaw_limited/pages/suggestion_page.dart';
 import 'package:jsaw_limited/routes/app_routes.dart';
 import 'package:jsaw_limited/service/dashboard_service.dart';
@@ -643,10 +644,14 @@ class _LargeDashboardPageState extends State<LargeDashboardPage> {
                             borderRadius: BorderRadius.circular(20)
                         ),
                         child: ElevatedButton(onPressed: (){
-                          Navigator.of(context).push(
-                            MaterialPageRoute(builder: (context) => const SuggestionFeedbackPage(),
-                                fullscreenDialog: true),
-                          );
+                          final show = CommonNavigationPage.showPage;
+                          if (show != null) {
+                            show('Write Us', const SuggestionFeedbackPage());
+                          } else {
+                            Navigator.of(context).push(
+                              MaterialPageRoute(builder: (context) => const SuggestionFeedbackPage()),
+                            );
+                          }
                         }, style: ElevatedButton.styleFrom(backgroundColor: Colors.transparent), child: const Text("Write Us", style: TextStyle(color: kcWhite, fontWeight: FontWeight.w600),),)),
                   )
                 ],

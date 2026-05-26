@@ -127,7 +127,7 @@ class _ApproveObservationDetailPageState extends State<ApproveObservationDetailP
           crossAxisAlignment: CrossAxisAlignment.center,
           mainAxisSize: MainAxisSize.min,
           children: [
-            PageHeader("COMPLIANCE DETAILS"),
+            const SubPageHeader("COMPLIANCE DETAILS"),
             _buildObservation(),
             const Padding(
               padding: EdgeInsets.all(10.0),

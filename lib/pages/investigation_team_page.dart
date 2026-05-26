@@ -8,6 +8,8 @@ import '../service/employee_reporting_service.dart';
 import '../service/incident_service.dart';
 import '../service/observation_service.dart';
 import '../utils/app_color.dart';
+import 'edit_investigation_page.dart';
+import 'employee_picker_dialog.dart';
 import 'image_picker.dart';
 
 class InvestigationTeamPage extends StatefulWidget {
@@ -37,6 +39,9 @@ class _InvestigationTeamPageState extends State<InvestigationTeamPage>
   final TextEditingController _listSearchController = TextEditingController();
   bool _listSearchActive = false;
   List<InvestigationReportResponse> _listSearchResults = [];
+
+  // Inline edit mode (kept inside the tab so the app shell stays visible)
+  InvestigationReportResponse? _editingReport;
 
   String _selectedIncidentUniqueId = "Select Unique Id";
 
@@ -368,7 +373,7 @@ class _InvestigationTeamPageState extends State<InvestigationTeamPage>
   Future<void> _pickTeamMember(int index) async {
     final picked = await showDialog<AllEmployeeModel>(
       context: context,
-      builder: (ctx) => _EmployeePickerDialog(
+      builder: (ctx) => EmployeePickerDialog(
         employees: _authUsers,
         searchByCodeAndNameOnly: true,
       ),
@@ -711,6 +716,13 @@ class _InvestigationTeamPageState extends State<InvestigationTeamPage>
   // ============== List Tab ==============
 
   Widget _buildListTab() {
+    if (_editingReport != null) {
+      return EditInvestigationPage(
+        report: _editingReport!,
+        onClose: () => setState(() => _editingReport = null),
+        onSaved: () => _loadInvestigationList(page: _listPage),
+      );
+    }
     return Column(
       children: [
         _buildListSearchBar(),
@@ -786,7 +798,10 @@ class _InvestigationTeamPageState extends State<InvestigationTeamPage>
         padding: const EdgeInsets.fromLTRB(20, 8, 20, 8),
         itemCount: _listItems.length,
         itemBuilder: (context, i) =>
-            _InvestigationReportCard(item: _listItems[i]),
+            _InvestigationReportCard(
+              item: _listItems[i],
+              onEdit: (r) => setState(() => _editingReport = r),
+            ),
       ),
     );
   }
@@ -801,7 +816,10 @@ class _InvestigationTeamPageState extends State<InvestigationTeamPage>
       padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
       itemCount: _listSearchResults.length,
       itemBuilder: (context, i) =>
-          _InvestigationReportCard(item: _listSearchResults[i]),
+          _InvestigationReportCard(
+            item: _listSearchResults[i],
+            onEdit: (r) => setState(() => _editingReport = r),
+          ),
     );
   }
 
@@ -1998,7 +2016,7 @@ class _InvestigationTeamPageState extends State<InvestigationTeamPage>
   Future<void> _pickEmployee(_CapaRow row) async {
     final picked = await showDialog<AllEmployeeModel>(
       context: context,
-      builder: (ctx) => _EmployeePickerDialog(employees: _allEmployees),
+      builder: (ctx) => EmployeePickerDialog(employees: _allEmployees),
     );
     if (picked != null) {
       setState(() => row.employee = picked);
@@ -2147,7 +2165,11 @@ class _CapaRow {
 
 class _InvestigationReportCard extends StatefulWidget {
   final InvestigationReportResponse item;
-  const _InvestigationReportCard({required this.item});
+  final ValueChanged<InvestigationReportResponse> onEdit;
+  const _InvestigationReportCard({
+    required this.item,
+    required this.onEdit,
+  });
 
   @override
   State<_InvestigationReportCard> createState() =>
@@ -2395,6 +2417,27 @@ class _InvestigationReportCardState extends State<_InvestigationReportCard> {
         else
           ...item.capa.map(_capaRowView).toList(),
         const SizedBox(height: 8),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(14, 4, 14, 14),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              ElevatedButton.icon(
+                onPressed: () => widget.onEdit(item),
+                icon: const Icon(Icons.edit_outlined, size: 18),
+                label: const Text('Edit'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: kcvoilet,
+                  foregroundColor: kcWhite,
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 18, vertical: 10),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8)),
+                ),
+              ),
+            ],
+          ),
+        ),
       ],
     );
   }
@@ -2707,128 +2750,6 @@ class _InvestigationReportCardState extends State<_InvestigationReportCard> {
                 color: kcValueDark,
                 fontWeight: FontWeight.w700)),
       ],
-    );
-  }
-}
-
-class _EmployeePickerDialog extends StatefulWidget {
-  final List<AllEmployeeModel> employees;
-  final bool searchByCodeAndNameOnly;
-  const _EmployeePickerDialog({
-    required this.employees,
-    this.searchByCodeAndNameOnly = false,
-  });
-
-  @override
-  State<_EmployeePickerDialog> createState() => _EmployeePickerDialogState();
-}
-
-class _EmployeePickerDialogState extends State<_EmployeePickerDialog> {
-  late List<AllEmployeeModel> _filtered;
-  final _searchController = TextEditingController();
-
-  @override
-  void initState() {
-    super.initState();
-    _filtered = widget.employees;
-  }
-
-  @override
-  void dispose() {
-    _searchController.dispose();
-    super.dispose();
-  }
-
-  void _onSearch(String q) {
-    final query = q.trim().toLowerCase();
-    setState(() {
-      if (query.isEmpty) {
-        _filtered = widget.employees;
-      } else {
-        _filtered = widget.employees.where((e) {
-          if (e.empUnqId.toLowerCase().contains(query) ||
-              e.empName.toLowerCase().contains(query)) {
-            return true;
-          }
-          if (widget.searchByCodeAndNameOnly) return false;
-          return e.gradeCode.toLowerCase().contains(query) ||
-              e.wrkGrp.toLowerCase().contains(query);
-        }).toList();
-      }
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Dialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-      child: SizedBox(
-        width: 480,
-        height: 520,
-        child: Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-              child: Row(
-                children: [
-                  const Expanded(
-                    child: Text(
-                      'Select Employee',
-                      style: TextStyle(
-                          fontSize: 16, fontWeight: FontWeight.w700),
-                    ),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.close),
-                    onPressed: () => Navigator.of(context).pop(),
-                  ),
-                ],
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: TextField(
-                controller: _searchController,
-                autofocus: true,
-                onChanged: _onSearch,
-                decoration: InputDecoration(
-                  isDense: true,
-                  hintText: widget.searchByCodeAndNameOnly
-                      ? 'Search by code or name'
-                      : 'Search by code, name, grade or wrkgrp',
-                  prefixIcon: const Icon(Icons.search, size: 18),
-                  contentPadding:
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
-                  border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(6)),
-                ),
-              ),
-            ),
-            const SizedBox(height: 8),
-            Expanded(
-              child: _filtered.isEmpty
-                  ? const Center(child: Text('No matches'))
-                  : ListView.builder(
-                      itemCount: _filtered.length,
-                      itemBuilder: (context, i) {
-                        final e = _filtered[i];
-                        return ListTile(
-                          dense: true,
-                          title: Text('${e.empUnqId} — ${e.empName}',
-                              style: const TextStyle(fontSize: 13)),
-                          subtitle: Text(
-                            'Grade: ${e.gradeCode.isEmpty ? "—" : e.gradeCode}'
-                            '   •   WrkGrp: ${e.wrkGrp.isEmpty ? "—" : e.wrkGrp}',
-                            style: const TextStyle(fontSize: 11),
-                          ),
-                          onTap: () => Navigator.of(context).pop(e),
-                        );
-                      },
-                    ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 }

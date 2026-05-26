@@ -20,6 +20,7 @@ import 'package:jsaw_limited/state/filterObservation_state.dart';
 import 'package:jsaw_limited/state/generateExcel_state.dart';
 import 'package:jsaw_limited/state/uniqueId_state.dart';
 import 'package:jsaw_limited/utils/app_color.dart';
+import 'package:jsaw_limited/utils/progressive_image.dart';
 import 'package:lottie/lottie.dart';
 import 'package:provider/provider.dart';
 import 'package:responsive_builder/responsive_builder.dart';
@@ -106,52 +107,63 @@ class _ObservationPageState extends State<ObservationPage>
       body: Row(
         children: [
           Expanded(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                TabBar(
-                  isScrollable: false,
-                  controller: tabController,
-                  indicatorColor: kcvoilet,
-                  indicatorSize: TabBarIndicatorSize.tab,
-                  indicatorWeight: 3,
-                  labelColor: kcvoilet,
-                  unselectedLabelColor: kcLightGrey,
-                  labelStyle: const TextStyle(
-                      fontWeight: FontWeight.w600,
-                      fontSize: 13,
-                      letterSpacing: 0.2),
-                  unselectedLabelStyle: const TextStyle(
-                      fontWeight: FontWeight.w500,
-                      fontSize: 13,
-                      letterSpacing: 0.2),
-                  dividerColor: kcVeryLightGrey,
-                  tabs: [
-                    _tab(Icons.inbox_outlined, 'Received Observation'),
-                    _tab(Icons.add_alert_outlined, 'Raised Observation'),
-                    _tab(Icons.list_alt_outlined, 'All Observation'),
-                    if (html.window.localStorage.getItem('khseCode') == '1')
-                      _tab(Icons.edit_note, 'Edit Observation'),
-                  ],
-                ),
-                Expanded(
-                  child: TabBarView(
-                    controller: tabController,
-                    children: [
-                      ReceivedObservationPage(),
-                      RaisedObservationPage(),
-                      const AllObservationPage(),
-                      if (html.window.localStorage.getItem('khseCode') == '1')
-                        HseEditObservationPage(),
-                    ],
-                  ),
-                ),
-              ],
+            // Nested Navigator keeps inner pushes (View / Edit screens) inside
+            // the app shell instead of replacing the whole screen.
+            child: Navigator(
+              onGenerateRoute: (settings) => MaterialPageRoute(
+                settings: settings,
+                builder: (_) => _buildTabHost(),
+              ),
             ),
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildTabHost() {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        TabBar(
+          isScrollable: false,
+          controller: tabController,
+          indicatorColor: kcvoilet,
+          indicatorSize: TabBarIndicatorSize.tab,
+          indicatorWeight: 3,
+          labelColor: kcvoilet,
+          unselectedLabelColor: kcLightGrey,
+          labelStyle: const TextStyle(
+              fontWeight: FontWeight.w600,
+              fontSize: 13,
+              letterSpacing: 0.2),
+          unselectedLabelStyle: const TextStyle(
+              fontWeight: FontWeight.w500,
+              fontSize: 13,
+              letterSpacing: 0.2),
+          dividerColor: kcVeryLightGrey,
+          tabs: [
+            _tab(Icons.inbox_outlined, 'Received Observation'),
+            _tab(Icons.add_alert_outlined, 'Raised Observation'),
+            _tab(Icons.list_alt_outlined, 'All Observation'),
+            if (html.window.localStorage.getItem('khseCode') == '1')
+              _tab(Icons.edit_note, 'Edit Observation'),
+          ],
+        ),
+        Expanded(
+          child: TabBarView(
+            controller: tabController,
+            children: [
+              ReceivedObservationPage(),
+              RaisedObservationPage(),
+              const AllObservationPage(),
+              if (html.window.localStorage.getItem('khseCode') == '1')
+                HseEditObservationPage(),
+            ],
+          ),
+        ),
+      ],
     );
   }
 
@@ -1392,18 +1404,10 @@ class _ObservationCard extends StatelessWidget {
               child: SizedBox(
                 width: 220,
                 height: 200,
-                child: FadeInImage(
-                  placeholder: NetworkImage(item.lowQualityImageUrl),
-                  image: NetworkImage(item.imageNumber),
-                  fadeInDuration: const Duration(milliseconds: 300),
-                  fadeOutDuration: const Duration(milliseconds: 300),
+                child: ProgressiveImage(
+                  highUrl: item.imageNumber,
+                  lowUrl: item.lowQualityImageUrl,
                   fit: BoxFit.cover,
-                  imageErrorBuilder: (_, __, ___) => Container(
-                    color: Colors.grey.shade100,
-                    alignment: Alignment.center,
-                    child: Icon(Icons.broken_image_outlined,
-                        color: Colors.grey.shade400, size: 48),
-                  ),
                 ),
               ),
             ),

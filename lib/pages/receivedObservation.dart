@@ -9,6 +9,7 @@ import 'package:jsaw_limited/pages/edit_received_observation.dart';
 import 'package:jsaw_limited/service/observation_service.dart';
 import 'package:jsaw_limited/state/filterObservation_state.dart';
 import 'package:jsaw_limited/utils/app_color.dart';
+import 'package:jsaw_limited/utils/progressive_image.dart';
 import 'package:lottie/lottie.dart';
 import 'package:provider/provider.dart';
 import 'package:responsive_builder/responsive_builder.dart';
@@ -315,21 +316,10 @@ class _ReceivedObservationPageState extends State<ReceivedObservationPage> {
                           child: SizedBox(
                             width: 220,
                             height: 200,
-                            child: FadeInImage(
-                              placeholder:
-                                  NetworkImage(item.lowQualityImageUrl),
-                              image: NetworkImage(item.imageNumber),
-                              fadeInDuration:
-                                  const Duration(milliseconds: 300),
-                              fadeOutDuration:
-                                  const Duration(milliseconds: 300),
+                            child: ProgressiveImage(
+                              highUrl: item.imageNumber,
+                              lowUrl: item.lowQualityImageUrl,
                               fit: BoxFit.cover,
-                              imageErrorBuilder: (_, __, ___) => Container(
-                                color: Colors.grey.shade100,
-                                alignment: Alignment.center,
-                                child: Icon(Icons.broken_image_outlined,
-                                    color: Colors.grey.shade400, size: 48),
-                              ),
                             ),
                           ),
                         ),
