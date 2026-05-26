@@ -124,34 +124,51 @@ class _CommonNavigationPageState extends State<CommonNavigationPage> {
 
   String _getRouteFromTitle(String title) {
     switch (title) {
+      // Workspace
       case 'Dashboard':
-        return '/dashboardSelection';
+        return '/dashboard';
       case 'Observation':
-        return '/observationPage';
+        return '/observation';
       case 'Graph':
-        return '/graphPage';
+        return '/graph';
+      case 'All Incident':
+        return '/all-incident';
+      // Reporting
       case 'Raise Observation':
-        return '/resgiaterObservationPage';
-      case 'Approve Observation':
-        return '/approvedObservationPage';
-      case 'Suggestion':
-        return '/suggestionFeedbackPage';
+        return '/raise-observation';
+      case 'Incident Tracking':
+        return '/incident-tracking';
+      case 'Medical Officer Response':
+        return '/medical-officer-response';
+      case 'Safety Remark Form':
+        return '/safety-remark-form';
+      case 'Investigation Form':
+        return '/investigation-form';
+      // Admin
+      case 'Approval Queue':
+        return '/approval-queue';
+      case 'Close/Reopen Records':
+        return '/close-reopen-records';
       case 'Priority Changes':
-        return '/priorityChangesPage';
-      case 'Edit Observation':
-       return '/editObservationPage';
-      case 'Approve Close/Reopen':
-        return '/approveClose/ReopenPage';
-      case 'Change Pass/ Email':
-        return '/changepasswordPage';
-      case 'Employee Reporting':
-        return '/employeeReportingPage';
+        return '/priority-changes';
+      case 'Write Us':
+        return '/write-us';
+      // Account
       case 'Profile':
-        return '/profilePage';
-      case 'Approve Close/Reopen Table':
-        return '/approveClose/ReopenPageTable';
-        default:
-        return '/dashboardPage';
+        return '/profile';
+      case 'Change Pass / Email':
+        return '/change-password';
+      case 'Employee Reporting':
+        return '/employee-reporting';
+      default:
+        // Fallback: derive route from title so new entries always get a slug
+        // (lowercase, spaces / slashes → dashes) instead of all collapsing to
+        // /dashboardPage.
+        final slug = title
+            .toLowerCase()
+            .replaceAll(RegExp(r'[\s/]+'), '-')
+            .replaceAll(RegExp(r'[^a-z0-9-]'), '');
+        return '/$slug';
     }
   }
 }

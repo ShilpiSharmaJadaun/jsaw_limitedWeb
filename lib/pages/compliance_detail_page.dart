@@ -8,6 +8,7 @@ import '../model/allobservation_model.dart';
 import '../service/observation_service.dart';
 import '../state/allobservationTillDate_state.dart';
 import '../utils/app_color.dart';
+import '../utils/progressive_image.dart';
 import 'edit_received_observation.dart';
 
 class ComplianceDetailPage extends StatefulWidget {
@@ -69,10 +70,10 @@ class _ComplianceDetailPageState extends State<ComplianceDetailPage> {
                         child: SizedBox(
                           width: 230,
                           height: 200,
-                          child: Image.network(
-                            alignment: Alignment.center,
-                            model[index].imageNumber,
-                            //fit: BoxFi,
+                          child: ProgressiveImage(
+                            highUrl: model[index].imageNumber,
+                            lowUrl: model[index].lowQualityImageUrl,
+                            fit: BoxFit.contain,
                           ),
                         ),
                       ),

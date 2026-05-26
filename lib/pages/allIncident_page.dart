@@ -18,6 +18,7 @@ import 'package:web/web.dart' show window;
 import '../bloc/all_filter_observation_bloc.dart';
 import '../service/incident_service.dart';
 import '../utils/app_color.dart';
+import '../utils/progressive_image.dart';
 
 class AllIncidentPage extends StatefulWidget {
   const AllIncidentPage({super.key});
@@ -209,23 +210,9 @@ class _AllIncidentPageState extends State<AllIncidentPage> {
                     child: SizedBox(
                       width: 22.screenWidth,
                       height: 18.screenHeight,
-                      child: FadeInImage(
-                        placeholder: NetworkImage(model[index].imageUrl),
-                        image: NetworkImage(model[index].imageUrl),
-                        fadeInDuration: const Duration(milliseconds: 300),
-                        fadeOutDuration: const Duration(milliseconds: 300),
-                        fit: BoxFit.cover,
-                        imageErrorBuilder: (context, error, stackTrace) {
-                          return Container(
-                            color: Colors.grey.shade100,
-                            alignment: Alignment.center,
-                            child: Icon(
-                              Icons.broken_image_outlined,
-                              color: Colors.grey.shade400,
-                              size: 48,
-                            ),
-                          );
-                        },
+                      child: ProgressiveImage(
+                        highUrl: model[index].imageUrl,
+                        lowUrl: model[index].lowQualityImageUrl,
                       ),
                     ),
                   ),

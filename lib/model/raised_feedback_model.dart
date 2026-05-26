@@ -21,6 +21,8 @@ class SuggestionFeedbackModel with _$SuggestionFeedbackModel{
     @Default("") String closingTicketDate,
     @Default("") String status,
     @Default("") String statusColor,
+    @Default("") String lowQualityImageUrl,
+    @Default("") String highQualityImageUrl,
   }) = _SuggestionFeedbackModel;
 
   factory SuggestionFeedbackModel.fromJson(Map<String, dynamic> json) => _$SuggestionFeedbackModelFromJson(json);

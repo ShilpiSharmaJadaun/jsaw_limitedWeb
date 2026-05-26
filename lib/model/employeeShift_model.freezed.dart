@@ -23,6 +23,8 @@ mixin _$EmployeeShiftModel {
   String get shiftCode => throw _privateConstructorUsedError;
   int get shiftSeq => throw _privateConstructorUsedError;
   String get shiftDesc => throw _privateConstructorUsedError;
+  String get shiftStart => throw _privateConstructorUsedError;
+  String get shiftEnd => throw _privateConstructorUsedError;
 
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
   @JsonKey(ignore: true)
@@ -36,7 +38,12 @@ abstract class $EmployeeShiftModelCopyWith<$Res> {
           EmployeeShiftModel value, $Res Function(EmployeeShiftModel) then) =
       _$EmployeeShiftModelCopyWithImpl<$Res, EmployeeShiftModel>;
   @useResult
-  $Res call({String shiftCode, int shiftSeq, String shiftDesc});
+  $Res call(
+      {String shiftCode,
+      int shiftSeq,
+      String shiftDesc,
+      String shiftStart,
+      String shiftEnd});
 }
 
 /// @nodoc
@@ -55,6 +62,8 @@ class _$EmployeeShiftModelCopyWithImpl<$Res, $Val extends EmployeeShiftModel>
     Object? shiftCode = null,
     Object? shiftSeq = null,
     Object? shiftDesc = null,
+    Object? shiftStart = null,
+    Object? shiftEnd = null,
   }) {
     return _then(_value.copyWith(
       shiftCode: null == shiftCode
@@ -69,6 +78,14 @@ class _$EmployeeShiftModelCopyWithImpl<$Res, $Val extends EmployeeShiftModel>
           ? _value.shiftDesc
           : shiftDesc // ignore: cast_nullable_to_non_nullable
               as String,
+      shiftStart: null == shiftStart
+          ? _value.shiftStart
+          : shiftStart // ignore: cast_nullable_to_non_nullable
+              as String,
+      shiftEnd: null == shiftEnd
+          ? _value.shiftEnd
+          : shiftEnd // ignore: cast_nullable_to_non_nullable
+              as String,
     ) as $Val);
   }
 }
@@ -81,7 +98,12 @@ abstract class _$$EmployeeShiftModelImplCopyWith<$Res>
       __$$EmployeeShiftModelImplCopyWithImpl<$Res>;
   @override
   @useResult
-  $Res call({String shiftCode, int shiftSeq, String shiftDesc});
+  $Res call(
+      {String shiftCode,
+      int shiftSeq,
+      String shiftDesc,
+      String shiftStart,
+      String shiftEnd});
 }
 
 /// @nodoc
@@ -98,6 +120,8 @@ class __$$EmployeeShiftModelImplCopyWithImpl<$Res>
     Object? shiftCode = null,
     Object? shiftSeq = null,
     Object? shiftDesc = null,
+    Object? shiftStart = null,
+    Object? shiftEnd = null,
   }) {
     return _then(_$EmployeeShiftModelImpl(
       shiftCode: null == shiftCode
@@ -112,6 +136,14 @@ class __$$EmployeeShiftModelImplCopyWithImpl<$Res>
           ? _value.shiftDesc
           : shiftDesc // ignore: cast_nullable_to_non_nullable
               as String,
+      shiftStart: null == shiftStart
+          ? _value.shiftStart
+          : shiftStart // ignore: cast_nullable_to_non_nullable
+              as String,
+      shiftEnd: null == shiftEnd
+          ? _value.shiftEnd
+          : shiftEnd // ignore: cast_nullable_to_non_nullable
+              as String,
     ));
   }
 }
@@ -120,7 +152,11 @@ class __$$EmployeeShiftModelImplCopyWithImpl<$Res>
 @JsonSerializable()
 class _$EmployeeShiftModelImpl implements _EmployeeShiftModel {
   const _$EmployeeShiftModelImpl(
-      {this.shiftCode = "", this.shiftSeq = 0, this.shiftDesc = ""});
+      {this.shiftCode = "",
+      this.shiftSeq = 0,
+      this.shiftDesc = "",
+      this.shiftStart = "",
+      this.shiftEnd = ""});
 
   factory _$EmployeeShiftModelImpl.fromJson(Map<String, dynamic> json) =>
       _$$EmployeeShiftModelImplFromJson(json);
@@ -134,10 +170,16 @@ class _$EmployeeShiftModelImpl implements _EmployeeShiftModel {
   @override
   @JsonKey()
   final String shiftDesc;
+  @override
+  @JsonKey()
+  final String shiftStart;
+  @override
+  @JsonKey()
+  final String shiftEnd;
 
   @override
   String toString() {
-    return 'EmployeeShiftModel(shiftCode: $shiftCode, shiftSeq: $shiftSeq, shiftDesc: $shiftDesc)';
+    return 'EmployeeShiftModel(shiftCode: $shiftCode, shiftSeq: $shiftSeq, shiftDesc: $shiftDesc, shiftStart: $shiftStart, shiftEnd: $shiftEnd)';
   }
 
   @override
@@ -150,12 +192,17 @@ class _$EmployeeShiftModelImpl implements _EmployeeShiftModel {
             (identical(other.shiftSeq, shiftSeq) ||
                 other.shiftSeq == shiftSeq) &&
             (identical(other.shiftDesc, shiftDesc) ||
-                other.shiftDesc == shiftDesc));
+                other.shiftDesc == shiftDesc) &&
+            (identical(other.shiftStart, shiftStart) ||
+                other.shiftStart == shiftStart) &&
+            (identical(other.shiftEnd, shiftEnd) ||
+                other.shiftEnd == shiftEnd));
   }
 
   @JsonKey(ignore: true)
   @override
-  int get hashCode => Object.hash(runtimeType, shiftCode, shiftSeq, shiftDesc);
+  int get hashCode => Object.hash(
+      runtimeType, shiftCode, shiftSeq, shiftDesc, shiftStart, shiftEnd);
 
   @JsonKey(ignore: true)
   @override
@@ -176,7 +223,9 @@ abstract class _EmployeeShiftModel implements EmployeeShiftModel {
   const factory _EmployeeShiftModel(
       {final String shiftCode,
       final int shiftSeq,
-      final String shiftDesc}) = _$EmployeeShiftModelImpl;
+      final String shiftDesc,
+      final String shiftStart,
+      final String shiftEnd}) = _$EmployeeShiftModelImpl;
 
   factory _EmployeeShiftModel.fromJson(Map<String, dynamic> json) =
       _$EmployeeShiftModelImpl.fromJson;
@@ -187,6 +236,10 @@ abstract class _EmployeeShiftModel implements EmployeeShiftModel {
   int get shiftSeq;
   @override
   String get shiftDesc;
+  @override
+  String get shiftStart;
+  @override
+  String get shiftEnd;
   @override
   @JsonKey(ignore: true)
   _$$EmployeeShiftModelImplCopyWith<_$EmployeeShiftModelImpl> get copyWith =>

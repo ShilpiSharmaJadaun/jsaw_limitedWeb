@@ -12,6 +12,8 @@ _$EmployeeShiftModelImpl _$$EmployeeShiftModelImplFromJson(
       shiftCode: json['shiftCode'] as String? ?? "",
       shiftSeq: (json['shiftSeq'] as num?)?.toInt() ?? 0,
       shiftDesc: json['shiftDesc'] as String? ?? "",
+      shiftStart: json['shiftStart'] as String? ?? "",
+      shiftEnd: json['shiftEnd'] as String? ?? "",
     );
 
 Map<String, dynamic> _$$EmployeeShiftModelImplToJson(
@@ -20,4 +22,6 @@ Map<String, dynamic> _$$EmployeeShiftModelImplToJson(
       'shiftCode': instance.shiftCode,
       'shiftSeq': instance.shiftSeq,
       'shiftDesc': instance.shiftDesc,
+      'shiftStart': instance.shiftStart,
+      'shiftEnd': instance.shiftEnd,
     };

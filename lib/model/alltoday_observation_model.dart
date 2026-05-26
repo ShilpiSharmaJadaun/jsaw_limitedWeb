@@ -29,6 +29,8 @@ class AllTodayObservationModel with _$AllTodayObservationModel{
     @Default("") String responsibilityHODName,
     @Default("") String responsibilityHODEmpUnqID,
     @Default("") String stationCode,
+    @Default("") String lowQualityImageUrl,
+    @Default("") String highQualityImageUrl,
 
   }) = _AllTodayObservationModel;
 

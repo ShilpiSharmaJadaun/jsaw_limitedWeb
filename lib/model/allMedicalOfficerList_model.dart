@@ -30,6 +30,8 @@ class AllMedicalOfficerListModel with _$AllMedicalOfficerListModel{
     @Default("") String firDateTime,
     @Default("") String imageUrl,
     @Default("") String raisedDate,
+    @Default("") String lowQualityImageUrl,
+    @Default("") String highQualityImageUrl,
 
 
   }) = _AllMedicalOfficerListModel;

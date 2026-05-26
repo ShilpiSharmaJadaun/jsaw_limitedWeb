@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
+import 'package:jsaw_limited/utils/progressive_image.dart';
 import 'package:provider/provider.dart';
 import '../bloc/allDepart_bloc.dart';
 import '../bloc/all_filter_observation_bloc.dart';
@@ -90,7 +91,11 @@ class _ApproveRejectTablePageState extends State<ApproveRejectTablePage> {
 
   late final UniqueIdBloc uniqueIdBloc;
 
-  TextEditingController remarkController = TextEditingController();
+  final Map<int, TextEditingController> _remarkControllers = {};
+
+  TextEditingController _remarkFor(int index) {
+    return _remarkControllers.putIfAbsent(index, () => TextEditingController());
+  }
 
   bool isLoading = false;
   bool isLastUpdate = false;
@@ -189,18 +194,25 @@ class _ApproveRejectTablePageState extends State<ApproveRejectTablePage> {
   void dispose() {
     _horizontalController.dispose();
     _verticalController.dispose();
+    for (final c in _remarkControllers.values) {
+      c.dispose();
+    }
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scrollbar(
-      trackVisibility: true,
-      thumbVisibility: true,
-      controller: _horizontalController,
-      scrollbarOrientation: ScrollbarOrientation.bottom,
-      child: Scaffold(
-        body: _buildDataTableBody(),
+    return Scaffold(
+      backgroundColor: kcDashboardBg1,
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [kcDashboardBg1, kcDashboardBg2],
+          ),
+        ),
+        child: _buildDataTableBody(),
       ),
     );
   }
@@ -224,113 +236,25 @@ class _ApproveRejectTablePageState extends State<ApproveRejectTablePage> {
   }
 
   Widget _buildCreditNoteContent(AllFilterObservationModel model){
-    // print(model.length);
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      physics: AlwaysScrollableScrollPhysics(),
-      controller: _horizontalController,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                ElevatedButton.icon(
-                  onPressed: model.totalItems != 0 && currentPage > 0 ? _previousPage : null,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: kcvoilet,
-                    foregroundColor: kcWhite,
-                    disabledBackgroundColor: kcVeryLightGrey,
-                    disabledForegroundColor: kcLightGrey,
-                    elevation: 0,
-                    fixedSize: const Size(140, 40),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
-                  ),
-                  icon: const Icon(Icons.chevron_left, size: 18),
-                  label: const Text("Previous"),
-                ),
-                Text(
-                  model.totalItems == 0
-                      ? "No records"
-                      : "Page $currentPage of ${model.totalPages}",
-                  style: const TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    color: kcValueDark,
-                  ),
-                ),
-                Row(
-                  children: [
-                    Container(
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFD4F4DD),
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                      child: IconButton(
-                        tooltip: 'Refresh',
-                        onPressed: () {
-                          setState(() {
-                            currentPage = 0;
-                          });
-                          allFilterObservationBloc.initState(0, "", "", "", "", "", "COMPLIANCE", "", "", "", "", "");
-                        },
-                        icon: Icon(Icons.refresh, color: kcStatGreen),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    ElevatedButton.icon(
-                      onPressed: () {
-                        uniqueIdBloc.initState();
-                        openFilterDialog();
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: kcvoilet,
-                        foregroundColor: kcWhite,
-                        fixedSize: const Size(120, 40),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
-                      ),
-                      icon: const Icon(Icons.filter_alt_outlined, size: 18),
-                      label: const Text("Filter"),
-                    ),
-                    const SizedBox(width: 8),
-                    ElevatedButton.icon(
-                      onPressed: model.totalItems != 0 && currentPage < model.totalPages
-                          ? _nextPage
-                          : null,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: kcvoilet,
-                        foregroundColor: kcWhite,
-                        disabledBackgroundColor: kcVeryLightGrey,
-                        disabledForegroundColor: kcLightGrey,
-                        elevation: 0,
-                        fixedSize: const Size(140, 40),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
-                      ),
-                      icon: const Icon(Icons.chevron_right, size: 18),
-                      label: const Text("Next"),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-          const Divider(height: 1, color: kcVeryLightGrey),
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: SizedBox(
-              width: 1200,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _buildToolbar(model),
+        _buildActionBar(model),
+        Expanded(
+          child: Scrollbar(
+            trackVisibility: true,
+            thumbVisibility: true,
+            controller: _horizontalController,
+            scrollbarOrientation: ScrollbarOrientation.bottom,
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              physics: const AlwaysScrollableScrollPhysics(),
+              controller: _horizontalController,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  _buildUpdate(model),
-                  _buildReject(model),
-                ],
-              ),
-            ),
-          ),
           ScrollConfiguration(
             behavior: ScrollBehavior().copyWith(overscroll: false),
             child: Scrollbar(
@@ -338,25 +262,22 @@ class _ApproveRejectTablePageState extends State<ApproveRejectTablePage> {
               thumbVisibility: true,
               child: SizedBox(
                 width: 2800,
-                //   color: Colors.grey,
                 child: Row(
                   children: [
-                    _buildTableHeaderContainer("Raised by",170),
-                    _buildTableHeaderContainer("Unique ID",170),
-                    _buildTableHeaderContainer("Date",170),
-                    _buildTableHeaderContainer("Plant/ Dept",170),
-                    _buildTableHeaderContainer("Responsibility",170),
-                    _buildTableHeaderContainer("Responsible HOD",170),
-                    _buildTableHeaderContainer("Location",170),
-                    _buildTableHeaderContainer("Hazard",170),
-                    _buildTableHeaderContainer("Target Date",170),
-                    _buildTableHeaderContainer("Current Status",170),
-                    _buildTableHeaderContainer("Observation",170),
-                    _buildTableHeaderContainer("Approve/ Reject",170),
-                    _buildTableHeaderContainer("Image",100),
-                    _buildTableHeaderContainer("Remark",170),
-                    // _buildTableHeaderContainer("Compliance",170),
-                    // _buildTableHeaderContainer("Action Taken",170),
+                    _buildTableHeaderContainer("Select", 170),
+                    _buildTableHeaderContainer("Raised By", 170),
+                    _buildTableHeaderContainer("Unique ID", 170),
+                    _buildTableHeaderContainer("Date", 170),
+                    _buildTableHeaderContainer("Plant / Dept", 170),
+                    _buildTableHeaderContainer("Responsibility", 170),
+                    _buildTableHeaderContainer("Responsible HOD", 170),
+                    _buildTableHeaderContainer("Location", 170),
+                    _buildTableHeaderContainer("Hazard", 170),
+                    _buildTableHeaderContainer("Target Date", 170),
+                    _buildTableHeaderContainer("Status", 170),
+                    _buildTableHeaderContainer("Observation", 170),
+                    _buildTableHeaderContainer("Before / After", 170),
+                    _buildTableHeaderContainer("Remark", 170),
                   ],
                 ),
               ),
@@ -377,20 +298,20 @@ class _ApproveRejectTablePageState extends State<ApproveRejectTablePage> {
                     itemBuilder: (BuildContext context, int index) {
                       return Row(
                         children: [
-                          _buildTableBodyContainer(model.model[index].observationRaisedBy.toString(),200),
-                          _buildTableBodyContainer(model.model[index].uniqueIdentificationNumber.toString(),200),
-                          _buildTableBodyContainer(model.model[index].raisedDate.toString(),200),
-                          _buildTableBodyContainer(model.model[index].plantDept.toString(),200),
-                          _buildTableBodyContainer(model.model[index].responsibility.toString(),200),
-                          _buildTableBodyContainer(model.model[index].responsibilityHODName.toString(),200),
-                          _buildTableBodyContainer(model.model[index].location.toString(),200),
-                          _buildTableBodyContainer(model.model[index].hazardCategory.toString(),200),
-                          _buildTableBodyContainer(model.model[index].observationCompletionTargetDate.toString(),200),
-                          _buildTableBodyContainer(model.model[index].status.toString(),200),
-                          _buildTableBodyContainer(model.model[index].observationText.toString(),200),
                           _buildApproveRejectBodyContainer(model, index),
-                          _buildImageContainer(model,index),
-                          _buildRemarkContainer(),
+                          _buildTableBodyContainer(model.model[index].observationRaisedBy.toString(), 200, rowIndex: index),
+                          _buildTableBodyContainer(model.model[index].uniqueIdentificationNumber.toString(), 200, rowIndex: index),
+                          _buildTableBodyContainer(model.model[index].raisedDate.toString(), 200, rowIndex: index),
+                          _buildTableBodyContainer(model.model[index].plantDept.toString(), 200, rowIndex: index),
+                          _buildTableBodyContainer(model.model[index].responsibility.toString(), 200, rowIndex: index),
+                          _buildTableBodyContainer(model.model[index].responsibilityHODName.toString(), 200, rowIndex: index),
+                          _buildTableBodyContainer(model.model[index].location.toString(), 200, rowIndex: index),
+                          _buildTableBodyContainer(model.model[index].hazardCategory.toString(), 200, rowIndex: index),
+                          _buildTableBodyContainer(model.model[index].observationCompletionTargetDate.toString(), 200, rowIndex: index),
+                          _buildTableBodyContainer(model.model[index].status.toString(), 200, isStatus: true, rowIndex: index),
+                          _buildTableBodyContainer(model.model[index].observationText.toString(), 200, rowIndex: index),
+                          _buildImageContainer(model, index),
+                          _buildRemarkCell(index),
                         ],
                       );
                     },
@@ -400,69 +321,361 @@ class _ApproveRejectTablePageState extends State<ApproveRejectTablePage> {
               ),
             ),
           )
+                ],
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildToolbar(AllFilterObservationModel model) {
+    return Container(
+      margin: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      decoration: BoxDecoration(
+        color: kcWhite,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: Colors.grey.shade200),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          // Pagination
+          IconButton(
+            tooltip: 'Previous',
+            onPressed:
+                model.totalItems != 0 && currentPage > 0 ? _previousPage : null,
+            icon: const Icon(Icons.chevron_left),
+            color: kcvoilet,
+          ),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
+              color: kcvoilet.withOpacity(0.10),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Text(
+              model.totalItems == 0
+                  ? 'No records'
+                  : 'Page $currentPage / ${model.totalPages}',
+              style: const TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+                color: kcvoilet,
+              ),
+            ),
+          ),
+          IconButton(
+            tooltip: 'Next',
+            onPressed: model.totalItems != 0 && currentPage < model.totalPages
+                ? _nextPage
+                : null,
+            icon: const Icon(Icons.chevron_right),
+            color: kcvoilet,
+          ),
+          const SizedBox(width: 8),
+          Container(
+            height: 24,
+            width: 1,
+            color: kcVeryLightGrey,
+          ),
+          const SizedBox(width: 8),
+          Text(
+            '${model.totalItems} total',
+            style: const TextStyle(
+              fontSize: 12,
+              color: kcLabelGrey,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const Spacer(),
+          // Right-side actions
+          OutlinedButton.icon(
+            onPressed: () {
+              setState(() {
+                currentPage = 0;
+              });
+              allFilterObservationBloc.initState(0, "", "", "", "", "",
+                  "COMPLIANCE", "", "", "", "", "");
+            },
+            icon: const Icon(Icons.refresh, size: 18),
+            label: const Text('Refresh'),
+            style: OutlinedButton.styleFrom(
+              foregroundColor: kcStatGreen,
+              side: BorderSide(color: kcStatGreen.withOpacity(0.4)),
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
+          ElevatedButton.icon(
+            onPressed: () {
+              uniqueIdBloc.initState();
+              openFilterDialog();
+            },
+            icon: const Icon(Icons.filter_alt_outlined, size: 18),
+            label: const Text('Filter'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: kcvoilet,
+              foregroundColor: kcWhite,
+              elevation: 0,
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+          ),
         ],
       ),
     );
-
   }
 
-  _buildTableHeaderContainer(String title,double width) {
+  Widget _buildActionBar(AllFilterObservationModel model) {
+    final hasSelection = selectedIndices.isNotEmpty;
+    return Container(
+      margin: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      decoration: BoxDecoration(
+        color: hasSelection
+            ? kcvoilet.withOpacity(0.06)
+            : kcWhite,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(
+          color: hasSelection
+              ? kcvoilet.withOpacity(0.30)
+              : Colors.grey.shade200,
+        ),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            hasSelection ? Icons.task_alt : Icons.checklist,
+            color: hasSelection ? kcvoilet : kcLabelGrey,
+            size: 18,
+          ),
+          const SizedBox(width: 8),
+          Text(
+            hasSelection
+                ? '${selectedIndices.length} selected'
+                : 'Select rows to act on',
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w700,
+              color: hasSelection ? kcvoilet : kcLabelGrey,
+            ),
+          ),
+          const Spacer(),
+          const Padding(
+            padding: EdgeInsets.only(right: 12),
+            child: Text(
+              'Enter each row’s remark in the table',
+              style: TextStyle(
+                fontSize: 11,
+                color: kcLabelGrey,
+                fontStyle: FontStyle.italic,
+              ),
+            ),
+          ),
+          _buildUpdate(model),
+          const SizedBox(width: 8),
+          _buildReject(model),
+        ],
+      ),
+    );
+  }
+
+  _buildTableHeaderContainer(String title, double width) {
     return Container(
       width: 200,
-      height: 100,
-      decoration: BoxDecoration(
-          border: Border.all(color: Colors.black, width:2),
-          color: navyBlue
+      height: 56,
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          colors: [navyBlue, kcvoilet],
+          begin: Alignment.centerLeft,
+          end: Alignment.centerRight,
+        ),
+        border: Border(
+          right: BorderSide(color: Color(0x33FFFFFF), width: 1),
+        ),
       ),
       child: Center(
         child: Padding(
-          padding: const EdgeInsets.all(10),
-          child: Text(title,
-            textAlign: TextAlign.left,
+          padding: const EdgeInsets.symmetric(horizontal: 10),
+          child: Text(
+            title,
+            textAlign: TextAlign.center,
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
-            style: const TextStyle(fontWeight: FontWeight.bold,color: kcWhite),),
-        ),),);
+            style: const TextStyle(
+              fontWeight: FontWeight.w700,
+              color: kcWhite,
+              fontSize: 13,
+              letterSpacing: 0.3,
+            ),
+          ),
+        ),
+      ),
+    );
   }
 
-  _buildTableBodyContainer(String title, double width) {
+  _buildTableBodyContainer(String title, double width,
+      {bool isStatus = false, int rowIndex = 0}) {
+    final zebra = rowIndex.isOdd ? kcDashboardBg1 : kcWhite;
     return Container(
       width: 200,
-      height: 60,
+      constraints: const BoxConstraints(minHeight: 60),
       decoration: BoxDecoration(
-        color: Colors.white,
-          border: Border.all(color: Colors.black, width: .5)
+        color: zebra,
+        border: Border(
+          right: BorderSide(color: Colors.grey.shade200),
+          bottom: BorderSide(color: Colors.grey.shade200),
+        ),
       ),
-      child: Padding(
-        padding: const EdgeInsets.all(10),
-        child: Text(title,
-          maxLines: 2,
-          textAlign: TextAlign.left,
-          overflow: TextOverflow.ellipsis,
-          style: TextStyle(fontWeight: FontWeight.bold),),
-      ),);
+      alignment: Alignment.center,
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      child: isStatus
+          ? _statusPill(title)
+          : Text(
+              title.isEmpty ? '—' : title,
+              maxLines: 2,
+              textAlign: TextAlign.center,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                fontWeight: FontWeight.w600,
+                fontSize: 12.5,
+                color: kcValueDark,
+              ),
+            ),
+    );
+  }
+
+  Widget _statusPill(String status) {
+    final s = status.trim().toUpperCase();
+    Color bg;
+    Color fg;
+    IconData icon;
+    switch (s) {
+      case 'CLOSED':
+      case 'COMPLIANCE':
+        bg = kcStatGreen;
+        icon = Icons.check_circle_outline;
+        fg = kcWhite;
+        break;
+      case 'PENDING':
+        bg = kcStatAmber;
+        icon = Icons.schedule;
+        fg = kcWhite;
+        break;
+      case 'IN PROGRESS':
+      case 'INPROGRESS':
+        bg = kcStatPurple;
+        icon = Icons.autorenew;
+        fg = kcWhite;
+        break;
+      case 'REJECTED':
+        bg = kcRed;
+        icon = Icons.cancel_outlined;
+        fg = kcWhite;
+        break;
+      default:
+        bg = kcLabelGrey;
+        icon = Icons.info_outline;
+        fg = kcWhite;
+    }
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: bg.withOpacity(0.25),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 14, color: fg),
+          const SizedBox(width: 6),
+          Text(
+            s.isEmpty ? '—' : s,
+            style: TextStyle(
+              color: fg,
+              fontSize: 11,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 0.3,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   _buildApproveRejectBodyContainer(AllFilterObservationModel model, int index) {
+    final isSelected = selectedIndices.contains(index);
+    final zebra = index.isOdd ? kcDashboardBg1 : kcWhite;
     return Container(
       width: 200,
-      height: 60,
+      constraints: const BoxConstraints(minHeight: 60),
       decoration: BoxDecoration(
-        color: Colors.white,
-        border: Border.all(color: Colors.black, width: 0.5),
+        color: isSelected ? kcvoilet.withOpacity(0.08) : zebra,
+        border: Border(
+          right: BorderSide(color: Colors.grey.shade200),
+          bottom: BorderSide(color: Colors.grey.shade200),
+        ),
       ),
       child: Center(
-        child: Checkbox(
-          value: selectedIndices.contains(index),
-          onChanged: (bool? value) {
+        child: InkWell(
+          borderRadius: BorderRadius.circular(20),
+          onTap: () {
             setState(() {
-              if (value == true) {
-                selectedIndices.add(index);
-              } else {
+              if (isSelected) {
                 selectedIndices.remove(index);
+              } else {
+                selectedIndices.add(index);
               }
             });
           },
+          child: Padding(
+            padding:
+                const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  isSelected
+                      ? Icons.check_box
+                      : Icons.check_box_outline_blank,
+                  size: 22,
+                  color: isSelected ? kcvoilet : kcLightGrey,
+                ),
+                const SizedBox(width: 6),
+                Text(
+                  isSelected ? 'Selected' : 'Select',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: isSelected ? kcvoilet : kcLabelGrey,
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );
@@ -475,7 +688,7 @@ class _ApproveRejectTablePageState extends State<ApproveRejectTablePage> {
         "observationText": model.model[index].observationText.toString(),
         "actionTaken": model.model[index].actionTaken.toString(),
         "status": "CHECKED", // Example status
-        "remarks": remarkController.text,
+        "remarks": _remarkFor(index).text,
         "updatedByEmpId": html.window.localStorage.getItem('kEmployeeCode')!,
         "updatedByEmpName": html.window.localStorage.getItem('kEmployeename')!,
         "updatedByEmail": html.window.localStorage.getItem('kUserEmail')!,
@@ -511,39 +724,71 @@ class _ApproveRejectTablePageState extends State<ApproveRejectTablePage> {
         );
       },
       builder: (context, state) {
-        return isLoading
-            ? const Center(child: CircularProgressIndicator())  // Show loader while updating
-            : ElevatedButton(
-          style: ElevatedButton.styleFrom(backgroundColor: kcobservationgreen),
-          onPressed: () async {
-            if (selectedIndices.isEmpty) return;
+        final hasSelection = selectedIndices.isNotEmpty;
+        return ElevatedButton.icon(
+          onPressed: (isLoading || !hasSelection)
+              ? null
+              : () async {
+                  setState(() {
+                    isLoading = true;
+                  });
 
-            setState(() {
-              isLoading = true;  // Start loading before updates
-            });
+                  final selectedData = selectedIndices.map((index) {
+                    return {
+                      "uniqueIdentificationNumber": model.model[index]
+                          .uniqueIdentificationNumber
+                          .toString(),
+                      "observationText":
+                          model.model[index].observationText.toString(),
+                      "actionTaken":
+                          model.model[index].actionTaken.toString(),
+                      "status": "CLOSED",
+                      "remarks": _remarkFor(index).text,
+                      "updatedByEmpId":
+                          html.window.localStorage.getItem('kEmployeeCode')!,
+                      "updatedByEmpName":
+                          html.window.localStorage.getItem('kEmployeename')!,
+                      "updatedByEmail":
+                          html.window.localStorage.getItem('kUserEmail')!,
+                      "raisedByEmpID": model
+                          .model[index].observationRaisedByEmpUnqId
+                          .toString(),
+                      "imgURL": model.model[index].imageCompliance,
+                    };
+                  }).toList();
 
-            final selectedData = selectedIndices.map((index) {
-              return {
-                "uniqueIdentificationNumber": model.model[index].uniqueIdentificationNumber.toString(),
-                "observationText": model.model[index].observationText.toString(),
-                "actionTaken": model.model[index].actionTaken.toString(),
-                "status": "CLOSED",
-                "remarks": remarkController.text,
-                "updatedByEmpId": html.window.localStorage.getItem('kEmployeeCode')!,
-                "updatedByEmpName": html.window.localStorage.getItem('kEmployeename')!,
-                "updatedByEmail": html.window.localStorage.getItem('kUserEmail')!,
-                "raisedByEmpID": model.model[index].observationRaisedByEmpUnqId.toString(),
-                "imgURL": model.model[index].imageCompliance
-              };
-            }).toList();
-
-            // Track last update for proper loading management
-            for (int i = 0; i < selectedData.length; i++) {
-              isLastUpdate = (i == selectedData.length - 1); // Flag last request
-              await complainceApproveRejectBloc.updateObservation(selectedData[i]);
-            }
-          },
-          child: const Text("Update", style: TextStyle(color: kcWhite)),
+                  for (int i = 0; i < selectedData.length; i++) {
+                    isLastUpdate = (i == selectedData.length - 1);
+                    await complainceApproveRejectBloc
+                        .updateObservation(selectedData[i]);
+                  }
+                },
+          icon: isLoading
+              ? const SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    valueColor: AlwaysStoppedAnimation(kcWhite),
+                  ),
+                )
+              : const Icon(Icons.check_circle_outline,
+                  size: 18, color: kcWhite),
+          label: const Text('Close',
+              style: TextStyle(
+                  color: kcWhite,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700)),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: kcobservationgreen,
+            disabledBackgroundColor: kcVeryLightGrey,
+            elevation: 0,
+            padding:
+                const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
+          ),
         );
       },
     );
@@ -566,80 +811,163 @@ class _ApproveRejectTablePageState extends State<ApproveRejectTablePage> {
         );
       },
       builder: (context, state) {
-        return state.maybeWhen(
-          loading: (_) {
-            return const Center(child: CircularProgressIndicator());
-          },
-          orElse: () {
-            return ElevatedButton(
-              style: ElevatedButton.styleFrom(backgroundColor: kcRed),
-              onPressed: () async {
-                final selectedData = selectedIndices.map((index) {
-                  return {
-                    "uniqueIdentificationNumber": model.model[index].uniqueIdentificationNumber.toString(),
-                    "observationText": model.model[index].observationText.toString(),
-                    "actionTaken": model.model[index].actionTaken.toString(),
-                    "status": "IN PROGRESS",
-                    "remarks": remarkController.text,
-                    "updatedByEmpId": html.window.localStorage.getItem('kEmployeeCode')!,
-                    "updatedByEmpName": html.window.localStorage.getItem('kEmployeename')!,
-                    "updatedByEmail": html.window.localStorage.getItem('kUserEmail')!,
-                    "raisedByEmpID": model.model[index].observationRaisedByEmpUnqId.toString(),
-                    "imgURL": model.model[index].imageCompliance
-                  };
-                }).toList();
+        final loading = state.maybeWhen(loading: (_) => true, orElse: () => false);
+        final hasSelection = selectedIndices.isNotEmpty;
+        return ElevatedButton.icon(
+          onPressed: (loading || !hasSelection)
+              ? null
+              : () async {
+                  final selectedData = selectedIndices.map((index) {
+                    return {
+                      "uniqueIdentificationNumber": model.model[index]
+                          .uniqueIdentificationNumber
+                          .toString(),
+                      "observationText":
+                          model.model[index].observationText.toString(),
+                      "actionTaken":
+                          model.model[index].actionTaken.toString(),
+                      "status": "IN PROGRESS",
+                      "remarks": _remarkFor(index).text,
+                      "updatedByEmpId":
+                          html.window.localStorage.getItem('kEmployeeCode')!,
+                      "updatedByEmpName":
+                          html.window.localStorage.getItem('kEmployeename')!,
+                      "updatedByEmail":
+                          html.window.localStorage.getItem('kUserEmail')!,
+                      "raisedByEmpID": model
+                          .model[index].observationRaisedByEmpUnqId
+                          .toString(),
+                      "imgURL": model.model[index].imageCompliance,
+                    };
+                  }).toList();
 
-                // Pass the selected data to the bloc or API
-                await Future.forEach(selectedData, (data) async {
-                  await complainceApproveRejectBloc.updateObservation(data);
-                });
+                  await Future.forEach(selectedData, (data) async {
+                    await complainceApproveRejectBloc
+                        .updateObservation(data);
+                  });
 
-                // Clear selections
-                setState(() {
-                  selectedIndices.clear();
-                });
-              },
-              child: const Text("Reject", style: TextStyle(color: kcWhite),),
-            );
-          },
+                  setState(() {
+                    selectedIndices.clear();
+                  });
+                },
+          icon: loading
+              ? const SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    valueColor: AlwaysStoppedAnimation(kcWhite),
+                  ),
+                )
+              : const Icon(Icons.replay, size: 18, color: kcWhite),
+          label: const Text('Reopen',
+              style: TextStyle(
+                  color: kcWhite,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700)),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: kcRed,
+            disabledBackgroundColor: kcVeryLightGrey,
+            elevation: 0,
+            padding:
+                const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
+          ),
         );
       },
     );
   }
 
-  _buildImageContainer(AllFilterObservationModel model, int index){
+  Widget _buildRemarkCell(int index) {
+    final zebra = index.isOdd ? kcDashboardBg1 : kcWhite;
     return Container(
       width: 200,
-      height: 60,
+      constraints: const BoxConstraints(minHeight: 60),
       decoration: BoxDecoration(
-          color: Colors.white,
-          border: Border.all(color: Colors.black, width: .5)
+        color: zebra,
+        border: Border(
+          right: BorderSide(color: Colors.grey.shade200),
+          bottom: BorderSide(color: Colors.grey.shade200),
+        ),
       ),
-      child: Column(
-        children: [
-          IconButton(onPressed: (){
-            _showImageComparisonDialog(context, model, index);
-          }, icon: Image.asset("assets/images/compareimage.png", scale: 30,)),
-          const Text("Compare Image", style: TextStyle(fontSize: 12),),
-        ],
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+      child: TextField(
+        controller: _remarkFor(index),
+        maxLines: 2,
+        minLines: 1,
+        style: const TextStyle(fontSize: 12.5),
+        decoration: InputDecoration(
+          isDense: true,
+          hintText: 'Add remark…',
+          hintStyle: const TextStyle(
+            fontSize: 12,
+            color: kcLightGrey,
+          ),
+          contentPadding:
+              const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+          filled: true,
+          fillColor: kcWhite,
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(6),
+            borderSide: BorderSide(color: Colors.grey.shade300),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(6),
+            borderSide: BorderSide(color: Colors.grey.shade300),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(6),
+            borderSide: const BorderSide(color: kcvoilet, width: 1.5),
+          ),
+        ),
       ),
     );
   }
 
-  _buildRemarkContainer(){
-    return  SizedBox(
+  _buildImageContainer(AllFilterObservationModel model, int index){
+    final zebra = index.isOdd ? kcDashboardBg1 : kcWhite;
+    return Container(
       width: 200,
-      height: 60,
-      child: TextFormField(
-        maxLines: 10,
-        controller: remarkController,
-        decoration: InputDecoration(
-          hintText: "Enter Remark",
-          border: _border(),
-          errorBorder: _border(),
+      constraints: const BoxConstraints(minHeight: 60),
+      decoration: BoxDecoration(
+        color: zebra,
+        border: Border(
+          right: BorderSide(color: Colors.grey.shade200),
+          bottom: BorderSide(color: Colors.grey.shade200),
+        ),
+      ),
+      child: Center(
+        child: TextButton.icon(
+          onPressed: () => _showImageComparisonDialog(context, model, index),
+          icon: const Icon(Icons.compare_outlined,
+              size: 18, color: kcStatBlue),
+          label: const Text(
+            'Compare',
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+              color: kcStatBlue,
+            ),
+          ),
+          style: TextButton.styleFrom(
+            backgroundColor: kcStatBlue.withOpacity(0.08),
+            padding:
+                const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
+          ),
         ),
       ),
     );
+  }
+
+  // Deprecated: replaced by per-row _buildRemarkCell; kept as no-op for any
+  // stragglers calling it.
+  Widget _buildRemarkContainer(){
+    return const SizedBox.shrink();
   }
 
   void _showImageComparisonDialog(BuildContext context,AllFilterObservationModel model, int index ) {
@@ -661,9 +989,9 @@ class _ApproveRejectTablePageState extends State<ApproveRejectTablePage> {
                     child: SizedBox(
                       height: 200,
                       width: 400,
-                      child: Image.network(
-                        model.model[index].imageNumber, // Replace with your second image URL or AssetImage
-                        fit: BoxFit.cover,
+                      child: ProgressiveImage(
+                        highUrl: model.model[index].imageNumber,
+                        lowUrl: model.model[index].lowQualityImageUrl,
                       ),
                     ),
                   ),
@@ -677,9 +1005,8 @@ class _ApproveRejectTablePageState extends State<ApproveRejectTablePage> {
                     child: SizedBox(
                       height: 200,
                       width: 400,
-                      child: Image.network(
-                        model.model[index].imageCompliance, // Replace with your first image URL or AssetImage
-                        fit: BoxFit.cover,
+                      child: ProgressiveImage(
+                        highUrl: model.model[index].imageCompliance,
                       ),
                     ),
                   ),

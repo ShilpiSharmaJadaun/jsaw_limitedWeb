@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 import 'package:jsaw_limited/bloc/approve_compliance_bloc.dart';
+import 'package:jsaw_limited/utils/progressive_image.dart';
 import 'package:provider/provider.dart';
 import 'package:responsive_builder/responsive_builder.dart';
 import '../bloc/allDepart_bloc.dart';
@@ -192,111 +193,214 @@ class _ApprovedObservationPageState extends State<ApprovedObservationPage> {
   }
 
   Widget _buildContent(AllFilterObservationModel model) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.start,
-      crossAxisAlignment: CrossAxisAlignment.start,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        // const AppDrawer(),
-        Expanded(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    ElevatedButton.icon(
-                      onPressed: model.totalItems != 0 && currentPage > 0 ? _previousPage : null,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: kcvoilet,
-                        foregroundColor: kcWhite,
-                        disabledBackgroundColor: kcVeryLightGrey,
-                        disabledForegroundColor: kcLightGrey,
-                        elevation: 0,
-                        fixedSize: const Size(140, 40),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
-                      ),
-                      icon: const Icon(Icons.chevron_left, size: 18),
-                      label: const Text("Previous"),
-                    ),
-                    Text(
-                      model.totalItems == 0
-                          ? "No records"
-                          : "Page $currentPage of ${model.totalPages}",
-                      style: const TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                        color: kcValueDark,
-                      ),
-                    ),
-                    Row(
-                      children: [
-                        Container(
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFD4F4DD),
-                            borderRadius: BorderRadius.circular(6),
-                          ),
-                          child: IconButton(
-                            tooltip: 'Refresh',
-                            onPressed: () {
-                              setState(() {
-                                currentPage = 0;
-                              });
-                              allFilterObservationBloc.initState(0, "", "", "", "", "", "COMPLIANCE", "", "", "", "", "");
-                            },
-                            icon: Icon(Icons.refresh, color: kcStatGreen),
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        ElevatedButton.icon(
-                          onPressed: () {
-                            uniqueIdBloc.initState();
-                            openFilterDialog();
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: kcvoilet,
-                            foregroundColor: kcWhite,
-                            fixedSize: const Size(120, 40),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
-                          ),
-                          icon: const Icon(Icons.filter_alt_outlined, size: 18),
-                          label: const Text("Filter"),
-                        ),
-                        const SizedBox(width: 8),
-                        ElevatedButton.icon(
-                          onPressed: model.totalItems != 0 && currentPage < model.totalPages
-                              ? _nextPage
-                              : null,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: kcvoilet,
-                            foregroundColor: kcWhite,
-                            disabledBackgroundColor: kcVeryLightGrey,
-                            disabledForegroundColor: kcLightGrey,
-                            elevation: 0,
-                            fixedSize: const Size(140, 40),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
-                          ),
-                          icon: const Icon(Icons.chevron_right, size: 18),
-                          label: const Text("Next"),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-              const Divider(height: 1, color: kcVeryLightGrey),
-              _buildList(model)
-            ],
-          ),
-        ),
+        _buildTopBar(model),
+        const Divider(height: 1, color: kcVeryLightGrey),
+        Expanded(child: _buildList(model)),
       ],
     );
   }
+
+  Widget _buildTopBar(AllFilterObservationModel model) {
+    final hasPrev = model.totalItems != 0 && currentPage > 0;
+    final hasNext = model.totalItems != 0 && currentPage < model.totalPages;
+    return Container(
+      padding:
+          const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      decoration: const BoxDecoration(
+        color: kcWhite,
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          _pageButton(
+            icon: Icons.chevron_left_rounded,
+            label: 'Prev',
+            enabled: hasPrev,
+            onPressed: _previousPage,
+          ),
+          Container(
+            padding:
+                const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            decoration: BoxDecoration(
+              color: kcvoilet.withOpacity(0.06),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                  color: kcvoilet.withOpacity(0.15), width: 1),
+            ),
+            child: Text(
+              model.totalItems == 0
+                  ? 'No records'
+                  : 'Page ${currentPage + 1} of ${model.totalPages}',
+              style: const TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: kcvoilet,
+              ),
+            ),
+          ),
+          Row(
+            children: [
+              _toolbarIconButton(
+                icon: Icons.refresh_rounded,
+                tooltip: 'Refresh',
+                color: kcStatGreen,
+                onPressed: () {
+                  setState(() => currentPage = 0);
+                  allFilterObservationBloc.initState(
+                      0, '', '', '', '', '', 'COMPLIANCE', '', '', '', '', '');
+                },
+              ),
+              const SizedBox(width: 10),
+              ElevatedButton.icon(
+                onPressed: () {
+                  uniqueIdBloc.initState();
+                  openFilterDialog();
+                },
+                icon: const Icon(Icons.filter_alt_outlined, size: 16),
+                label: const Text('Filter',
+                    style: TextStyle(
+                        fontWeight: FontWeight.w600, fontSize: 14)),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: kcvoilet,
+                  foregroundColor: kcWhite,
+                  fixedSize: const Size(120, 38),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8)),
+                  elevation: 0,
+                ),
+              ),
+              const SizedBox(width: 10),
+              _pageButton(
+                icon: Icons.chevron_right_rounded,
+                label: 'Next',
+                enabled: hasNext,
+                onPressed: _nextPage,
+                iconAfter: true,
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _toolbarIconButton({
+    required IconData icon,
+    required String tooltip,
+    required Color color,
+    required VoidCallback onPressed,
+  }) {
+    return Tooltip(
+      message: tooltip,
+      child: InkWell(
+        onTap: onPressed,
+        borderRadius: BorderRadius.circular(8),
+        child: Container(
+          width: 38,
+          height: 38,
+          decoration: BoxDecoration(
+            color: color.withOpacity(0.12),
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: color.withOpacity(0.3), width: 1),
+          ),
+          child: Icon(icon, color: color, size: 20),
+        ),
+      ),
+    );
+  }
+
+  Widget _pageButton({
+    required IconData icon,
+    required String label,
+    required bool enabled,
+    required VoidCallback onPressed,
+    bool iconAfter = false,
+  }) {
+    return AnimatedOpacity(
+      opacity: enabled ? 1.0 : 0.35,
+      duration: const Duration(milliseconds: 200),
+      child: ElevatedButton(
+        onPressed: enabled ? onPressed : null,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: kcvoilet,
+          foregroundColor: kcWhite,
+          disabledBackgroundColor: kcLightGrey,
+          shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8)),
+          padding:
+              const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+          elevation: 0,
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: iconAfter
+              ? [
+                  Text(label,
+                      style: const TextStyle(
+                          fontWeight: FontWeight.w600, fontSize: 13)),
+                  const SizedBox(width: 4),
+                  Icon(icon, size: 18),
+                ]
+              : [
+                  Icon(icon, size: 18),
+                  const SizedBox(width: 4),
+                  Text(label,
+                      style: const TextStyle(
+                          fontWeight: FontWeight.w600, fontSize: 13)),
+                ],
+        ),
+      ),
+    );
+  }
   
-  Widget _buildList(AllFilterObservationModel model){
+  Widget _buildList(AllFilterObservationModel model) {
+    if (model.model.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.inbox_outlined, color: kcLightGrey.withOpacity(0.6), size: 64),
+            const SizedBox(height: 12),
+            const Text(
+              'No records pending approval',
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: kcLabelGrey,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+    return ListView.builder(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      itemCount: model.model.length,
+      itemBuilder: (BuildContext context, int index) {
+        final item = model.model[index];
+        return _ApprovedObservationCard(
+          item: item,
+          onOpen: () async {
+            final shouldInit = await Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (context) => ApproveObservationDetailPage(model: item),
+                fullscreenDialog: true,
+              ),
+            );
+            if (shouldInit != null && shouldInit) {
+              allFilterObservationBloc.initState(
+                  currentPage, '', '', '', '', '', 'COMPLIANCE', '', '', '', '', '');
+            }
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildList_OLD_UNUSED(AllFilterObservationModel model){
     return  Expanded(
       child: ListView.builder(
           itemCount: model.model.length,
@@ -313,10 +417,9 @@ class _ApprovedObservationPageState extends State<ApprovedObservationPage> {
                         child: SizedBox(
                           width: 200,
                           height: 200,
-                          child: Image.network(
-                            alignment: Alignment.center,
-                            model.model[index].imageCompliance,
-                            //fit: BoxFi,
+                          child: ProgressiveImage(
+                            highUrl: model.model[index].imageCompliance,
+                            fit: BoxFit.contain,
                           ),
                         ),
                       ),
@@ -2633,5 +2736,421 @@ class UniqueIdSearchableListNotifier extends ValueNotifier<List<UniqueIdModel>> 
       value = initialValue.where((e) => e.uniqueIdentificationNumber.toLowerCase().contains(query.toLowerCase())).toList();
     }
     notifyListeners();
+  }
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// Approval Queue Card — mirrors Observation page card styling
+// ────────────────────────────────────────────────────────────────────────────
+class _ApprovedObservationCard extends StatelessWidget {
+  final dynamic item;
+  final VoidCallback onOpen;
+
+  const _ApprovedObservationCard({
+    required this.item,
+    required this.onOpen,
+  });
+
+  Color _statusColor(String s) {
+    switch (s.trim().toUpperCase()) {
+      case 'CLOSED':
+      case 'COMPLIANCE':
+        return kcStatGreen;
+      case 'PENDING':
+        return kcStatAmber;
+      case 'IN PROGRESS':
+        return kcStatPurple;
+      case 'REJECTED':
+        return kcRed;
+      default:
+        return kcLightGrey;
+    }
+  }
+
+  Color _hex(String h) {
+    h = h.replaceFirst('#', '');
+    if (h.length == 6) h = 'FF$h';
+    return Color(int.parse(h, radix: 16));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      decoration: BoxDecoration(
+        color: kcWhite,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: kcVeryLightGrey, width: 1),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.06),
+            blurRadius: 14,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // ----- Image -----
+            ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: SizedBox(
+                width: 220,
+                height: 200,
+                child: ProgressiveImage(
+                  highUrl: item.imageCompliance,
+                ),
+              ),
+            ),
+            const SizedBox(width: 12),
+            // ----- Content -----
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // 3-column info grid
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            _infoSection(Icons.person_outline_rounded,
+                                kcStatBlue, 'Raised By', item.observationRaisedBy, kcValueDark),
+                            _infoSection(Icons.factory_outlined,
+                                kcStatGreen, 'Plant / Dept', item.plantDept, kcValueDark),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            _infoSection(Icons.qr_code_2_outlined,
+                                kcvoilet, 'Unique ID', item.uniqueIdentificationNumber, kcValueDark),
+                            _infoSection(Icons.location_on_outlined,
+                                kcStatRed, 'Location', item.location, kcValueDark),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            _infoSection(Icons.assignment_ind_outlined,
+                                kcStatPurple, 'Responsibility', item.responsibility, kcmegenta),
+                            _infoSection(Icons.workspace_premium_outlined,
+                                _statusColor(item.status), 'Status', item.status, _statusColor(item.status)),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  // Gradient divider
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 10),
+                    child: Container(
+                      height: 1,
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            Colors.transparent,
+                            Colors.grey.shade300,
+                            Colors.transparent,
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                  // Date pills row: Raised + Target
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: Row(
+                          children: [
+                            _iconBadge(Icons.event_note_outlined, kcStatAmber),
+                            const SizedBox(width: 8),
+                            _label('Raised Date :'),
+                            const SizedBox(width: 6),
+                            Flexible(child: _pillBadge(item.raisedDate, kcStatAmber)),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Row(
+                          children: [
+                            _iconBadge(Icons.event_outlined, kcvoilet),
+                            const SizedBox(width: 8),
+                            _label('Target Date :'),
+                            const SizedBox(width: 6),
+                            Flexible(
+                              child: _pillBadge(item.observationCompletionTargetDate, kcvoilet),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                  // Compliance + Priority row
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: Row(
+                          children: [
+                            _iconBadge(Icons.event_available_outlined, kcStatGreen),
+                            const SizedBox(width: 8),
+                            _label('Compliance Date :'),
+                            const SizedBox(width: 6),
+                            Flexible(
+                              child: _pillBadge(
+                                item.complianceDate.toString().trim().isEmpty
+                                    ? '—'
+                                    : item.complianceDate,
+                                item.complianceDate.toString().trim().isEmpty
+                                    ? kcLightGrey
+                                    : kcStatGreen,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Row(
+                          children: [
+                            _iconBadge(Icons.flag_outlined,
+                                _hex(item.priorityStatusColour)),
+                            const SizedBox(width: 8),
+                            _label('Priority :'),
+                            const SizedBox(width: 6),
+                            Flexible(
+                              child: _pillBadge(
+                                item.priorityStatusName,
+                                _hex(item.priorityStatusColour),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  // Observation
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _iconBadge(Icons.visibility_outlined, kcObservationCyan),
+                      const SizedBox(width: 8),
+                      _label('Observation :'),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          item.observationText,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            color: kcValueDark,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                  // Action Taken + open button
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _iconBadge(Icons.lightbulb_outline, kcInfoResponsibility),
+                      const SizedBox(width: 8),
+                      _label('Action Taken :'),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          item.actionTaken.toString().trim().isEmpty
+                              ? '—'
+                              : item.actionTaken,
+                          maxLines: 3,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            color: kcValueDark,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      ElevatedButton.icon(
+                        onPressed: onOpen,
+                        icon: const Icon(Icons.arrow_forward_ios,
+                            size: 14, color: kcWhite),
+                        label: const Text(
+                          'Review',
+                          style: TextStyle(
+                            color: kcWhite,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: kcvoilet,
+                          elevation: 0,
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 14, vertical: 10),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ----- Reusable building blocks -----
+
+  Widget _infoSection(IconData icon, Color iconColor, String label,
+      String value, Color valueColor) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              _iconBadge(icon, iconColor),
+              const SizedBox(width: 6),
+              _label('$label :'),
+            ],
+          ),
+          _valueBox(value, valueColor, accent: iconColor),
+        ],
+      ),
+    );
+  }
+
+  Widget _iconBadge(IconData icon, Color color) {
+    return Container(
+      padding: const EdgeInsets.all(6),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.12),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Icon(icon, color: color, size: 18),
+    );
+  }
+
+  Widget _pillBadge(String text, Color color) {
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [color, color.withOpacity(0.85)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: color.withOpacity(0.3),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+        child: Text(
+          text,
+          style: const TextStyle(
+            color: kcWhite,
+            fontWeight: FontWeight.w600,
+            fontSize: 13,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _label(String t) => Text(
+        t,
+        style: const TextStyle(
+          fontSize: 13,
+          fontWeight: FontWeight.w600,
+          color: kcLabelGrey,
+        ),
+      );
+
+  Widget _valueBox(String value, Color color, {Color? accent}) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+      child: Container(
+        width: double.infinity,
+        constraints: const BoxConstraints(minHeight: 30),
+        decoration: BoxDecoration(
+          color: kcWhite,
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: Colors.grey.shade200, width: 1),
+          boxShadow: [
+            BoxShadow(
+              color: (accent ?? Colors.black).withOpacity(0.06),
+              blurRadius: 6,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: IntrinsicHeight(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              if (accent != null)
+                Container(
+                  width: 3,
+                  decoration: BoxDecoration(
+                    color: accent,
+                    borderRadius: const BorderRadius.only(
+                      topLeft: Radius.circular(10),
+                      bottomLeft: Radius.circular(10),
+                    ),
+                  ),
+                ),
+              Expanded(
+                child: Padding(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                  child: Text(
+                    value.isEmpty ? '—' : value,
+                    maxLines: 3,
+                    textAlign: TextAlign.center,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 13,
+                      color: color,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }

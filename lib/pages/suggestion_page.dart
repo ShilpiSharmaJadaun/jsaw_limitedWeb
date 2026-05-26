@@ -6,6 +6,7 @@ import 'package:jsaw_limited/bloc/suggestion_feedback_bloc.dart';
 import 'package:jsaw_limited/model/raised_feedback_model.dart';
 import 'package:jsaw_limited/state/suggestion_feedback_state.dart';
 import 'package:jsaw_limited/state/suggestion_state.dart';
+import 'package:jsaw_limited/utils/progressive_image.dart';
 import 'package:provider/provider.dart';
 import 'package:responsive_builder/responsive_builder.dart';
 import '../bloc/allobservation_bloc.dart';
@@ -54,91 +55,87 @@ class _SuggestionFeedbackPageState extends State<SuggestionFeedbackPage> with Si
 
   Widget build(BuildContext context) {
     return WillPopScope(
-      onWillPop: ()async{
-        return true;
-      },
+      onWillPop: () async => true,
       child: Scaffold(
-        body:  Row(
-          mainAxisAlignment: MainAxisAlignment.start,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-           // const AppDrawer(),
-            Expanded(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                mainAxisAlignment: MainAxisAlignment.start,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                //  PageHeader("Complaints"),
-                  TabBar(
-                    isScrollable: false,
-                    controller: tabController,
-                    indicatorColor: kcOrange,
-                    // indicatorSize: TabBarIndicatorSize.label,
-                    tabs: const [
-                      Tab(
-                        icon: Icon(
-                          Icons.safety_check,
-                          color: kcMediumGrey,
-                        ),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(
-                              "Create Complaint",
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                color:
-                                kcMediumGrey, // Change this to your desired text color
-                              ),
-                              softWrap: true,
-                              maxLines: 2, // Allow up to two lines
-                              overflow: TextOverflow
-                                  .ellipsis, // Add ellipsis if text overflows
-                            ),
-                          ],
-                        ),
-                      ),
-                      Tab(
-                        icon: Icon(
-                          Icons.search_rounded,
-                          color: kcMediumGrey,
-                        ),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(
-                              "Raised Complaint",
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                color:
-                                kcMediumGrey, // Change this to your desired text color
-                              ),
-                              softWrap: true,
-                              maxLines: 2, // Allow up to two lines
-                              overflow: TextOverflow
-                                  .ellipsis, // Add ellipsis if text overflows
-                            ),
-                          ],
-                        ),
+        backgroundColor: kcDashboardBg1,
+        body: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [kcDashboardBg1, kcDashboardBg2],
+            ),
+          ),
+          child: Column(
+            children: [
+              const SizedBox(height: 12),
+              Container(
+                margin: const EdgeInsets.symmetric(horizontal: 20),
+                decoration: BoxDecoration(
+                  color: kcWhite,
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(12),
+                    topRight: Radius.circular(12),
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.04),
+                      blurRadius: 6,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: TabBar(
+                  controller: tabController,
+                  labelColor: kcOrange,
+                  unselectedLabelColor: kcLabelGrey,
+                  indicatorColor: kcOrange,
+                  indicatorWeight: 3,
+                  tabs: const [
+                    Tab(
+                      icon: Icon(Icons.feedback_outlined),
+                      text: 'Create Complaint',
+                    ),
+                    Tab(
+                      icon: Icon(Icons.list_alt_outlined),
+                      text: 'Raised Complaints',
+                    ),
+                  ],
+                ),
+              ),
+              Expanded(
+                child: Container(
+                  margin: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+                  decoration: BoxDecoration(
+                    color: kcWhite,
+                    borderRadius: const BorderRadius.only(
+                      bottomLeft: Radius.circular(12),
+                      bottomRight: Radius.circular(12),
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.04),
+                        blurRadius: 6,
+                        offset: const Offset(0, 2),
                       ),
                     ],
                   ),
-                  Expanded(
-                   // height: 500,
-                    child: TabBarView(controller: tabController, children: const [
+                  child: TabBarView(
+                    controller: tabController,
+                    children: const [
                       SuggestionPage(),
                       RaisedSuggestionPage(),
-                    ]),
-                  )
-                ],
+                    ],
+                  ),
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
   }
+
 
   // Titles for each drawer item
   static const drawerTitles = <String>[
@@ -512,63 +509,90 @@ class _SuggestionPageState extends State<SuggestionPage> {
         state.maybeWhen(
           success: (_, message) {
             ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-              content: Text(message ?? "Sent Successfully"),
+              content: Text(message ?? "Complaint submitted successfully"),
+              backgroundColor: kcobservationgreen,
             ));
-             },
+            titleController.clear();
+            suggestionController.clear();
+            dateTimeController.clear();
+            priority.value = "Select Priority";
+            priorityColor = "";
+            setState(() => _selectedImage = null);
+            RaisedSuggestionPage.refresh?.call();
+          },
           failed: (_, message) {
-            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+              content: Text(message),
+              backgroundColor: kcRed,
+            ));
           },
           orElse: () {},
         );
       },
       builder: (context, state) {
-        return state.maybeWhen(
-          loading: (_) {
-            return const Center(child: CircularProgressIndicator());
-          },
-          orElse: () {
-            return Align(
-              alignment: Alignment.bottomCenter,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 50),
-                child: ElevatedButton(
-                  onPressed: () async {
-                    await saveSuggestionBloc.saveSuggestion(_selectedImage!,
-                        titleController.text, suggestionController.text,
-                        dateTimeController.text, "1.1",
-                        determineOperatingSystem(), priority.value, html.window.localStorage.getItem('kEmployeeCode') ?? "",
-                        html.window.localStorage.getItem('kEmployeename')  ?? "", "pending");
-
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: kcvoilet,
-                    fixedSize: const Size(200, 40)
-                ), child: const Text("Submit",
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: kcWhite),
-                ),),
+        final isLoading = state.maybeWhen(
+          loading: (_) => true,
+          orElse: () => false,
+        );
+        return Padding(
+          padding: const EdgeInsets.all(16),
+          child: SizedBox(
+            width: 400,
+            child: ElevatedButton.icon(
+              onPressed: isLoading
+                  ? null
+                  : () async {
+                      if (_selectedImage == null) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Please pick an image first.'),
+                            backgroundColor: kcRed,
+                          ),
+                        );
+                        return;
+                      }
+                      await saveSuggestionBloc.saveSuggestion(
+                          _selectedImage!,
+                          titleController.text,
+                          suggestionController.text,
+                          dateTimeController.text,
+                          "1.1",
+                          determineOperatingSystem(),
+                          priority.value,
+                          html.window.localStorage.getItem('kEmployeeCode') ?? "",
+                          html.window.localStorage.getItem('kEmployeename') ?? "",
+                          "pending");
+                    },
+              icon: isLoading
+                  ? const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        valueColor: AlwaysStoppedAnimation(kcWhite),
+                      ),
+                    )
+                  : const Icon(Icons.send_outlined, size: 18, color: kcWhite),
+              label: const Text(
+                "Submit Complaint",
+                style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
+                    color: kcWhite),
               ),
-            );
-
-
-              Center(
-              child: Padding(
-                padding: const EdgeInsets.all(10.0),
-                child: ElevatedButton(
-                  onPressed: () async {
-
-                  },
-                  child: const Text("Update Changes"),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: kcobservationgreen,
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
                 ),
               ),
-            );
-          },
+            ),
+          ),
         );
       },
     );
-
-
-
-
   }
 
   Color hexToColor(String hexString) {
@@ -636,6 +660,10 @@ class PrioritySearchableListNotifier extends ValueNotifier<List<PriorityModel>> 
 class RaisedSuggestionPage extends StatefulWidget {
   const RaisedSuggestionPage({super.key});
 
+  /// Called by SuggestionPage after a successful submit to refresh the list
+  /// from the sibling tab without sharing a bloc.
+  static void Function()? refresh;
+
   @override
   State<RaisedSuggestionPage> createState() => _RaisedSuggestionPageState();
 }
@@ -644,17 +672,28 @@ class _RaisedSuggestionPageState extends State<RaisedSuggestionPage> {
 
   late final SuggestionFeedbackBloc suggestionFeedbackBloc;
 
+  @override
   void initState() {
     super.initState();
     final observationService = Provider.of<ObservationService>(context, listen: false);
     suggestionFeedbackBloc = SuggestionFeedbackBloc(observationService);
     suggestionFeedbackBloc.initState();
+    RaisedSuggestionPage.refresh = () {
+      if (mounted) suggestionFeedbackBloc.initState();
+    };
+  }
+
+  @override
+  void dispose() {
+    RaisedSuggestionPage.refresh = null;
+    super.dispose();
   }
 
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: kcDashboardBg1,
       body: _buildObservation(),
     );
   }
@@ -692,12 +731,12 @@ class _RaisedSuggestionPageState extends State<RaisedSuggestionPage> {
                 children: [
                   Padding(
                     padding: const EdgeInsets.all(8),
-                    child: Container(
+                    child: SizedBox(
                       width: 200,
                       height: 200,
-                      child: Image.network(
-                        alignment: Alignment.center,
-                        model[index].attachments,
+                      child: ProgressiveImage(
+                        highUrl: model[index].attachments,
+                        lowUrl: model[index].lowQualityImageUrl,
                         fit: BoxFit.scaleDown,
                       ),
                     ),

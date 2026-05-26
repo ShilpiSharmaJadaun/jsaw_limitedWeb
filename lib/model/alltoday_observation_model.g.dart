@@ -34,6 +34,8 @@ _$AllTodayObservationModelImpl _$$AllTodayObservationModelImplFromJson(
       responsibilityHODEmpUnqID:
           json['responsibilityHODEmpUnqID'] as String? ?? "",
       stationCode: json['stationCode'] as String? ?? "",
+      lowQualityImageUrl: json['lowQualityImageUrl'] as String? ?? "",
+      highQualityImageUrl: json['highQualityImageUrl'] as String? ?? "",
     );
 
 Map<String, dynamic> _$$AllTodayObservationModelImplToJson(
@@ -61,4 +63,6 @@ Map<String, dynamic> _$$AllTodayObservationModelImplToJson(
       'responsibilityHODName': instance.responsibilityHODName,
       'responsibilityHODEmpUnqID': instance.responsibilityHODEmpUnqID,
       'stationCode': instance.stationCode,
+      'lowQualityImageUrl': instance.lowQualityImageUrl,
+      'highQualityImageUrl': instance.highQualityImageUrl,
     };

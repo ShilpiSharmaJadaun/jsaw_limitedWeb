@@ -43,6 +43,8 @@ mixin _$AllTodayObservationModel {
   String get responsibilityHODName => throw _privateConstructorUsedError;
   String get responsibilityHODEmpUnqID => throw _privateConstructorUsedError;
   String get stationCode => throw _privateConstructorUsedError;
+  String get lowQualityImageUrl => throw _privateConstructorUsedError;
+  String get highQualityImageUrl => throw _privateConstructorUsedError;
 
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
   @JsonKey(ignore: true)
@@ -78,7 +80,9 @@ abstract class $AllTodayObservationModelCopyWith<$Res> {
       String raisedDate,
       String responsibilityHODName,
       String responsibilityHODEmpUnqID,
-      String stationCode});
+      String stationCode,
+      String lowQualityImageUrl,
+      String highQualityImageUrl});
 }
 
 /// @nodoc
@@ -117,6 +121,8 @@ class _$AllTodayObservationModelCopyWithImpl<$Res,
     Object? responsibilityHODName = null,
     Object? responsibilityHODEmpUnqID = null,
     Object? stationCode = null,
+    Object? lowQualityImageUrl = null,
+    Object? highQualityImageUrl = null,
   }) {
     return _then(_value.copyWith(
       id: null == id
@@ -207,6 +213,14 @@ class _$AllTodayObservationModelCopyWithImpl<$Res,
           ? _value.stationCode
           : stationCode // ignore: cast_nullable_to_non_nullable
               as String,
+      lowQualityImageUrl: null == lowQualityImageUrl
+          ? _value.lowQualityImageUrl
+          : lowQualityImageUrl // ignore: cast_nullable_to_non_nullable
+              as String,
+      highQualityImageUrl: null == highQualityImageUrl
+          ? _value.highQualityImageUrl
+          : highQualityImageUrl // ignore: cast_nullable_to_non_nullable
+              as String,
     ) as $Val);
   }
 }
@@ -242,7 +256,9 @@ abstract class _$$AllTodayObservationModelImplCopyWith<$Res>
       String raisedDate,
       String responsibilityHODName,
       String responsibilityHODEmpUnqID,
-      String stationCode});
+      String stationCode,
+      String lowQualityImageUrl,
+      String highQualityImageUrl});
 }
 
 /// @nodoc
@@ -280,6 +296,8 @@ class __$$AllTodayObservationModelImplCopyWithImpl<$Res>
     Object? responsibilityHODName = null,
     Object? responsibilityHODEmpUnqID = null,
     Object? stationCode = null,
+    Object? lowQualityImageUrl = null,
+    Object? highQualityImageUrl = null,
   }) {
     return _then(_$AllTodayObservationModelImpl(
       id: null == id
@@ -370,6 +388,14 @@ class __$$AllTodayObservationModelImplCopyWithImpl<$Res>
           ? _value.stationCode
           : stationCode // ignore: cast_nullable_to_non_nullable
               as String,
+      lowQualityImageUrl: null == lowQualityImageUrl
+          ? _value.lowQualityImageUrl
+          : lowQualityImageUrl // ignore: cast_nullable_to_non_nullable
+              as String,
+      highQualityImageUrl: null == highQualityImageUrl
+          ? _value.highQualityImageUrl
+          : highQualityImageUrl // ignore: cast_nullable_to_non_nullable
+              as String,
     ));
   }
 }
@@ -399,7 +425,9 @@ class _$AllTodayObservationModelImpl implements _AllTodayObservationModel {
       this.raisedDate = "",
       this.responsibilityHODName = "",
       this.responsibilityHODEmpUnqID = "",
-      this.stationCode = ""});
+      this.stationCode = "",
+      this.lowQualityImageUrl = "",
+      this.highQualityImageUrl = ""});
 
   factory _$AllTodayObservationModelImpl.fromJson(Map<String, dynamic> json) =>
       _$$AllTodayObservationModelImplFromJson(json);
@@ -470,10 +498,16 @@ class _$AllTodayObservationModelImpl implements _AllTodayObservationModel {
   @override
   @JsonKey()
   final String stationCode;
+  @override
+  @JsonKey()
+  final String lowQualityImageUrl;
+  @override
+  @JsonKey()
+  final String highQualityImageUrl;
 
   @override
   String toString() {
-    return 'AllTodayObservationModel(id: $id, observationRaisedBy: $observationRaisedBy, observationRaisedByEmpUnqId: $observationRaisedByEmpUnqId, uniqueIdentificationNumber: $uniqueIdentificationNumber, plantDept: $plantDept, plantDeptCode: $plantDeptCode, location: $location, observationText: $observationText, imageNumber: $imageNumber, actionTaken: $actionTaken, responsibility: $responsibility, status: $status, hazardCategory: $hazardCategory, stationName: $stationName, remarks: $remarks, imageCompliance: $imageCompliance, priorityStatusName: $priorityStatusName, priorityStatusColour: $priorityStatusColour, raisedDate: $raisedDate, responsibilityHODName: $responsibilityHODName, responsibilityHODEmpUnqID: $responsibilityHODEmpUnqID, stationCode: $stationCode)';
+    return 'AllTodayObservationModel(id: $id, observationRaisedBy: $observationRaisedBy, observationRaisedByEmpUnqId: $observationRaisedByEmpUnqId, uniqueIdentificationNumber: $uniqueIdentificationNumber, plantDept: $plantDept, plantDeptCode: $plantDeptCode, location: $location, observationText: $observationText, imageNumber: $imageNumber, actionTaken: $actionTaken, responsibility: $responsibility, status: $status, hazardCategory: $hazardCategory, stationName: $stationName, remarks: $remarks, imageCompliance: $imageCompliance, priorityStatusName: $priorityStatusName, priorityStatusColour: $priorityStatusColour, raisedDate: $raisedDate, responsibilityHODName: $responsibilityHODName, responsibilityHODEmpUnqID: $responsibilityHODEmpUnqID, stationCode: $stationCode, lowQualityImageUrl: $lowQualityImageUrl, highQualityImageUrl: $highQualityImageUrl)';
   }
 
   @override
@@ -522,11 +556,14 @@ class _$AllTodayObservationModelImpl implements _AllTodayObservationModel {
                 other.raisedDate == raisedDate) &&
             (identical(other.responsibilityHODName, responsibilityHODName) ||
                 other.responsibilityHODName == responsibilityHODName) &&
-            (identical(other.responsibilityHODEmpUnqID,
-                    responsibilityHODEmpUnqID) ||
+            (identical(other.responsibilityHODEmpUnqID, responsibilityHODEmpUnqID) ||
                 other.responsibilityHODEmpUnqID == responsibilityHODEmpUnqID) &&
             (identical(other.stationCode, stationCode) ||
-                other.stationCode == stationCode));
+                other.stationCode == stationCode) &&
+            (identical(other.lowQualityImageUrl, lowQualityImageUrl) ||
+                other.lowQualityImageUrl == lowQualityImageUrl) &&
+            (identical(other.highQualityImageUrl, highQualityImageUrl) ||
+                other.highQualityImageUrl == highQualityImageUrl));
   }
 
   @JsonKey(ignore: true)
@@ -554,7 +591,9 @@ class _$AllTodayObservationModelImpl implements _AllTodayObservationModel {
         raisedDate,
         responsibilityHODName,
         responsibilityHODEmpUnqID,
-        stationCode
+        stationCode,
+        lowQualityImageUrl,
+        highQualityImageUrl
       ]);
 
   @JsonKey(ignore: true)
@@ -595,7 +634,9 @@ abstract class _AllTodayObservationModel implements AllTodayObservationModel {
       final String raisedDate,
       final String responsibilityHODName,
       final String responsibilityHODEmpUnqID,
-      final String stationCode}) = _$AllTodayObservationModelImpl;
+      final String stationCode,
+      final String lowQualityImageUrl,
+      final String highQualityImageUrl}) = _$AllTodayObservationModelImpl;
 
   factory _AllTodayObservationModel.fromJson(Map<String, dynamic> json) =
       _$AllTodayObservationModelImpl.fromJson;
@@ -644,6 +685,10 @@ abstract class _AllTodayObservationModel implements AllTodayObservationModel {
   String get responsibilityHODEmpUnqID;
   @override
   String get stationCode;
+  @override
+  String get lowQualityImageUrl;
+  @override
+  String get highQualityImageUrl;
   @override
   @JsonKey(ignore: true)
   _$$AllTodayObservationModelImplCopyWith<_$AllTodayObservationModelImpl>

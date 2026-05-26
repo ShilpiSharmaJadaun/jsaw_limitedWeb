@@ -10,6 +10,8 @@ class EmployeeShiftModel with _$EmployeeShiftModel{
     @Default("") String shiftCode,
     @Default(0) int shiftSeq,
     @Default("") String shiftDesc,
+    @Default("") String shiftStart,
+    @Default("") String shiftEnd,
 
 
   }) = _EmployeeShiftModel;

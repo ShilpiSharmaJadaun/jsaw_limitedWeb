@@ -40,6 +40,8 @@ _$CompleteSafetyRemarkModelImpl _$$CompleteSafetyRemarkModelImplFromJson(
       medicalOfficerRemarks: json['medicalOfficerRemarks'] as String? ?? "",
       safetyRemarks: json['safetyRemarks'] as String? ?? "",
       raisedDate: json['raisedDate'] as String? ?? "",
+      lowQualityImageUrl: json['lowQualityImageUrl'] as String? ?? "",
+      highQualityImageUrl: json['highQualityImageUrl'] as String? ?? "",
     );
 
 Map<String, dynamic> _$$CompleteSafetyRemarkModelImplToJson(
@@ -76,4 +78,6 @@ Map<String, dynamic> _$$CompleteSafetyRemarkModelImplToJson(
       'medicalOfficerRemarks': instance.medicalOfficerRemarks,
       'safetyRemarks': instance.safetyRemarks,
       'raisedDate': instance.raisedDate,
+      'lowQualityImageUrl': instance.lowQualityImageUrl,
+      'highQualityImageUrl': instance.highQualityImageUrl,
     };

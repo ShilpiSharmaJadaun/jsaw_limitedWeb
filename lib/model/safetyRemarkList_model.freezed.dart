@@ -51,6 +51,8 @@ mixin _$SafetyRemarkListModel {
   int get restUpto => throw _privateConstructorUsedError;
   String get fitForDutyFrom => throw _privateConstructorUsedError;
   String get raisedDate => throw _privateConstructorUsedError;
+  String get lowQualityImageUrl => throw _privateConstructorUsedError;
+  String get highQualityImageUrl => throw _privateConstructorUsedError;
 
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
   @JsonKey(ignore: true)
@@ -93,7 +95,9 @@ abstract class $SafetyRemarkListModelCopyWith<$Res> {
       String natureOfInjury,
       @JsonKey(fromJson: _restUptoFromJson) int restUpto,
       String fitForDutyFrom,
-      String raisedDate});
+      String raisedDate,
+      String lowQualityImageUrl,
+      String highQualityImageUrl});
 }
 
 /// @nodoc
@@ -139,6 +143,8 @@ class _$SafetyRemarkListModelCopyWithImpl<$Res,
     Object? restUpto = null,
     Object? fitForDutyFrom = null,
     Object? raisedDate = null,
+    Object? lowQualityImageUrl = null,
+    Object? highQualityImageUrl = null,
   }) {
     return _then(_value.copyWith(
       id: null == id
@@ -257,6 +263,14 @@ class _$SafetyRemarkListModelCopyWithImpl<$Res,
           ? _value.raisedDate
           : raisedDate // ignore: cast_nullable_to_non_nullable
               as String,
+      lowQualityImageUrl: null == lowQualityImageUrl
+          ? _value.lowQualityImageUrl
+          : lowQualityImageUrl // ignore: cast_nullable_to_non_nullable
+              as String,
+      highQualityImageUrl: null == highQualityImageUrl
+          ? _value.highQualityImageUrl
+          : highQualityImageUrl // ignore: cast_nullable_to_non_nullable
+              as String,
     ) as $Val);
   }
 }
@@ -299,7 +313,9 @@ abstract class _$$SafetyRemarkListModelImplCopyWith<$Res>
       String natureOfInjury,
       @JsonKey(fromJson: _restUptoFromJson) int restUpto,
       String fitForDutyFrom,
-      String raisedDate});
+      String raisedDate,
+      String lowQualityImageUrl,
+      String highQualityImageUrl});
 }
 
 /// @nodoc
@@ -343,6 +359,8 @@ class __$$SafetyRemarkListModelImplCopyWithImpl<$Res>
     Object? restUpto = null,
     Object? fitForDutyFrom = null,
     Object? raisedDate = null,
+    Object? lowQualityImageUrl = null,
+    Object? highQualityImageUrl = null,
   }) {
     return _then(_$SafetyRemarkListModelImpl(
       id: null == id
@@ -461,6 +479,14 @@ class __$$SafetyRemarkListModelImplCopyWithImpl<$Res>
           ? _value.raisedDate
           : raisedDate // ignore: cast_nullable_to_non_nullable
               as String,
+      lowQualityImageUrl: null == lowQualityImageUrl
+          ? _value.lowQualityImageUrl
+          : lowQualityImageUrl // ignore: cast_nullable_to_non_nullable
+              as String,
+      highQualityImageUrl: null == highQualityImageUrl
+          ? _value.highQualityImageUrl
+          : highQualityImageUrl // ignore: cast_nullable_to_non_nullable
+              as String,
     ));
   }
 }
@@ -497,7 +523,9 @@ class _$SafetyRemarkListModelImpl implements _SafetyRemarkListModel {
       this.natureOfInjury = "",
       @JsonKey(fromJson: _restUptoFromJson) this.restUpto = 0,
       this.fitForDutyFrom = "",
-      this.raisedDate = ""});
+      this.raisedDate = "",
+      this.lowQualityImageUrl = "",
+      this.highQualityImageUrl = ""});
 
   factory _$SafetyRemarkListModelImpl.fromJson(Map<String, dynamic> json) =>
       _$$SafetyRemarkListModelImplFromJson(json);
@@ -589,10 +617,16 @@ class _$SafetyRemarkListModelImpl implements _SafetyRemarkListModel {
   @override
   @JsonKey()
   final String raisedDate;
+  @override
+  @JsonKey()
+  final String lowQualityImageUrl;
+  @override
+  @JsonKey()
+  final String highQualityImageUrl;
 
   @override
   String toString() {
-    return 'SafetyRemarkListModel(id: $id, incidentReportId: $incidentReportId, incidentUniqueId: $incidentUniqueId, incidentDateTime: $incidentDateTime, shift: $shift, employeeCode: $employeeCode, employeeName: $employeeName, age: $age, contractorName: $contractorName, contCode: $contCode, plant: $plant, plantCode: $plantCode, deptName: $deptName, deptCode: $deptCode, location: $location, responsibleShiftEngg: $responsibleShiftEngg, responsibleHod: $responsibleHod, contactNumber: $contactNumber, incidentType: $incidentType, workInjury: $workInjury, descpOfIncident: $descpOfIncident, firDateTime: $firDateTime, imageUrl: $imageUrl, typeOfInjury: $typeOfInjury, bodyPart: $bodyPart, natureOfInjury: $natureOfInjury, restUpto: $restUpto, fitForDutyFrom: $fitForDutyFrom, raisedDate: $raisedDate)';
+    return 'SafetyRemarkListModel(id: $id, incidentReportId: $incidentReportId, incidentUniqueId: $incidentUniqueId, incidentDateTime: $incidentDateTime, shift: $shift, employeeCode: $employeeCode, employeeName: $employeeName, age: $age, contractorName: $contractorName, contCode: $contCode, plant: $plant, plantCode: $plantCode, deptName: $deptName, deptCode: $deptCode, location: $location, responsibleShiftEngg: $responsibleShiftEngg, responsibleHod: $responsibleHod, contactNumber: $contactNumber, incidentType: $incidentType, workInjury: $workInjury, descpOfIncident: $descpOfIncident, firDateTime: $firDateTime, imageUrl: $imageUrl, typeOfInjury: $typeOfInjury, bodyPart: $bodyPart, natureOfInjury: $natureOfInjury, restUpto: $restUpto, fitForDutyFrom: $fitForDutyFrom, raisedDate: $raisedDate, lowQualityImageUrl: $lowQualityImageUrl, highQualityImageUrl: $highQualityImageUrl)';
   }
 
   @override
@@ -653,7 +687,11 @@ class _$SafetyRemarkListModelImpl implements _SafetyRemarkListModel {
             (identical(other.fitForDutyFrom, fitForDutyFrom) ||
                 other.fitForDutyFrom == fitForDutyFrom) &&
             (identical(other.raisedDate, raisedDate) ||
-                other.raisedDate == raisedDate));
+                other.raisedDate == raisedDate) &&
+            (identical(other.lowQualityImageUrl, lowQualityImageUrl) ||
+                other.lowQualityImageUrl == lowQualityImageUrl) &&
+            (identical(other.highQualityImageUrl, highQualityImageUrl) ||
+                other.highQualityImageUrl == highQualityImageUrl));
   }
 
   @JsonKey(ignore: true)
@@ -688,7 +726,9 @@ class _$SafetyRemarkListModelImpl implements _SafetyRemarkListModel {
         natureOfInjury,
         restUpto,
         fitForDutyFrom,
-        raisedDate
+        raisedDate,
+        lowQualityImageUrl,
+        highQualityImageUrl
       ]);
 
   @JsonKey(ignore: true)
@@ -736,7 +776,9 @@ abstract class _SafetyRemarkListModel implements SafetyRemarkListModel {
       final String natureOfInjury,
       @JsonKey(fromJson: _restUptoFromJson) final int restUpto,
       final String fitForDutyFrom,
-      final String raisedDate}) = _$SafetyRemarkListModelImpl;
+      final String raisedDate,
+      final String lowQualityImageUrl,
+      final String highQualityImageUrl}) = _$SafetyRemarkListModelImpl;
 
   factory _SafetyRemarkListModel.fromJson(Map<String, dynamic> json) =
       _$SafetyRemarkListModelImpl.fromJson;
@@ -800,6 +842,10 @@ abstract class _SafetyRemarkListModel implements SafetyRemarkListModel {
   String get fitForDutyFrom;
   @override
   String get raisedDate;
+  @override
+  String get lowQualityImageUrl;
+  @override
+  String get highQualityImageUrl;
   @override
   @JsonKey(ignore: true)
   _$$SafetyRemarkListModelImplCopyWith<_$SafetyRemarkListModelImpl>

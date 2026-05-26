@@ -37,6 +37,8 @@ class CompleteSafetyRemarkModel with _$CompleteSafetyRemarkModel{
     @Default("") String medicalOfficerRemarks,
     @Default("") String safetyRemarks,
     @Default("") String raisedDate,
+    @Default("") String lowQualityImageUrl,
+    @Default("") String highQualityImageUrl,
 
   }) = _CompleteSafetyRemarkModel;
 

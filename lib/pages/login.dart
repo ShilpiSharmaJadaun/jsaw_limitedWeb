@@ -22,6 +22,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
 
   late TextEditingController mobileUserTextController = TextEditingController();
   late TextEditingController mobilePassTextController = TextEditingController();
+  final FocusNode _userFocus = FocusNode();
   final FocusNode _passwordFocus = FocusNode();
   late final LoginPageBloc bloc;
 
@@ -29,10 +30,14 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
     super.initState();
     final loginService = Provider.of<LoginService>(context, listen: false);
     bloc = LoginPageBloc(loginService);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _userFocus.requestFocus();
+    });
   }
 
   @override
   void dispose() {
+    _userFocus.dispose();
     _passwordFocus.dispose();
     super.dispose();
   }
@@ -210,6 +215,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                 controller: mobileUserTextController,
                 hintText: "Enter User Code",
                 icon: Icons.person_outline_rounded, obscureText: false,
+                focusNode: _userFocus,
                 textInputAction: TextInputAction.next,
                 onSubmitted: (_) => _passwordFocus.requestFocus(),
               ),

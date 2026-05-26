@@ -35,6 +35,8 @@ mixin _$SuggestionFeedbackModel {
   String get closingTicketDate => throw _privateConstructorUsedError;
   String get status => throw _privateConstructorUsedError;
   String get statusColor => throw _privateConstructorUsedError;
+  String get lowQualityImageUrl => throw _privateConstructorUsedError;
+  String get highQualityImageUrl => throw _privateConstructorUsedError;
 
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
   @JsonKey(ignore: true)
@@ -62,7 +64,9 @@ abstract class $SuggestionFeedbackModelCopyWith<$Res> {
       String ticketRaisedDate,
       String closingTicketDate,
       String status,
-      String statusColor});
+      String statusColor,
+      String lowQualityImageUrl,
+      String highQualityImageUrl});
 }
 
 /// @nodoc
@@ -93,6 +97,8 @@ class _$SuggestionFeedbackModelCopyWithImpl<$Res,
     Object? closingTicketDate = null,
     Object? status = null,
     Object? statusColor = null,
+    Object? lowQualityImageUrl = null,
+    Object? highQualityImageUrl = null,
   }) {
     return _then(_value.copyWith(
       id: null == id
@@ -151,6 +157,14 @@ class _$SuggestionFeedbackModelCopyWithImpl<$Res,
           ? _value.statusColor
           : statusColor // ignore: cast_nullable_to_non_nullable
               as String,
+      lowQualityImageUrl: null == lowQualityImageUrl
+          ? _value.lowQualityImageUrl
+          : lowQualityImageUrl // ignore: cast_nullable_to_non_nullable
+              as String,
+      highQualityImageUrl: null == highQualityImageUrl
+          ? _value.highQualityImageUrl
+          : highQualityImageUrl // ignore: cast_nullable_to_non_nullable
+              as String,
     ) as $Val);
   }
 }
@@ -178,7 +192,9 @@ abstract class _$$SuggestionFeedbackModelImplCopyWith<$Res>
       String ticketRaisedDate,
       String closingTicketDate,
       String status,
-      String statusColor});
+      String statusColor,
+      String lowQualityImageUrl,
+      String highQualityImageUrl});
 }
 
 /// @nodoc
@@ -208,6 +224,8 @@ class __$$SuggestionFeedbackModelImplCopyWithImpl<$Res>
     Object? closingTicketDate = null,
     Object? status = null,
     Object? statusColor = null,
+    Object? lowQualityImageUrl = null,
+    Object? highQualityImageUrl = null,
   }) {
     return _then(_$SuggestionFeedbackModelImpl(
       id: null == id
@@ -266,6 +284,14 @@ class __$$SuggestionFeedbackModelImplCopyWithImpl<$Res>
           ? _value.statusColor
           : statusColor // ignore: cast_nullable_to_non_nullable
               as String,
+      lowQualityImageUrl: null == lowQualityImageUrl
+          ? _value.lowQualityImageUrl
+          : lowQualityImageUrl // ignore: cast_nullable_to_non_nullable
+              as String,
+      highQualityImageUrl: null == highQualityImageUrl
+          ? _value.highQualityImageUrl
+          : highQualityImageUrl // ignore: cast_nullable_to_non_nullable
+              as String,
     ));
   }
 }
@@ -287,7 +313,9 @@ class _$SuggestionFeedbackModelImpl implements _SuggestionFeedbackModel {
       this.ticketRaisedDate = "",
       this.closingTicketDate = "",
       this.status = "",
-      this.statusColor = ""});
+      this.statusColor = "",
+      this.lowQualityImageUrl = "",
+      this.highQualityImageUrl = ""});
 
   factory _$SuggestionFeedbackModelImpl.fromJson(Map<String, dynamic> json) =>
       _$$SuggestionFeedbackModelImplFromJson(json);
@@ -334,10 +362,16 @@ class _$SuggestionFeedbackModelImpl implements _SuggestionFeedbackModel {
   @override
   @JsonKey()
   final String statusColor;
+  @override
+  @JsonKey()
+  final String lowQualityImageUrl;
+  @override
+  @JsonKey()
+  final String highQualityImageUrl;
 
   @override
   String toString() {
-    return 'SuggestionFeedbackModel(id: $id, issueTitle: $issueTitle, issueDescription: $issueDescription, dateTimeOfOccurrence: $dateTimeOfOccurrence, softwareVersion: $softwareVersion, operatingSystem: $operatingSystem, severity: $severity, attachments: $attachments, empUnId: $empUnId, empName: $empName, ticketRaisedDate: $ticketRaisedDate, closingTicketDate: $closingTicketDate, status: $status, statusColor: $statusColor)';
+    return 'SuggestionFeedbackModel(id: $id, issueTitle: $issueTitle, issueDescription: $issueDescription, dateTimeOfOccurrence: $dateTimeOfOccurrence, softwareVersion: $softwareVersion, operatingSystem: $operatingSystem, severity: $severity, attachments: $attachments, empUnId: $empUnId, empName: $empName, ticketRaisedDate: $ticketRaisedDate, closingTicketDate: $closingTicketDate, status: $status, statusColor: $statusColor, lowQualityImageUrl: $lowQualityImageUrl, highQualityImageUrl: $highQualityImageUrl)';
   }
 
   @override
@@ -368,7 +402,11 @@ class _$SuggestionFeedbackModelImpl implements _SuggestionFeedbackModel {
                 other.closingTicketDate == closingTicketDate) &&
             (identical(other.status, status) || other.status == status) &&
             (identical(other.statusColor, statusColor) ||
-                other.statusColor == statusColor));
+                other.statusColor == statusColor) &&
+            (identical(other.lowQualityImageUrl, lowQualityImageUrl) ||
+                other.lowQualityImageUrl == lowQualityImageUrl) &&
+            (identical(other.highQualityImageUrl, highQualityImageUrl) ||
+                other.highQualityImageUrl == highQualityImageUrl));
   }
 
   @JsonKey(ignore: true)
@@ -388,7 +426,9 @@ class _$SuggestionFeedbackModelImpl implements _SuggestionFeedbackModel {
       ticketRaisedDate,
       closingTicketDate,
       status,
-      statusColor);
+      statusColor,
+      lowQualityImageUrl,
+      highQualityImageUrl);
 
   @JsonKey(ignore: true)
   @override
@@ -420,7 +460,9 @@ abstract class _SuggestionFeedbackModel implements SuggestionFeedbackModel {
       final String ticketRaisedDate,
       final String closingTicketDate,
       final String status,
-      final String statusColor}) = _$SuggestionFeedbackModelImpl;
+      final String statusColor,
+      final String lowQualityImageUrl,
+      final String highQualityImageUrl}) = _$SuggestionFeedbackModelImpl;
 
   factory _SuggestionFeedbackModel.fromJson(Map<String, dynamic> json) =
       _$SuggestionFeedbackModelImpl.fromJson;
@@ -453,6 +495,10 @@ abstract class _SuggestionFeedbackModel implements SuggestionFeedbackModel {
   String get status;
   @override
   String get statusColor;
+  @override
+  String get lowQualityImageUrl;
+  @override
+  String get highQualityImageUrl;
   @override
   @JsonKey(ignore: true)
   _$$SuggestionFeedbackModelImplCopyWith<_$SuggestionFeedbackModelImpl>

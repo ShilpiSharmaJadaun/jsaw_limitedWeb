@@ -6,6 +6,7 @@ import 'package:jsaw_limited/bloc/alltoday_observation_bloc.dart';
 import 'package:jsaw_limited/bloc/observationstatus_bloc.dart';
 import 'package:jsaw_limited/bloc/top3hazard_bloc.dart';
 import 'package:jsaw_limited/bloc/update_password_bloc.dart';
+import 'package:jsaw_limited/utils/progressive_image.dart';
 import 'package:jsaw_limited/model/allhazard_cat_model.dart';
 import 'package:jsaw_limited/model/alltoday_observation_model.dart';
 import 'package:jsaw_limited/model/observationstatus_model.dart';
@@ -333,15 +334,9 @@ class _ExtraLargeDashboardPageState extends State<ExtraLargeDashboardPage> {
                   child: SizedBox(
                     width: 100,
                     height: 80,
-                    child: Image.network(
-                      item.imageNumber,
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) => Container(
-                        color: Colors.grey.shade100,
-                        alignment: Alignment.center,
-                        child: Icon(Icons.broken_image_outlined,
-                            color: Colors.grey.shade400),
-                      ),
+                    child: ProgressiveImage(
+                      highUrl: item.imageNumber,
+                      lowUrl: item.lowQualityImageUrl,
                     ),
                   ),
                 ),

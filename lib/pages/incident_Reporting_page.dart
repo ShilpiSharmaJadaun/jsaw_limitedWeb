@@ -119,6 +119,12 @@ class _IncidentReportingPageState extends State<IncidentReportingPage> {
 
   ValueNotifier<String> contractorID = ValueNotifier("");
   ValueNotifier<String> employeeShiftDetail = ValueNotifier("");
+  ValueNotifier<String> employeeShiftDisplay = ValueNotifier("");
+
+  String _formatShift(EmployeeShiftModel s) {
+    if (s.shiftStart.isEmpty || s.shiftEnd.isEmpty) return s.shiftDesc;
+    return '${s.shiftDesc} (${s.shiftStart} - ${s.shiftEnd})';
+  }
 
   ValueNotifier<String> wrkGrp = ValueNotifier("");
   ValueNotifier<String> gender = ValueNotifier("");
@@ -583,6 +589,7 @@ class _IncidentReportingPageState extends State<IncidentReportingPage> {
     contractorName.value = "";
     contractorID.value = "";
     employeeShiftDetail.value = "";
+    employeeShiftDisplay.value = "";
     location.value = "";
     typeOfIncident.value = "";
     responsibleHOD.value = "";
@@ -901,7 +908,7 @@ class _IncidentReportingPageState extends State<IncidentReportingPage> {
               color: kcWhite,
             ),
             child:  ValueListenableBuilder<String>(
-              valueListenable: employeeShiftDetail,
+              valueListenable: employeeShiftDisplay,
               builder: (context, value, child) => Padding(
                 padding: const EdgeInsets.all(2.0),
                 child: Row(
@@ -911,7 +918,7 @@ class _IncidentReportingPageState extends State<IncidentReportingPage> {
                       // width: 150,
                       // height: 20,
                       child: Text(
-                        value.isEmpty ? "Select Employee Shift" : employeeShiftDetail.value,
+                        value.isEmpty ? "Select Employee Shift" : value,
                         textAlign: TextAlign.center,
                         maxLines: 4,
                         style: TextStyle(color: (employeeName.value == "Select Employee Shift") ? kcDarkGreyColor : kcLightGrey),
@@ -970,11 +977,12 @@ class _IncidentReportingPageState extends State<IncidentReportingPage> {
                                 InkWell(
                                   onTap: () {
                                     employeeShiftDetail.value = list[index].shiftDesc;
+                                    employeeShiftDisplay.value = _formatShift(list[index]);
                                     Navigator.pop(context);
                                   },
                                   child: Padding(
                                     padding: const EdgeInsets.all(2.0),
-                                    child: Text(list[index].shiftDesc,
+                                    child: Text(_formatShift(list[index]),
                                     ),
                                   ),
                                 ),

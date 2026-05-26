@@ -3,18 +3,24 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:jsaw_limited/bloc/allSafetyObservationRaisedbyManager_bloc.dart';
 import 'package:jsaw_limited/bloc/hazardgraphExport_bloc.dart';
 import 'package:jsaw_limited/model/filterObservation_model.dart';
+import 'package:jsaw_limited/pages/allIncident_page.dart';
 import 'package:jsaw_limited/pages/approve_reject_table_page.dart';
 import 'package:jsaw_limited/pages/change_password_page.dart';
 import 'package:jsaw_limited/pages/common_navigation_page.dart';
 import 'package:jsaw_limited/pages/dashboardSelection.dart';
 import 'package:jsaw_limited/pages/edit_raised_observations_page.dart';
 import 'package:jsaw_limited/pages/employee_reporting_page.dart';
+import 'package:jsaw_limited/pages/incident_Reporting_page.dart';
+import 'package:jsaw_limited/pages/investigation_team_page.dart';
 import 'package:jsaw_limited/pages/login.dart';
+import 'package:jsaw_limited/pages/medicalOfficerResponse_page.dart';
 import 'package:jsaw_limited/pages/observation.dart';
 import 'package:jsaw_limited/pages/graph_page.dart';
 import 'package:jsaw_limited/pages/priority_changes_page.dart';
+import 'package:jsaw_limited/pages/profile_page.dart';
 import 'package:jsaw_limited/pages/register_observation_page.dart';
 import 'package:jsaw_limited/pages/approved_observation_page.dart';
+import 'package:jsaw_limited/pages/safetyRemarkResponse_page.dart';
 import 'package:jsaw_limited/pages/suggestion_page.dart';
 import 'package:jsaw_limited/service/dashboard_service.dart';
 import 'package:jsaw_limited/service/employee_reporting_service.dart';
@@ -37,6 +43,28 @@ import 'routes/app_routes.dart';
 final localStorage = LocalStorage('my_app');
 
 final navigatorKey = GlobalKey<NavigatorState>();
+
+class _RouteLogger extends NavigatorObserver {
+  void _log(String action, Route<dynamic>? route, Route<dynamic>? previous) {
+    final name = route?.settings.name ?? route?.runtimeType.toString() ?? 'unknown';
+    final prev = previous?.settings.name ?? previous?.runtimeType.toString() ?? '-';
+    debugPrint('[Route] $action  current: $name  previous: $prev');
+  }
+
+  @override
+  void didPush(Route route, Route? previousRoute) => _log('push', route, previousRoute);
+
+  @override
+  void didPop(Route route, Route? previousRoute) => _log('pop', route, previousRoute);
+
+  @override
+  void didReplace({Route? newRoute, Route? oldRoute}) => _log('replace', newRoute, oldRoute);
+
+  @override
+  void didRemove(Route route, Route? previousRoute) => _log('remove', route, previousRoute);
+}
+
+final _routeLogger = _RouteLogger();
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -82,6 +110,7 @@ class MyApp extends StatelessWidget {
       builder: (context) {
         return MaterialApp(
           navigatorKey: navigatorKey,
+          navigatorObservers: [_routeLogger],
          // scrollBehavior: const MaterialScrollBehavior().copyWith(scrollbars: true, physics: ScrollPhysics(parent: AlwaysScrollableScrollPhysics())),
           debugShowCheckedModeBanner: false,
           theme: ThemeData(
@@ -99,9 +128,79 @@ class MyApp extends StatelessWidget {
           initialRoute: AppRoutes.loginPage,
           onGenerateRoute: (settings) {
             final pages = <String, WidgetBuilder>{
+              // Drawer slugs — these mirror _getRouteFromTitle in
+              // common_navigation_page.dart so browser refresh on any of
+              // them restores the correct inner page.
+              '/dashboard': (context) => const CommonNavigationPage(
+                title: 'Dashboard',
+                child: DashboardselectionPage(),
+              ),
+              '/observation': (context) => const CommonNavigationPage(
+                title: 'Observation',
+                child: ObservationPage(),
+              ),
+              '/graph': (context) => const CommonNavigationPage(
+                title: 'Graph',
+                child: GraphPage(),
+              ),
+              '/all-incident': (context) => const CommonNavigationPage(
+                title: 'All Incident',
+                child: AllIncidentPage(),
+              ),
+              '/raise-observation': (context) => const CommonNavigationPage(
+                title: 'Raise Observation',
+                child: RegisterObservationPage(),
+              ),
+              '/incident-tracking': (context) => const CommonNavigationPage(
+                title: 'Incident Tracking',
+                child: IncidentReportingPage(),
+              ),
+              '/medical-officer-response': (context) => const CommonNavigationPage(
+                title: 'Medical Officer Response',
+                child: MedicalOfficerResponsePage(),
+              ),
+              '/safety-remark-form': (context) => const CommonNavigationPage(
+                title: 'Safety Remark Form',
+                child: SafetyRemarkResponsePage(),
+              ),
+              '/investigation-form': (context) => const CommonNavigationPage(
+                title: 'Investigation Form',
+                child: InvestigationTeamPage(),
+              ),
+              '/approval-queue': (context) => const CommonNavigationPage(
+                title: 'Approval Queue',
+                child: ApprovedObservationPage(),
+              ),
+              '/close-reopen-records': (context) => const CommonNavigationPage(
+                title: 'Close/Reopen Records',
+                child: ApproveRejectTablePage(),
+              ),
+              '/priority-changes': (context) => const CommonNavigationPage(
+                title: 'Priority Changes',
+                child: PriorityChangesPage(),
+              ),
+              '/write-us': (context) => const CommonNavigationPage(
+                title: 'Write Us',
+                child: SuggestionFeedbackPage(),
+              ),
+              '/profile': (context) => const CommonNavigationPage(
+                title: 'Profile',
+                child: ProfilePage(),
+              ),
+              '/change-password': (context) => const CommonNavigationPage(
+                title: 'Change Pass / Email',
+                child: ChangePasswordPage(),
+              ),
+              '/employee-reporting': (context) => const CommonNavigationPage(
+                title: 'Employee Reporting',
+                child: EmployeeReportingPage(),
+              ),
+
+              // Legacy route names — kept so existing Navigator.pushNamed
+              // calls continue to work.
               '/dashboardSelection': (context) => const CommonNavigationPage(
                 title: 'Dashboard',
-                child: DashboardselectionPage()
+                child: DashboardselectionPage(),
               ),
               '/observationPage': (context) => const CommonNavigationPage(
                 title: 'Observation',
@@ -150,14 +249,29 @@ class MyApp extends StatelessWidget {
               AppRoutes.loginPage: (context) => const LoginPage(),
             };
 
+            final token = window.localStorage.getItem('kAuthToken');
             final builder = pages[settings.name];
-            if (builder == null) return null;
+
+            if (builder == null) {
+              return MaterialPageRoute(
+                builder: (_) => (token == null || token.isEmpty)
+                    ? const LoginPage()
+                    : const CommonNavigationPage(
+                        title: 'Dashboard',
+                        child: DashboardselectionPage(),
+                      ),
+                settings: RouteSettings(
+                  name: (token == null || token.isEmpty)
+                      ? AppRoutes.loginPage
+                      : '/dashboardSelection',
+                ),
+              );
+            }
 
             if (settings.name == AppRoutes.loginPage) {
               return MaterialPageRoute(builder: builder, settings: settings);
             }
 
-            final token = window.localStorage.getItem('kAuthToken');
             if (token == null || token.isEmpty) {
               return MaterialPageRoute(
                 builder: (_) => const LoginPage(),
@@ -167,6 +281,10 @@ class MyApp extends StatelessWidget {
 
             return MaterialPageRoute(builder: builder, settings: settings);
           },
+          onUnknownRoute: (settings) => MaterialPageRoute(
+            builder: (_) => const LoginPage(),
+            settings: const RouteSettings(name: AppRoutes.loginPage),
+          ),
 
         );
       },

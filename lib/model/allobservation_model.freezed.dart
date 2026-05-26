@@ -44,6 +44,8 @@ mixin _$AllObservationModel {
   String get fileURL => throw _privateConstructorUsedError;
   String get stationName => throw _privateConstructorUsedError;
   String get station_Code => throw _privateConstructorUsedError;
+  String get lowQualityImageUrl => throw _privateConstructorUsedError;
+  String get highQualityImageUrl => throw _privateConstructorUsedError;
 
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
   @JsonKey(ignore: true)
@@ -81,7 +83,9 @@ abstract class $AllObservationModelCopyWith<$Res> {
       String wrkGrp,
       String fileURL,
       String stationName,
-      String station_Code});
+      String station_Code,
+      String lowQualityImageUrl,
+      String highQualityImageUrl});
 }
 
 /// @nodoc
@@ -121,6 +125,8 @@ class _$AllObservationModelCopyWithImpl<$Res, $Val extends AllObservationModel>
     Object? fileURL = null,
     Object? stationName = null,
     Object? station_Code = null,
+    Object? lowQualityImageUrl = null,
+    Object? highQualityImageUrl = null,
   }) {
     return _then(_value.copyWith(
       observationRaisedBy: null == observationRaisedBy
@@ -219,6 +225,14 @@ class _$AllObservationModelCopyWithImpl<$Res, $Val extends AllObservationModel>
           ? _value.station_Code
           : station_Code // ignore: cast_nullable_to_non_nullable
               as String,
+      lowQualityImageUrl: null == lowQualityImageUrl
+          ? _value.lowQualityImageUrl
+          : lowQualityImageUrl // ignore: cast_nullable_to_non_nullable
+              as String,
+      highQualityImageUrl: null == highQualityImageUrl
+          ? _value.highQualityImageUrl
+          : highQualityImageUrl // ignore: cast_nullable_to_non_nullable
+              as String,
     ) as $Val);
   }
 }
@@ -255,7 +269,9 @@ abstract class _$$AllObservationModelImplCopyWith<$Res>
       String wrkGrp,
       String fileURL,
       String stationName,
-      String station_Code});
+      String station_Code,
+      String lowQualityImageUrl,
+      String highQualityImageUrl});
 }
 
 /// @nodoc
@@ -293,6 +309,8 @@ class __$$AllObservationModelImplCopyWithImpl<$Res>
     Object? fileURL = null,
     Object? stationName = null,
     Object? station_Code = null,
+    Object? lowQualityImageUrl = null,
+    Object? highQualityImageUrl = null,
   }) {
     return _then(_$AllObservationModelImpl(
       observationRaisedBy: null == observationRaisedBy
@@ -391,6 +409,14 @@ class __$$AllObservationModelImplCopyWithImpl<$Res>
           ? _value.station_Code
           : station_Code // ignore: cast_nullable_to_non_nullable
               as String,
+      lowQualityImageUrl: null == lowQualityImageUrl
+          ? _value.lowQualityImageUrl
+          : lowQualityImageUrl // ignore: cast_nullable_to_non_nullable
+              as String,
+      highQualityImageUrl: null == highQualityImageUrl
+          ? _value.highQualityImageUrl
+          : highQualityImageUrl // ignore: cast_nullable_to_non_nullable
+              as String,
     ));
   }
 }
@@ -422,7 +448,9 @@ class _$AllObservationModelImpl implements _AllObservationModel {
       this.wrkGrp = "",
       this.fileURL = "",
       this.stationName = "",
-      this.station_Code = ""});
+      this.station_Code = "",
+      this.lowQualityImageUrl = "",
+      this.highQualityImageUrl = ""});
 
   factory _$AllObservationModelImpl.fromJson(Map<String, dynamic> json) =>
       _$$AllObservationModelImplFromJson(json);
@@ -499,10 +527,16 @@ class _$AllObservationModelImpl implements _AllObservationModel {
   @override
   @JsonKey()
   final String station_Code;
+  @override
+  @JsonKey()
+  final String lowQualityImageUrl;
+  @override
+  @JsonKey()
+  final String highQualityImageUrl;
 
   @override
   String toString() {
-    return 'AllObservationModel(observationRaisedBy: $observationRaisedBy, uniqueIdentificationNumber: $uniqueIdentificationNumber, observationRaisedByEmpUnqId: $observationRaisedByEmpUnqId, plantDept: $plantDept, location: $location, observationText: $observationText, imageNumber: $imageNumber, category: $category, actionTaken: $actionTaken, responsibility: $responsibility, status: $status, hazardCategory: $hazardCategory, department: $department, deptCode: $deptCode, remarks: $remarks, priorityStatusName: $priorityStatusName, priorityStatusColour: $priorityStatusColour, raisedDate: $raisedDate, responsibilityHODName: $responsibilityHODName, responsibilityHODEmpUnqID: $responsibilityHODEmpUnqID, wrkGrp: $wrkGrp, fileURL: $fileURL, stationName: $stationName, station_Code: $station_Code)';
+    return 'AllObservationModel(observationRaisedBy: $observationRaisedBy, uniqueIdentificationNumber: $uniqueIdentificationNumber, observationRaisedByEmpUnqId: $observationRaisedByEmpUnqId, plantDept: $plantDept, location: $location, observationText: $observationText, imageNumber: $imageNumber, category: $category, actionTaken: $actionTaken, responsibility: $responsibility, status: $status, hazardCategory: $hazardCategory, department: $department, deptCode: $deptCode, remarks: $remarks, priorityStatusName: $priorityStatusName, priorityStatusColour: $priorityStatusColour, raisedDate: $raisedDate, responsibilityHODName: $responsibilityHODName, responsibilityHODEmpUnqID: $responsibilityHODEmpUnqID, wrkGrp: $wrkGrp, fileURL: $fileURL, stationName: $stationName, station_Code: $station_Code, lowQualityImageUrl: $lowQualityImageUrl, highQualityImageUrl: $highQualityImageUrl)';
   }
 
   @override
@@ -512,8 +546,7 @@ class _$AllObservationModelImpl implements _AllObservationModel {
             other is _$AllObservationModelImpl &&
             (identical(other.observationRaisedBy, observationRaisedBy) ||
                 other.observationRaisedBy == observationRaisedBy) &&
-            (identical(other.uniqueIdentificationNumber,
-                    uniqueIdentificationNumber) ||
+            (identical(other.uniqueIdentificationNumber, uniqueIdentificationNumber) ||
                 other.uniqueIdentificationNumber ==
                     uniqueIdentificationNumber) &&
             (identical(other.observationRaisedByEmpUnqId,
@@ -557,7 +590,11 @@ class _$AllObservationModelImpl implements _AllObservationModel {
             (identical(other.stationName, stationName) ||
                 other.stationName == stationName) &&
             (identical(other.station_Code, station_Code) ||
-                other.station_Code == station_Code));
+                other.station_Code == station_Code) &&
+            (identical(other.lowQualityImageUrl, lowQualityImageUrl) ||
+                other.lowQualityImageUrl == lowQualityImageUrl) &&
+            (identical(other.highQualityImageUrl, highQualityImageUrl) ||
+                other.highQualityImageUrl == highQualityImageUrl));
   }
 
   @JsonKey(ignore: true)
@@ -587,7 +624,9 @@ class _$AllObservationModelImpl implements _AllObservationModel {
         wrkGrp,
         fileURL,
         stationName,
-        station_Code
+        station_Code,
+        lowQualityImageUrl,
+        highQualityImageUrl
       ]);
 
   @JsonKey(ignore: true)
@@ -630,7 +669,9 @@ abstract class _AllObservationModel implements AllObservationModel {
       final String wrkGrp,
       final String fileURL,
       final String stationName,
-      final String station_Code}) = _$AllObservationModelImpl;
+      final String station_Code,
+      final String lowQualityImageUrl,
+      final String highQualityImageUrl}) = _$AllObservationModelImpl;
 
   factory _AllObservationModel.fromJson(Map<String, dynamic> json) =
       _$AllObservationModelImpl.fromJson;
@@ -683,6 +724,10 @@ abstract class _AllObservationModel implements AllObservationModel {
   String get stationName;
   @override
   String get station_Code;
+  @override
+  String get lowQualityImageUrl;
+  @override
+  String get highQualityImageUrl;
   @override
   @JsonKey(ignore: true)
   _$$AllObservationModelImplCopyWith<_$AllObservationModelImpl> get copyWith =>

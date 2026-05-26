@@ -36,6 +36,8 @@ _$AllObservationModelImpl _$$AllObservationModelImplFromJson(
       fileURL: json['fileURL'] as String? ?? "",
       stationName: json['stationName'] as String? ?? "",
       station_Code: json['station_Code'] as String? ?? "",
+      lowQualityImageUrl: json['lowQualityImageUrl'] as String? ?? "",
+      highQualityImageUrl: json['highQualityImageUrl'] as String? ?? "",
     );
 
 Map<String, dynamic> _$$AllObservationModelImplToJson(
@@ -65,4 +67,6 @@ Map<String, dynamic> _$$AllObservationModelImplToJson(
       'fileURL': instance.fileURL,
       'stationName': instance.stationName,
       'station_Code': instance.station_Code,
+      'lowQualityImageUrl': instance.lowQualityImageUrl,
+      'highQualityImageUrl': instance.highQualityImageUrl,
     };

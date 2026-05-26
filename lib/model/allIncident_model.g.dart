@@ -48,6 +48,8 @@ _$AllIncidentModelImpl _$$AllIncidentModelImplFromJson(
       safetyRemarks: json['safetyRemarks'] as String? ?? "",
       safetyResponseDate: json['safetyResponseDate'] as String? ?? "",
       safetyUpdatedDate: json['safetyUpdatedDate'] as String? ?? "",
+      lowQualityImageUrl: json['lowQualityImageUrl'] as String? ?? "",
+      highQualityImageUrl: json['highQualityImageUrl'] as String? ?? "",
     );
 
 Map<String, dynamic> _$$AllIncidentModelImplToJson(
@@ -89,4 +91,6 @@ Map<String, dynamic> _$$AllIncidentModelImplToJson(
       'safetyRemarks': instance.safetyRemarks,
       'safetyResponseDate': instance.safetyResponseDate,
       'safetyUpdatedDate': instance.safetyUpdatedDate,
+      'lowQualityImageUrl': instance.lowQualityImageUrl,
+      'highQualityImageUrl': instance.highQualityImageUrl,
     };

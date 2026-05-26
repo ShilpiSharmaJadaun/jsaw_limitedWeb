@@ -8,6 +8,7 @@ import 'package:jsaw_limited/bloc/employeeResponsibility_bloc.dart';
 import 'package:jsaw_limited/bloc/observationby_uni_bloc.dart';
 import 'package:jsaw_limited/bloc/priority_bloc.dart';
 import 'package:jsaw_limited/bloc/update_observation_bloc.dart';
+import 'package:jsaw_limited/utils/progressive_image.dart';
 import 'package:jsaw_limited/model/allplant_model.dart';
 import 'package:jsaw_limited/model/employeeResponsibility_model.dart';
 import 'package:jsaw_limited/model/filterObservation_model.dart';
@@ -238,15 +239,8 @@ class _EditRaisedObservationsPageState extends State<EditRaisedObservationsPage>
               child: SizedBox(
                 width: 180,
                 height: 160,
-                child: Image.network(
-                  item.imageCompliance,
-                  fit: BoxFit.cover,
-                  errorBuilder: (_, __, ___) => Container(
-                    color: Colors.grey.shade100,
-                    alignment: Alignment.center,
-                    child: Icon(Icons.broken_image_outlined,
-                        color: Colors.grey.shade400, size: 48),
-                  ),
+                child: ProgressiveImage(
+                  highUrl: item.imageCompliance,
                 ),
               ),
             ),
@@ -455,15 +449,9 @@ class _EditRaisedObservationsPageState extends State<EditRaisedObservationsPage>
                   child: SizedBox(
                     width: 220,
                     height: 200,
-                    child: Image.network(
-                      model.imageNumber,
-                      fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) => Container(
-                        color: Colors.grey.shade100,
-                        alignment: Alignment.center,
-                        child: Icon(Icons.broken_image_outlined,
-                            color: Colors.grey.shade400, size: 48),
-                      ),
+                    child: ProgressiveImage(
+                      highUrl: model.imageNumber,
+                      lowUrl: model.lowQualityImageUrl,
                     ),
                   ),
                 ),

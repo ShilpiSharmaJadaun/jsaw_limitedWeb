@@ -23,6 +23,8 @@ _$SuggestionFeedbackModelImpl _$$SuggestionFeedbackModelImplFromJson(
       closingTicketDate: json['closingTicketDate'] as String? ?? "",
       status: json['status'] as String? ?? "",
       statusColor: json['statusColor'] as String? ?? "",
+      lowQualityImageUrl: json['lowQualityImageUrl'] as String? ?? "",
+      highQualityImageUrl: json['highQualityImageUrl'] as String? ?? "",
     );
 
 Map<String, dynamic> _$$SuggestionFeedbackModelImplToJson(
@@ -42,4 +44,6 @@ Map<String, dynamic> _$$SuggestionFeedbackModelImplToJson(
       'closingTicketDate': instance.closingTicketDate,
       'status': instance.status,
       'statusColor': instance.statusColor,
+      'lowQualityImageUrl': instance.lowQualityImageUrl,
+      'highQualityImageUrl': instance.highQualityImageUrl,
     };

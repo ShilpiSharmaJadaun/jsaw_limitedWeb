@@ -44,6 +44,8 @@ mixin _$AllMedicalOfficerListModel {
   String get firDateTime => throw _privateConstructorUsedError;
   String get imageUrl => throw _privateConstructorUsedError;
   String get raisedDate => throw _privateConstructorUsedError;
+  String get lowQualityImageUrl => throw _privateConstructorUsedError;
+  String get highQualityImageUrl => throw _privateConstructorUsedError;
 
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
   @JsonKey(ignore: true)
@@ -81,7 +83,9 @@ abstract class $AllMedicalOfficerListModelCopyWith<$Res> {
       String descpOfIncident,
       String firDateTime,
       String imageUrl,
-      String raisedDate});
+      String raisedDate,
+      String lowQualityImageUrl,
+      String highQualityImageUrl});
 }
 
 /// @nodoc
@@ -121,6 +125,8 @@ class _$AllMedicalOfficerListModelCopyWithImpl<$Res,
     Object? firDateTime = null,
     Object? imageUrl = null,
     Object? raisedDate = null,
+    Object? lowQualityImageUrl = null,
+    Object? highQualityImageUrl = null,
   }) {
     return _then(_value.copyWith(
       id: null == id
@@ -215,6 +221,14 @@ class _$AllMedicalOfficerListModelCopyWithImpl<$Res,
           ? _value.raisedDate
           : raisedDate // ignore: cast_nullable_to_non_nullable
               as String,
+      lowQualityImageUrl: null == lowQualityImageUrl
+          ? _value.lowQualityImageUrl
+          : lowQualityImageUrl // ignore: cast_nullable_to_non_nullable
+              as String,
+      highQualityImageUrl: null == highQualityImageUrl
+          ? _value.highQualityImageUrl
+          : highQualityImageUrl // ignore: cast_nullable_to_non_nullable
+              as String,
     ) as $Val);
   }
 }
@@ -251,7 +265,9 @@ abstract class _$$AllMedicalOfficerListModelImplCopyWith<$Res>
       String descpOfIncident,
       String firDateTime,
       String imageUrl,
-      String raisedDate});
+      String raisedDate,
+      String lowQualityImageUrl,
+      String highQualityImageUrl});
 }
 
 /// @nodoc
@@ -290,6 +306,8 @@ class __$$AllMedicalOfficerListModelImplCopyWithImpl<$Res>
     Object? firDateTime = null,
     Object? imageUrl = null,
     Object? raisedDate = null,
+    Object? lowQualityImageUrl = null,
+    Object? highQualityImageUrl = null,
   }) {
     return _then(_$AllMedicalOfficerListModelImpl(
       id: null == id
@@ -384,6 +402,14 @@ class __$$AllMedicalOfficerListModelImplCopyWithImpl<$Res>
           ? _value.raisedDate
           : raisedDate // ignore: cast_nullable_to_non_nullable
               as String,
+      lowQualityImageUrl: null == lowQualityImageUrl
+          ? _value.lowQualityImageUrl
+          : lowQualityImageUrl // ignore: cast_nullable_to_non_nullable
+              as String,
+      highQualityImageUrl: null == highQualityImageUrl
+          ? _value.highQualityImageUrl
+          : highQualityImageUrl // ignore: cast_nullable_to_non_nullable
+              as String,
     ));
   }
 }
@@ -414,7 +440,9 @@ class _$AllMedicalOfficerListModelImpl implements _AllMedicalOfficerListModel {
       this.descpOfIncident = "",
       this.firDateTime = "",
       this.imageUrl = "",
-      this.raisedDate = ""});
+      this.raisedDate = "",
+      this.lowQualityImageUrl = "",
+      this.highQualityImageUrl = ""});
 
   factory _$AllMedicalOfficerListModelImpl.fromJson(
           Map<String, dynamic> json) =>
@@ -489,10 +517,16 @@ class _$AllMedicalOfficerListModelImpl implements _AllMedicalOfficerListModel {
   @override
   @JsonKey()
   final String raisedDate;
+  @override
+  @JsonKey()
+  final String lowQualityImageUrl;
+  @override
+  @JsonKey()
+  final String highQualityImageUrl;
 
   @override
   String toString() {
-    return 'AllMedicalOfficerListModel(id: $id, uniqueId: $uniqueId, incidentDateTime: $incidentDateTime, shift: $shift, employeeCode: $employeeCode, employeeName: $employeeName, age: $age, contractorName: $contractorName, contCode: $contCode, plant: $plant, plantCode: $plantCode, deptName: $deptName, deptCode: $deptCode, location: $location, responsibleShiftEngg: $responsibleShiftEngg, responsibleHod: $responsibleHod, contactNumber: $contactNumber, incidentType: $incidentType, workInjury: $workInjury, descpOfIncident: $descpOfIncident, firDateTime: $firDateTime, imageUrl: $imageUrl, raisedDate: $raisedDate)';
+    return 'AllMedicalOfficerListModel(id: $id, uniqueId: $uniqueId, incidentDateTime: $incidentDateTime, shift: $shift, employeeCode: $employeeCode, employeeName: $employeeName, age: $age, contractorName: $contractorName, contCode: $contCode, plant: $plant, plantCode: $plantCode, deptName: $deptName, deptCode: $deptCode, location: $location, responsibleShiftEngg: $responsibleShiftEngg, responsibleHod: $responsibleHod, contactNumber: $contactNumber, incidentType: $incidentType, workInjury: $workInjury, descpOfIncident: $descpOfIncident, firDateTime: $firDateTime, imageUrl: $imageUrl, raisedDate: $raisedDate, lowQualityImageUrl: $lowQualityImageUrl, highQualityImageUrl: $highQualityImageUrl)';
   }
 
   @override
@@ -541,7 +575,11 @@ class _$AllMedicalOfficerListModelImpl implements _AllMedicalOfficerListModel {
             (identical(other.imageUrl, imageUrl) ||
                 other.imageUrl == imageUrl) &&
             (identical(other.raisedDate, raisedDate) ||
-                other.raisedDate == raisedDate));
+                other.raisedDate == raisedDate) &&
+            (identical(other.lowQualityImageUrl, lowQualityImageUrl) ||
+                other.lowQualityImageUrl == lowQualityImageUrl) &&
+            (identical(other.highQualityImageUrl, highQualityImageUrl) ||
+                other.highQualityImageUrl == highQualityImageUrl));
   }
 
   @JsonKey(ignore: true)
@@ -570,7 +608,9 @@ class _$AllMedicalOfficerListModelImpl implements _AllMedicalOfficerListModel {
         descpOfIncident,
         firDateTime,
         imageUrl,
-        raisedDate
+        raisedDate,
+        lowQualityImageUrl,
+        highQualityImageUrl
       ]);
 
   @JsonKey(ignore: true)
@@ -613,7 +653,9 @@ abstract class _AllMedicalOfficerListModel
       final String descpOfIncident,
       final String firDateTime,
       final String imageUrl,
-      final String raisedDate}) = _$AllMedicalOfficerListModelImpl;
+      final String raisedDate,
+      final String lowQualityImageUrl,
+      final String highQualityImageUrl}) = _$AllMedicalOfficerListModelImpl;
 
   factory _AllMedicalOfficerListModel.fromJson(Map<String, dynamic> json) =
       _$AllMedicalOfficerListModelImpl.fromJson;
@@ -664,6 +706,10 @@ abstract class _AllMedicalOfficerListModel
   String get imageUrl;
   @override
   String get raisedDate;
+  @override
+  String get lowQualityImageUrl;
+  @override
+  String get highQualityImageUrl;
   @override
   @JsonKey(ignore: true)
   _$$AllMedicalOfficerListModelImplCopyWith<_$AllMedicalOfficerListModelImpl>

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:jsaw_limited/bloc/saveSafetyRemarkResponse_bloc.dart';
 import 'package:jsaw_limited/model/safetyRemarkList_model.dart';
 import 'package:jsaw_limited/state/saveSafetyRemarkResponse_state.dart';
+import 'package:jsaw_limited/utils/progressive_image.dart';
 import 'package:provider/provider.dart';
 import 'package:responsive_builder/responsive_builder.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -65,7 +66,7 @@ class _SafetyRemarkPageState extends State<SafetyRemarkPage> {
               padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
               child: Column(
                 children: [
-                  _buildHeroImage(m.imageUrl),
+                  _buildHeroImage(m.imageUrl, m.lowQualityImageUrl),
                   const SizedBox(height: 20),
                   _buildIncidentDetailsCard(m),
                   const SizedBox(height: 16),
@@ -186,7 +187,7 @@ class _SafetyRemarkPageState extends State<SafetyRemarkPage> {
   }
 
   // -------------------- Hero Image --------------------
-  Widget _buildHeroImage(String url) {
+  Widget _buildHeroImage(String url, String lowUrl) {
     return Center(
       child: ClipRRect(
         borderRadius: BorderRadius.circular(12),
@@ -195,19 +196,7 @@ class _SafetyRemarkPageState extends State<SafetyRemarkPage> {
           height: 18.screenHeight,
           child: url.isEmpty
               ? _imagePlaceholder()
-              : Image.network(
-                  url,
-                  fit: BoxFit.cover,
-                  loadingBuilder: (context, child, progress) {
-                    if (progress == null) return child;
-                    return Container(
-                      color: Colors.grey.shade100,
-                      alignment: Alignment.center,
-                      child: const CircularProgressIndicator(strokeWidth: 2),
-                    );
-                  },
-                  errorBuilder: (_, __, ___) => _imagePlaceholder(),
-                ),
+              : ProgressiveImage(highUrl: url, lowUrl: lowUrl),
         ),
       ),
     );

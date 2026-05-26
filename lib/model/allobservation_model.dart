@@ -31,6 +31,8 @@ class AllObservationModel with _$AllObservationModel{
     @Default("") String fileURL,
     @Default("") String stationName,
     @Default("") String station_Code,
+    @Default("") String lowQualityImageUrl,
+    @Default("") String highQualityImageUrl,
 
 
   }) = _AllObservationModel;

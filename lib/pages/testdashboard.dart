@@ -6,6 +6,7 @@ import 'package:jsaw_limited/bloc/alltoday_observation_bloc.dart';
 import 'package:jsaw_limited/bloc/observationstatus_bloc.dart';
 import 'package:jsaw_limited/bloc/top3hazard_bloc.dart';
 import 'package:jsaw_limited/bloc/update_password_bloc.dart';
+import 'package:jsaw_limited/utils/progressive_image.dart';
 import 'package:jsaw_limited/model/allhazard_cat_model.dart';
 import 'package:jsaw_limited/model/alltoday_observation_model.dart';
 import 'package:jsaw_limited/model/observationstatus_model.dart';
@@ -185,9 +186,9 @@ class _TestDashboardPageState extends State<TestDashboardPage> {
                         child: SizedBox(
                           width: 100,
                           height: 150,
-                          child: Image.network(
-                            model[index].imageNumber,
-                            fit: BoxFit.cover,
+                          child: ProgressiveImage(
+                            highUrl: model[index].imageNumber,
+                            lowUrl: model[index].lowQualityImageUrl,
                           ),
                         ),
                       ),

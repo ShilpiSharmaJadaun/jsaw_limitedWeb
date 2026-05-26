@@ -68,54 +68,201 @@ class _EmployeeReportingPageState extends State<EmployeeReportingPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: SafeArea(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.start,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildHeadingText("Change HOD"),
-            Container(
-              width: 1000,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  _buildALlReportingEmp(),
-                  _buildAllHod(),
-                  _buildAllEmployee(),
-                  _buildSubmit()
-                ],
-              ),
-            ),
-            _buildHeadingText("Insert New HOD /  Employee"),
-            Container(
-              width: 1000,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  _buildInsertAllEmployee(),
-                  _buildNewHODEmployee(),
-                  _buildSubmitNewHOD()
-                ],
-              ),
-            ),
-            _buildHeadingText("Delete HOD /  Employee"),
-            Container(
-              width: 1000,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  _buildDeleteReportingEmp(),
-                  _buildDeletedAllHod(),
-                  _buildDeleteHOD()
-                ],
-              ),
-            ),
-          ],
+      backgroundColor: kcDashboardBg1,
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [kcDashboardBg1, kcDashboardBg2],
+          ),
         ),
-      )
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(20),
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 1100),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  _sectionCard(
+                    title: 'Change HOD',
+                    subtitle:
+                        'Update an existing reporting relationship.',
+                    icon: Icons.swap_horiz_outlined,
+                    headerColors: const [kcvoilet, kcInfoResponsibility],
+                    children: [
+                      _dropdownLabel('Reporting Employee',
+                          Icons.person_outline, kcStatBlue),
+                      _buildALlReportingEmp(),
+                      const SizedBox(width: 16),
+                      _dropdownLabel('Current HOD',
+                          Icons.supervisor_account_outlined, kcStatAmber),
+                      _buildAllHod(),
+                      const SizedBox(width: 16),
+                      _dropdownLabel('New HOD',
+                          Icons.person_add_alt_outlined, kcobservationgreen),
+                      _buildAllEmployee(),
+                      const SizedBox(width: 8),
+                      _buildSubmit(),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+                  _sectionCard(
+                    title: 'Insert New HOD / Employee',
+                    subtitle: 'Assign an HOD to an employee.',
+                    icon: Icons.person_add_alt_1_outlined,
+                    headerColors: const [kcobservationgreen, kcInfoPlant],
+                    children: [
+                      _dropdownLabel('Employee',
+                          Icons.person_outline, kcStatBlue),
+                      _buildInsertAllEmployee(),
+                      const SizedBox(width: 16),
+                      _dropdownLabel('HOD / Reporting To',
+                          Icons.supervisor_account_outlined,
+                          kcInfoResponsibility),
+                      _buildNewHODEmployee(),
+                      const SizedBox(width: 8),
+                      _buildSubmitNewHOD(),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+                  _sectionCard(
+                    title: 'Delete HOD / Employee',
+                    subtitle: 'Remove an existing HOD assignment.',
+                    icon: Icons.person_remove_outlined,
+                    headerColors: const [kcmegenta, kcInfoFir],
+                    children: [
+                      _dropdownLabel('Reporting Employee',
+                          Icons.person_outline, kcStatBlue),
+                      _buildDeleteReportingEmp(),
+                      const SizedBox(width: 16),
+                      _dropdownLabel('HOD to Remove',
+                          Icons.no_accounts_outlined, kcRed),
+                      _buildDeletedAllHod(),
+                      const SizedBox(width: 8),
+                      _buildDeleteHOD(),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+
+  Widget _sectionCard({
+    required String title,
+    required String subtitle,
+    required IconData icon,
+    required List<Color> headerColors,
+    required List<Widget> children,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        color: kcWhite,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: headerColors.first.withOpacity(0.25)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Container(
+            padding:
+                const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: headerColors,
+                begin: Alignment.centerLeft,
+                end: Alignment.centerRight,
+              ),
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(14),
+                topRight: Radius.circular(14),
+              ),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: kcWhite.withOpacity(0.18),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(icon, color: kcWhite, size: 18),
+                ),
+                const SizedBox(width: 10),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: const TextStyle(
+                        color: kcWhite,
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    Text(
+                      subtitle,
+                      style: const TextStyle(
+                          color: cream, fontSize: 11),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Wrap(
+              spacing: 6,
+              runSpacing: 12,
+              alignment: WrapAlignment.start,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              children: children,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _dropdownLabel(String label, IconData icon, Color color) {
+    return Padding(
+      padding: const EdgeInsets.only(right: 8),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(6),
+            decoration: BoxDecoration(
+              color: color.withOpacity(0.12),
+              borderRadius: BorderRadius.circular(6),
+            ),
+            child: Icon(icon, color: color, size: 16),
+          ),
+          const SizedBox(width: 6),
+          Text(
+            label,
+            style: const TextStyle(
+              fontSize: 12,
+              color: kcLabelGrey,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -126,8 +273,14 @@ class _EmployeeReportingPageState extends State<EmployeeReportingPage> {
         state.maybeWhen(
           success: (_, message) {
             ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-              content: Text(message ?? "Sent Successfully"),
+              content: Text(message ?? "Updated Successfully"),
             ));
+            employeeFromAppReportingBloc.initState();
+            try {
+              if (reportEmployeeCode.isNotEmpty) {
+                allHodBloc.initState(reportEmployeeCode);
+              }
+            } catch (_) {}
           },
           failed: (_, message) {
             ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
@@ -141,28 +294,34 @@ class _EmployeeReportingPageState extends State<EmployeeReportingPage> {
             return const Center(child: CircularProgressIndicator());
           },
           orElse: () {
-            return Align(
-              alignment: Alignment.bottomCenter,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 50),
-                child: ElevatedButton(
-                  onPressed: () async {
-                    final data = {
-                      "reportResEmpCode": reportEmployeeCode,
-                      "reportingToEmpCode": employeeCode,
-                      "oldReportingToEmpCode": hodCode,
-                    };
-                    await updateHodBloc.forgetPassword(data);
-                    reportingEmployeeName.value = "";
-                    hodName.value = "";
-                    employeeName.value = "";
-                  },
-                  style: ElevatedButton.styleFrom(
-                      backgroundColor: kcvoilet,
-                      fixedSize: const Size(200, 40)
-                  ), child: const Text("Update",
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: kcWhite),
-                ),),
+            return ElevatedButton.icon(
+              onPressed: () async {
+                final data = {
+                  "reportResEmpCode": reportEmployeeCode,
+                  "reportingToEmpCode": employeeCode,
+                  "oldReportingToEmpCode": hodCode,
+                };
+                await updateHodBloc.forgetPassword(data);
+                reportingEmployeeName.value = "";
+                hodName.value = "";
+                employeeName.value = "";
+              },
+              icon: const Icon(Icons.save_outlined, size: 18, color: kcWhite),
+              label: const Text(
+                "Update",
+                style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                    color: kcWhite),
+              ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: kcvoilet,
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 18, vertical: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                elevation: 0,
               ),
             );
 
@@ -179,8 +338,13 @@ class _EmployeeReportingPageState extends State<EmployeeReportingPage> {
         state.maybeWhen(
           success: (_, message) {
             employeeFromAppReportingBloc.initState();
+            try {
+              if (employeeCode.isNotEmpty) {
+                allHodBloc.initState(employeeCode);
+              }
+            } catch (_) {}
             ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-              content: Text(message ?? "Sent Successfully"),
+              content: Text(message ?? "Inserted Successfully"),
             ));
           },
           failed: (_, message) {
@@ -195,27 +359,33 @@ class _EmployeeReportingPageState extends State<EmployeeReportingPage> {
             return const Center(child: CircularProgressIndicator());
           },
           orElse: () {
-            return Align(
-              alignment: Alignment.bottomCenter,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 50),
-                child: ElevatedButton(
-                  onPressed: () async {
-                    final data = {
-                      "reportResEmpCode": employeeCode,
-                      "reportingToEmpCode": newHodCode,
-                    };
-                    await insertHODEMPloyeeBloc.insertHod(data);
-                    reportingEmployeeName.value = "";
-                    hodName.value = "";
-                    employeeName.value = "";
-                  },
-                  style: ElevatedButton.styleFrom(
-                      backgroundColor: kcvoilet,
-                      fixedSize: const Size(200, 40)
-                  ), child: const Text("Insert",
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: kcWhite),
-                ),),
+            return ElevatedButton.icon(
+              onPressed: () async {
+                final data = {
+                  "reportResEmpCode": employeeCode,
+                  "reportingToEmpCode": newHodCode,
+                };
+                await insertHODEMPloyeeBloc.insertHod(data);
+                insertEmployeeName.value = "";
+                NewHodName.value = "";
+              },
+              icon: const Icon(Icons.add_circle_outline,
+                  size: 18, color: kcWhite),
+              label: const Text(
+                "Insert",
+                style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                    color: kcWhite),
+              ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: kcobservationgreen,
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 18, vertical: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                elevation: 0,
               ),
             );
 
@@ -232,8 +402,15 @@ class _EmployeeReportingPageState extends State<EmployeeReportingPage> {
         state.maybeWhen(
           success: (_, message) {
             employeeFromAppReportingBloc.initState();
+            try {
+              if (reportEmployeeCode.isNotEmpty) {
+                allHodBloc.initState(reportEmployeeCode);
+              }
+            } catch (_) {}
+            deleteReportingEmployeeName.value = "";
+            deleteHodName.value = "";
             ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-              content: Text(message ?? "Sent Successfully"),
+              content: Text(message ?? "Deleted Successfully"),
             ));
           },
           failed: (_, message) {
@@ -248,27 +425,33 @@ class _EmployeeReportingPageState extends State<EmployeeReportingPage> {
             return const Center(child: CircularProgressIndicator());
           },
           orElse: () {
-            return Align(
-              alignment: Alignment.bottomCenter,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 50),
-                child: ElevatedButton(
-                  onPressed: () async {
-                    final data = {
-                      "reportResEmpCode": reportEmployeeCode,
-                      "reportingToEmpCode": hodCode,
-                    };
-                    await deleteHODBloc.forgetPassword(data);
-                    reportingEmployeeName.value = "";
-                    hodName.value = "";
-                    employeeName.value = "";
-                  },
-                  style: ElevatedButton.styleFrom(
-                      backgroundColor: kcvoilet,
-                      fixedSize: const Size(200, 40)
-                  ), child: const Text("Delete",
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: kcWhite),
-                ),),
+            return ElevatedButton.icon(
+              onPressed: () async {
+                final data = {
+                  "reportResEmpCode": reportEmployeeCode,
+                  "reportingToEmpCode": hodCode,
+                };
+                await deleteHODBloc.forgetPassword(data);
+                deleteReportingEmployeeName.value = "";
+                deleteHodName.value = "";
+              },
+              icon: const Icon(Icons.delete_outline,
+                  size: 18, color: kcWhite),
+              label: const Text(
+                "Delete",
+                style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                    color: kcWhite),
+              ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: kcRed,
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 18, vertical: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                elevation: 0,
               ),
             );
 
@@ -320,7 +503,7 @@ class _EmployeeReportingPageState extends State<EmployeeReportingPage> {
           height: 50,
           child: Container(
             width: 200,
-            decoration: BoxDecoration(borderRadius: BorderRadius.circular(8.0),color: kcWhite),
+            decoration: BoxDecoration(borderRadius: BorderRadius.circular(8.0), color: kcWhite, border: Border.all(color: kcVeryLightGrey)),
             child: ValueListenableBuilder<String>(
               valueListenable: reportingEmployeeName,
               builder: (context, value, child) => Padding(
@@ -465,7 +648,7 @@ class _EmployeeReportingPageState extends State<EmployeeReportingPage> {
           height: 50,
           child: Container(
             width: 200,
-            decoration: BoxDecoration(borderRadius: BorderRadius.circular(8.0),color: kcWhite),
+            decoration: BoxDecoration(borderRadius: BorderRadius.circular(8.0), color: kcWhite, border: Border.all(color: kcVeryLightGrey)),
             child: ValueListenableBuilder<String>(
               valueListenable: deleteReportingEmployeeName,
               builder: (context, value, child) => Padding(
@@ -611,7 +794,7 @@ class _EmployeeReportingPageState extends State<EmployeeReportingPage> {
           height: 50,
           child: Container(
             width: 80,
-            decoration: BoxDecoration(borderRadius: BorderRadius.circular(8.0),color: kcWhite),
+            decoration: BoxDecoration(borderRadius: BorderRadius.circular(8.0), color: kcWhite, border: Border.all(color: kcVeryLightGrey)),
             child: ValueListenableBuilder<String>(
               valueListenable: hodName,
               builder: (context, value, child) => Padding(
@@ -756,7 +939,7 @@ class _EmployeeReportingPageState extends State<EmployeeReportingPage> {
           height: 50,
           child: Container(
             width: 80,
-            decoration: BoxDecoration(borderRadius: BorderRadius.circular(8.0),color: kcWhite),
+            decoration: BoxDecoration(borderRadius: BorderRadius.circular(8.0), color: kcWhite, border: Border.all(color: kcVeryLightGrey)),
             child: ValueListenableBuilder<String>(
               valueListenable: deleteHodName,
               builder: (context, value, child) => Padding(
@@ -900,7 +1083,7 @@ class _EmployeeReportingPageState extends State<EmployeeReportingPage> {
           height: 50,
           child: Container(
             width: 80,
-            decoration: BoxDecoration(borderRadius: BorderRadius.circular(8.0),color: kcWhite),
+            decoration: BoxDecoration(borderRadius: BorderRadius.circular(8.0), color: kcWhite, border: Border.all(color: kcVeryLightGrey)),
             child: ValueListenableBuilder<String>(
               valueListenable: employeeName,
               builder: (context, value, child) => Padding(
@@ -1044,7 +1227,7 @@ class _EmployeeReportingPageState extends State<EmployeeReportingPage> {
           height: 50,
           child: Container(
             width: 80,
-            decoration: BoxDecoration(borderRadius: BorderRadius.circular(8.0),color: kcWhite),
+            decoration: BoxDecoration(borderRadius: BorderRadius.circular(8.0), color: kcWhite, border: Border.all(color: kcVeryLightGrey)),
             child: ValueListenableBuilder<String>(
               valueListenable: insertEmployeeName,
               builder: (context, value, child) => Padding(
@@ -1192,7 +1375,7 @@ class _EmployeeReportingPageState extends State<EmployeeReportingPage> {
           height: 50,
           child: Container(
             width: 80,
-            decoration: BoxDecoration(borderRadius: BorderRadius.circular(8.0),color: kcWhite),
+            decoration: BoxDecoration(borderRadius: BorderRadius.circular(8.0), color: kcWhite, border: Border.all(color: kcVeryLightGrey)),
             child: ValueListenableBuilder<String>(
               valueListenable: NewHodName,
               builder: (context, value, child) => Padding(

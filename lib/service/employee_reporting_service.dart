@@ -63,6 +63,23 @@ class EmployeeReportingService{
     return[];
   }
 
+  Future<List<AllEmployeeModel>> getAllCompOutSourcAuthUser() async {
+    const url = "${root}employees/getAllCompOutSourcAuthUser";
+    final response = await authHttp.get(Uri.parse(url), headers: getHeaders());
+    try {
+      final responseBody = json.decode(response.body);
+      if (responseBody["status"] == true) {
+        final itemList = responseBody["model"] as List;
+        return itemList.map((e) => AllEmployeeModel.fromJson(e)).toList();
+      } else {
+        throw ApiError.fromResponse(responseBody["msg"]);
+      }
+    } catch (e) {
+      _handleError(e);
+    }
+    return [];
+  }
+
   //update HOD
 
   Future<String?> updateHod(Map<String, dynamic>data) async {

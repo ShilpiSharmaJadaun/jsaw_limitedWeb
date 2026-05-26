@@ -39,6 +39,8 @@ _$SafetyRemarkListModelImpl _$$SafetyRemarkListModelImplFromJson(
           json['restUpto'] == null ? 0 : _restUptoFromJson(json['restUpto']),
       fitForDutyFrom: json['fitForDutyFrom'] as String? ?? "",
       raisedDate: json['raisedDate'] as String? ?? "",
+      lowQualityImageUrl: json['lowQualityImageUrl'] as String? ?? "",
+      highQualityImageUrl: json['highQualityImageUrl'] as String? ?? "",
     );
 
 Map<String, dynamic> _$$SafetyRemarkListModelImplToJson(
@@ -73,4 +75,6 @@ Map<String, dynamic> _$$SafetyRemarkListModelImplToJson(
       'restUpto': instance.restUpto,
       'fitForDutyFrom': instance.fitForDutyFrom,
       'raisedDate': instance.raisedDate,
+      'lowQualityImageUrl': instance.lowQualityImageUrl,
+      'highQualityImageUrl': instance.highQualityImageUrl,
     };

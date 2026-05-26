@@ -13,6 +13,7 @@ import 'package:jsaw_limited/model/allTypeIncident_model.dart';
 import 'package:jsaw_limited/model/completeSafetyRemark_model.dart';
 import 'package:jsaw_limited/model/employeeBasicDetail_model.dart';
 import 'package:jsaw_limited/model/employeeShift_model.dart';
+import 'package:jsaw_limited/model/investigationReport_response_model.dart';
 import 'package:jsaw_limited/model/safetyRemarkList_model.dart';
 import '../error/api_error.dart';
 import '../model/completeMedicalResponse_model.dart';
@@ -204,6 +205,163 @@ class IncidentService{
 
   }
 
+
+  Future<String?> saveInvestigationReport({
+    required Uint8List imageBytes,
+    required String incidentUniqueId,
+    required String reportDate,
+    required List<Map<String, String>> team,
+    required List<String> rootCauses,
+    required List<Map<String, dynamic>> capa,
+  }) async {
+    const url = "${root}investigationReport/saveInvestigationReport";
+    try {
+      var request = http.MultipartRequest("POST", Uri.parse(url));
+      authHttp.attachAuth(request);
+
+      request.files.add(http.MultipartFile.fromBytes(
+        'image',
+        imageBytes,
+        filename: 'upload.jpg',
+        contentType: MediaType('image', 'jpeg'),
+      ));
+
+      request.fields['incidentUniqueId'] = incidentUniqueId;
+      request.fields['reportDate'] = reportDate;
+      request.fields['team'] = jsonEncode(team);
+      request.fields['rootCauses'] = jsonEncode(rootCauses);
+      request.fields['capa'] = jsonEncode(capa);
+
+      var res = await request.send();
+      var results = await http.Response.fromStream(res);
+      authHttp.check(results);
+      var finalres = jsonDecode(results.body) as Map<String, dynamic>;
+
+      if (finalres['status'] == true) {
+        return finalres['msg']?.toString();
+      } else {
+        throw Exception(finalres['msg']?.toString() ?? 'Save failed');
+      }
+    } catch (e) {
+      if (e is String) throw Exception(e);
+      throw Exception(
+          "An error occurred while saving the investigation report: $e");
+    }
+  }
+
+  Future<
+      ({
+        List<InvestigationReportResponse> items,
+        int totalElements,
+        int totalPages,
+        int currentPage,
+        int pageSize,
+        bool hasNext,
+        bool hasPrevious,
+      })> getAllInvestigationReport({int page = 1, int pageSize = 10}) async {
+    final url = Uri.parse(
+        "${root}investigationReport/getAllInvestigationReport?page=$page&pageSize=$pageSize");
+    try {
+      final response = await authHttp.get(url, headers: getHeaders());
+      if (response.statusCode < 200 || response.statusCode >= 300) {
+        throw ApiError.fromResponse(
+            'Server error ${response.statusCode}: ${response.body}');
+      }
+      final responseBody = json.decode(response.body);
+      final model = (responseBody is Map) ? responseBody['model'] : null;
+
+      int asInt(dynamic v, int fallback) =>
+          v is int ? v : int.tryParse('${v ?? ''}') ?? fallback;
+      bool asBool(dynamic v) => v is bool ? v : false;
+
+      final rawItems = (model is Map) ? model['items'] : null;
+      final items = (rawItems is List)
+          ? rawItems
+              .whereType<Map>()
+              .map((e) => InvestigationReportResponse.fromJson(
+                  e.cast<String, dynamic>()))
+              .toList()
+          : <InvestigationReportResponse>[];
+
+      if (model is Map) {
+        return (
+          items: items,
+          totalElements: asInt(model['totalElements'], items.length),
+          totalPages: asInt(model['totalPages'], items.isEmpty ? 0 : 1),
+          currentPage: asInt(model['currentPage'], page),
+          pageSize: asInt(model['pageSize'], pageSize),
+          hasNext: asBool(model['hasNext']),
+          hasPrevious: asBool(model['hasPrevious']),
+        );
+      }
+      return (
+        items: items,
+        totalElements: items.length,
+        totalPages: items.isEmpty ? 0 : 1,
+        currentPage: page,
+        pageSize: pageSize,
+        hasNext: false,
+        hasPrevious: false,
+      );
+    } catch (e) {
+      if (e is ApiError) rethrow;
+      if (e is SocketException) throw ApiError.internet();
+      if (e is TimeoutException) throw ApiError.timeOut();
+      throw ApiError.fromResponse(e.toString());
+    }
+  }
+
+  Future<List<InvestigationReportResponse>> getInvestigationReportByUniqueId(
+      String incidentUniqueId) async {
+    const url = "${root}investigationReport/getByIncidentUniqueId";
+    try {
+      final response = await authHttp.post(
+        Uri.parse(url),
+        body: json.encode({"incidentUniqueId": incidentUniqueId}),
+        headers: getHeaders(),
+      );
+      if (response.statusCode < 200 || response.statusCode >= 300) {
+        throw ApiError.fromResponse(
+            'Server error ${response.statusCode}: ${response.body}');
+      }
+      final responseBody = json.decode(response.body);
+      if (responseBody is Map && responseBody['status'] == true) {
+        final raw = responseBody['model'];
+        if (raw is List) {
+          return raw
+              .whereType<Map>()
+              .map((e) => InvestigationReportResponse.fromJson(
+                  e.cast<String, dynamic>()))
+              .toList();
+        }
+        return <InvestigationReportResponse>[];
+      }
+      // status:false with "No Investigation Report found…" is a normal empty result
+      return <InvestigationReportResponse>[];
+    } catch (e) {
+      if (e is ApiError) rethrow;
+      if (e is SocketException) throw ApiError.internet();
+      if (e is TimeoutException) throw ApiError.timeOut();
+      throw ApiError.fromResponse(e.toString());
+    }
+  }
+
+  Future<List<String>> getAllIncidentReportUniqueIds() async {
+    const url = "${root}incidentReport/getAllUniqueIds";
+    final response = await authHttp.get(Uri.parse(url), headers: getHeaders());
+    try {
+      final responseBody = json.decode(response.body);
+      if (responseBody["status"] == true) {
+        final itemList = responseBody["model"] as List;
+        return itemList.map((e) => e.toString()).toList();
+      } else {
+        throw ApiError.fromResponse(responseBody["msg"]);
+      }
+    } catch (e) {
+      _handleError(e);
+    }
+    return [];
+  }
 
   Future<List<AllMedicalOfficerListModel>> getAllMedicalOfficerList()async{
     const url = "${root}incidentReport/getPendingForMedicalOfficer";

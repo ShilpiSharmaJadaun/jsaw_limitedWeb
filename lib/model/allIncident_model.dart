@@ -43,6 +43,8 @@ class AllIncidentModel with _$AllIncidentModel{
     @Default("") String safetyRemarks,
     @Default("") String safetyResponseDate,
     @Default("") String safetyUpdatedDate,
+    @Default("") String lowQualityImageUrl,
+    @Default("") String highQualityImageUrl,
 
 
   }) = _AllIncidentModel;

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:jsaw_limited/utils/progressive_image.dart';
 import 'package:provider/provider.dart';
 import '../bloc/allDepart_bloc.dart';
 import '../bloc/allhazard_cat_bloc.dart';
@@ -195,15 +196,8 @@ class _EditAllObservationPageState extends State<EditAllObservationPage> {
               child: SizedBox(
                 width: 180,
                 height: 160,
-                child: Image.network(
-                  item.imageCompliance,
-                  fit: BoxFit.cover,
-                  errorBuilder: (_, __, ___) => Container(
-                    color: Colors.grey.shade100,
-                    alignment: Alignment.center,
-                    child: Icon(Icons.broken_image_outlined,
-                        color: Colors.grey.shade400, size: 48),
-                  ),
+                child: ProgressiveImage(
+                  highUrl: item.imageCompliance,
                 ),
               ),
             ),
@@ -370,15 +364,8 @@ class _EditAllObservationPageState extends State<EditAllObservationPage> {
               child: SizedBox(
                 width: 220,
                 height: 200,
-                child: Image.network(
-                  widget.image,
-                  fit: BoxFit.cover,
-                  errorBuilder: (_, __, ___) => Container(
-                    color: Colors.grey.shade100,
-                    alignment: Alignment.center,
-                    child: Icon(Icons.broken_image_outlined,
-                        color: Colors.grey.shade400, size: 48),
-                  ),
+                child: ProgressiveImage(
+                  highUrl: widget.image,
                 ),
               ),
             ),

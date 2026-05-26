@@ -36,6 +36,8 @@ class SafetyRemarkListModel with _$SafetyRemarkListModel{
     @JsonKey(fromJson: _restUptoFromJson) @Default(0) int restUpto,
     @Default("") String fitForDutyFrom,
     @Default("") String raisedDate,
+    @Default("") String lowQualityImageUrl,
+    @Default("") String highQualityImageUrl,
 
   }) = _SafetyRemarkListModel;
 

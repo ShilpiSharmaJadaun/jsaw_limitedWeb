@@ -34,7 +34,22 @@
       "Bash(flutter pub *)",
       "Bash(git *)",
       "Bash(python *)",
-      "Bash(awk END{print NR} *)"
+      "Bash(awk END{print NR} *)",
+      "Bash(awk 'END{print FILENAME\": \"NR\" lines\"}' D:/JSAW_BACKEND_API/jsaw_limitedWeb/lib/pages/change_password_page.dart D:/JSAW_BACKEND_API/jsaw_limitedWeb/lib/pages/suggestion_page.dart D:/JSAW_BACKEND_API/jsaw_limitedWeb/lib/pages/approve_reject_table_page.dart)",
+      "Bash(awk *)",
+      "mcp__ide__getDiagnostics",
+      "Bash(xargs grep *)",
+      "Bash(cat)",
+      "Bash(bash /tmp/analyze.sh)",
+      "Bash(flutter analyze *)",
+      "Bash(xargs ls *)",
+      "Bash(./mvnw.cmd compile *)",
+      "Bash(\"D:\\\\JSAW_BACKEND_API\\\\JSAW\\\\mvnw.cmd\" -f \"D:\\\\JSAW_BACKEND_API\\\\JSAW\\\\pom.xml\" compile -q)",
+      "Bash(\"D:\\\\JSAW_BACKEND_API\\\\JSAW\\\\mvnw.cmd\" -f \"D:\\\\JSAW_BACKEND_API\\\\JSAW\\\\pom.xml\" compile)",
+      "Bash(grep -n 'InvestigationCapaItem\\\\|_$Investigation' lib/model/investigationReport_response_model.g.dart)",
+      "Bash(grep -n '_$InvestigationCapaItemFromJson\\\\|InvestigationCapaItem _' lib/model/investigationReport_response_model.freezed.dart)",
+      "Bash(> /tmp/flutter_run.log)",
+      "Bash(dart run *)"
     ]
   }
 }

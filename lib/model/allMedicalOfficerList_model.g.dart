@@ -32,6 +32,8 @@ _$AllMedicalOfficerListModelImpl _$$AllMedicalOfficerListModelImplFromJson(
       firDateTime: json['firDateTime'] as String? ?? "",
       imageUrl: json['imageUrl'] as String? ?? "",
       raisedDate: json['raisedDate'] as String? ?? "",
+      lowQualityImageUrl: json['lowQualityImageUrl'] as String? ?? "",
+      highQualityImageUrl: json['highQualityImageUrl'] as String? ?? "",
     );
 
 Map<String, dynamic> _$$AllMedicalOfficerListModelImplToJson(
@@ -60,4 +62,6 @@ Map<String, dynamic> _$$AllMedicalOfficerListModelImplToJson(
       'firDateTime': instance.firDateTime,
       'imageUrl': instance.imageUrl,
       'raisedDate': instance.raisedDate,
+      'lowQualityImageUrl': instance.lowQualityImageUrl,
+      'highQualityImageUrl': instance.highQualityImageUrl,
     };

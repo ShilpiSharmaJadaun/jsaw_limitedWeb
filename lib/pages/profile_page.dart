@@ -4,6 +4,7 @@ import 'package:web/web.dart' show window;
 
 import '../model/allemployee_model.dart';
 import '../service/employee_reporting_service.dart';
+import '../service/observation_service.dart';
 import '../utils/app_color.dart';
 
 class ProfilePage extends StatefulWidget {
@@ -18,11 +19,47 @@ class _ProfilePageState extends State<ProfilePage> {
   bool _enriching = false;
   String? _enrichError;
 
+  // deptCode -> plant/dept name (from department/getAllDepartment)
+  Map<String, String> _deptToPlantName = {};
+  // statCode -> station/dept name (from stations/getAllStationByDeptCode)
+  Map<String, String> _statToDeptName = {};
+
   @override
   void initState() {
     super.initState();
     _emp = _buildFromLocalStorage();
     _enrichFromApi();
+    _loadLookups();
+  }
+
+  Future<void> _loadLookups() async {
+    try {
+      final obsService =
+          Provider.of<ObservationService>(context, listen: false);
+      final plants = await obsService.getAllPlant();
+      if (mounted) {
+        setState(() {
+          _deptToPlantName = {
+            for (final p in plants)
+              if (p.deptCode.isNotEmpty) p.deptCode: p.deptName,
+          };
+        });
+      }
+      final deptCode = _emp?.deptCode ?? '';
+      if (deptCode.isNotEmpty) {
+        final stations = await obsService.getDepartment(deptCode);
+        if (mounted) {
+          setState(() {
+            _statToDeptName = {
+              for (final s in stations)
+                if (s.statCode.isNotEmpty) s.statCode: s.statName,
+            };
+          });
+        }
+      }
+    } catch (_) {
+      // Non-fatal: fall back to codes
+    }
   }
 
   AllEmployeeModel? _buildFromLocalStorage() {
@@ -149,17 +186,17 @@ class _ProfilePageState extends State<ProfilePage> {
                 rows: [
                   _Row(Icons.badge_outlined, 'Employee Code', emp.empUnqId,
                       kcStatBlue),
-                  _Row(Icons.assignment_ind_outlined, 'Designation Code',
+                  _Row(Icons.assignment_ind_outlined, 'Designation',
                       emp.desgCode, kcInfoResponsibility),
-                  _Row(Icons.business_outlined, 'Department Code',
-                      emp.deptCode, kcInfoPlant),
-                  _Row(Icons.factory_outlined, 'Unit Code', emp.unitCode,
+                  _Row(Icons.business_outlined, 'Plant',
+                      _deptToPlantName[emp.deptCode] ?? emp.deptCode,
+                      kcInfoPlant),
+                  _Row(Icons.factory_outlined, 'Unit', emp.unitCode,
                       kcInfoContractor),
-                  _Row(Icons.location_city_outlined, 'Station Code',
-                      emp.statCode, kcInfoLocation),
-                  _Row(Icons.grade_outlined, 'Grade Code', emp.gradeCode,
-                      kcStatAmber),
-                  _Row(Icons.category_outlined, 'Category Code', emp.catCode,
+                  _Row(Icons.location_city_outlined, 'Department',
+                      _statToDeptName[emp.statCode] ?? emp.statCode,
+                      kcInfoLocation),
+                  _Row(Icons.category_outlined, 'Category', emp.catCode,
                       kcInfoObservation),
                   _Row(Icons.groups_outlined, 'Work Group', emp.wrkGrp,
                       kcStatPurple),
@@ -182,22 +219,9 @@ class _ProfilePageState extends State<ProfilePage> {
                 icon: Icons.shield_outlined,
                 iconColor: kcStatGreen,
                 rows: [
-                  _Row(Icons.verified_user_outlined, 'Admin',
-                      emp.admin ? 'Yes' : 'No', kcStatGreen),
-                  _Row(Icons.supervisor_account_outlined, 'HOD',
-                      emp.hod == 1 ? 'Yes' : 'No', kcStatPurple),
-                  _Row(Icons.health_and_safety_outlined, 'HSE Team',
+                  _Row(Icons.health_and_safety_outlined, 'HSE TEAM',
                       emp.hseteamAuthorization == 1 ? 'Yes' : 'No',
                       kcInfoFir),
-                  _Row(
-                      Icons.engineering_outlined,
-                      'Plant / Unit Head',
-                      emp.employeeAuthorizationForPlantUnitHead == 1
-                          ? 'Yes'
-                          : 'No',
-                      kcStatBlue),
-                  _Row(Icons.toggle_on_outlined, 'Active',
-                      emp.active == 1 ? 'Yes' : 'No', kcobservationgreen),
                 ],
               ),
             ],
