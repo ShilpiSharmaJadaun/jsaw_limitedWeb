@@ -1,31 +1,14 @@
-import 'package:flutter/cupertino.dart';
-import 'package:jsaw_limited/pages/dashboard.dart';
+import 'package:flutter/widgets.dart';
 import 'package:jsaw_limited/pages/largeDashboard.dart';
 
+/// The redesigned [LargeDashboardPage] is responsive (collapses to a single
+/// column on narrow screens, splits into 7/5 columns when wide), so we use
+/// it for every size now.
 class DashboardselectionPage extends StatelessWidget {
   const DashboardselectionPage({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        double screenWidth = constraints.maxWidth;
-        double screenHeight = constraints.maxHeight;
-print("Width X Height");
-print("$screenWidth*$screenHeight");
-        if (screenWidth >= 1400) {
-          print("larger");
-          // Render the layout for screens larger than or equal to 1600px
-          return ExtraLargeDashboardPage();
-
-        } else {
-          print("smaller");
-          // Render the layout for screens smaller than 1600px
-          return LargeDashboardPage();
-        }
-      },
-    );
+    return const LargeDashboardPage();
   }
 }
-
-
