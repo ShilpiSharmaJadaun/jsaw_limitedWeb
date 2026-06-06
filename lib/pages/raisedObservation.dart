@@ -6,6 +6,7 @@ import 'package:jsaw_limited/bloc/allobservation_bloc.dart';
 import 'package:jsaw_limited/bloc/filterObservation_bloc.dart';
 import 'package:jsaw_limited/model/filterObservation_model.dart';
 import 'package:jsaw_limited/pages/edit_received_observation.dart';
+import 'package:jsaw_limited/pages/widgets/observation_filter.dart';
 import 'package:jsaw_limited/service/observation_service.dart';
 import 'package:jsaw_limited/state/filterObservation_state.dart';
 import 'package:jsaw_limited/utils/app_color.dart';
@@ -58,7 +59,12 @@ class RaisedObservationPage extends StatefulWidget {
   State<RaisedObservationPage> createState() => _RaisedObservationPageState();
 }
 
-class _RaisedObservationPageState extends State<RaisedObservationPage> {
+class _RaisedObservationPageState extends State<RaisedObservationPage>
+    with AutomaticKeepAliveClientMixin {
+  // Keep this tab's State (and blocs) alive inside the TabBarView so dialogs
+  // opened from it never reference a disposed State.
+  @override
+  bool get wantKeepAlive => true;
 
 
   late final RaisedObservationBloc raisedObservationBloc;
@@ -177,6 +183,7 @@ class _RaisedObservationPageState extends State<RaisedObservationPage> {
 
   @override
   Widget build(BuildContext context) {
+    super.build(context); // required by AutomaticKeepAliveClientMixin
     return Scaffold(
       body: _buildObservation(),
     );
@@ -249,7 +256,8 @@ class _RaisedObservationPageState extends State<RaisedObservationPage> {
                   const SizedBox(width: 8),
                   ElevatedButton.icon(
                     onPressed: () {
-                      uniqueIdBloc.initState();
+                      uniqueIdBloc.initState(
+                          observationRaisedByEmpUnqId: window.localStorage.getItem('kEmployeeCode') ?? "");
                       openFilterDialog();
                     },
                     style: ElevatedButton.styleFrom(
@@ -855,59 +863,48 @@ class _RaisedObservationPageState extends State<RaisedObservationPage> {
   Future<void> _buildFilterDialog(BuildContext dialogContext, String employeeCode) {
     return showDialog(
         context: dialogContext,
-        builder: (context) {
-          return AlertDialog(
-            shape: const RoundedRectangleBorder(
-                borderRadius: BorderRadius.all(Radius.circular(10))),
-            contentPadding: const EdgeInsets.all(8.0),
-            content: SizedBox(
-              height: 600,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  const Text("SELECT FILTERS", style: TextStyle(fontWeight: FontWeight.bold),),
-                  _buildDateRangeContainer("Start Date", startDateInput),
-                  _buildDateRangeContainer("End Date", endDateInput),
-                  _buildPlant(),
-                  _buildDepartment(),
-                  _buildStatusContent(statusList),
-                  _buildLocation(),
-                  _buildHazard(),
-                  _buildUniqueId()
-                ],
-              ),
-            ),
-            actions: [
-              ElevatedButton(
-                onPressed: () {
-                  clearFormValues();
-                  Navigator.pop(context);
-                },
-                style: ElevatedButton.styleFrom(backgroundColor: kcRed),
-                child: const Text("Cancel", style: TextStyle(color: kcWhite),),
-              ),
-              ElevatedButton(
-                onPressed: () {
+        builder: (ctx) => ObservationFilterDialog(
+              startDateInput: startDateInput,
+              endDateInput: endDateInput,
+              fromDateInput: fromDateInput,
+              plantWidget: _buildPlant(),
+              departWidget: _buildDepartment(),
+              statusWidget: _buildStatusContent(statusList),
+              locationWidget: _buildLocation(),
+              hazardWidget: _buildHazard(),
+              uniqueIdWidget: _buildUniqueId(),
+              onClear: () {
+                clearFormValues();
+                Navigator.pop(ctx);
+              },
+              onApply: () {
+                // Snapshot the chosen filter values before clearFormValues() wipes them.
+                final fStat = statCode;
+                final fFrom = fromDateInput.text;
+                final fEnd = endDateInput.text;
+                final fLoc = location.value;
+                final fDept = departCode;
+                final fStatus = priority.value;
+                final fHazard = hazard.value;
+                final fUin = uniqueId.value;
 
-                  allFilterObservationBloc.initState(0,statCode, fromDateInput.text, endDateInput.text,
-                      location.value, departCode, priority.value,
-                      hazard.value, "", employeeCode,"",uniqueId.value);
-                  setState(() {
-                    currentPage = 0;
-                  });
-                  html.window.localStorage.removeItem('kRaisedSessionID');
-                  startDateInput.clear();
-                  endDateInput.clear();
-                  clearFormValues();
-                  Navigator.of(dialogContext).pop();
-                },
-                style: ElevatedButton.styleFrom(backgroundColor: kcobservationgreen),
-                child: const Text("Apply Filters", style: TextStyle(color: kcWhite),),
-              ),
-            ],
-          );
-        });
+                // Close the dialog FIRST (using its own context) so it always
+                // dismisses, regardless of what happens with the reload below.
+                Navigator.pop(ctx);
+
+                // Reload raised observations (observationRaisedByEmpUnqId = me).
+                allFilterObservationBloc.initState(0, fStat, fFrom, fEnd,
+                    fLoc, fDept, fStatus, fHazard, "", employeeCode, "", fUin);
+
+                html.window.localStorage.removeItem('kRaisedSessionID');
+                startDateInput.clear();
+                endDateInput.clear();
+                clearFormValues();
+                if (mounted) {
+                  setState(() => currentPage = 0);
+                }
+              },
+            ));
   }
 
   void clearFormValues() {
@@ -922,6 +919,7 @@ class _RaisedObservationPageState extends State<RaisedObservationPage> {
     location.value = "";
     hazard.value = "";
     hazardType.value = "";
+    uniqueId.value = "";
 
     // Clear TextEditingControllers
     startDateInput.clear();
@@ -1002,39 +1000,16 @@ class _RaisedObservationPageState extends State<RaisedObservationPage> {
   //status
 
   Widget _buildStatusContent(List<String> statusList) {
-    return Padding(
-      padding: const EdgeInsets.all(2),
-      child: InkWell(
-        onTap: (){
-          _buildStatusDialog(statusList);  // Call the status dialog
-        },
-        child: SizedBox(
-          width: 180,
-          height: 40,
-          child: Container(
-            decoration: BoxDecoration(borderRadius: BorderRadius.circular(8.0), color: kcWhite),
-            child: ValueListenableBuilder<String>(
-              valueListenable: priority, // Assuming priority stores the selected status
-              builder: (context, value, child) => Padding(
-                padding: const EdgeInsets.all(2.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    SizedBox(
-                      child: Text(
-                        value.isEmpty ? "Filter Status" : priority.value,
-                        textAlign: TextAlign.center,
-                        maxLines: 4,
-                        style: TextStyle(color: (priority.value == "Filter Status") ? kcDarkGreyColor : kcLightGrey),
-                      ),
-                    ),
-                    const Icon(Icons.arrow_drop_down_sharp)
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ),
+    return FilterDropdownChip(
+      notifier: priority, // Assuming priority stores the selected status
+      placeholder: "Filter Status",
+      onTap: () => showObservationPicker<String>(
+        context: context,
+        title: "Select Status",
+        items: statusList,
+        label: (s) => s,
+        filter: (s, q) => s.toLowerCase().contains(q.toLowerCase()),
+        onSelect: (s) => priority.value = s,
       ),
     );
   }
@@ -1142,48 +1117,27 @@ class _RaisedObservationPageState extends State<RaisedObservationPage> {
   }
 
   Widget _buildLoading1(List<AllPlantModel> model){
-    return const CircularProgressIndicator();
+    return const LoadingChip();
   }
 
   Widget _buildContent1(List<AllPlantModel> model){
-    return Padding(
-      padding: const EdgeInsets.all(5),
-      child: InkWell(
-        onTap: (){
-          _buildallPlantListDialog(model);
+    return FilterDropdownChip(
+      notifier: plant,
+      placeholder: "Filter Plant",
+      onTap: () => showObservationPicker<AllPlantModel>(
+        context: context,
+        title: "Select Plant",
+        items: model,
+        label: (m) => m.deptName,
+        filter: (m, q) => m.deptName.toLowerCase().contains(q.toLowerCase()),
+        onSelect: (m) {
+          plant.value = m.deptName;
+          departCode = m.deptCode;
+          allDepartBloc.initState(departCode);
+          locationBloc.initState(departCode);
         },
-        child: SizedBox(
-          width: 250,
-          height: 40,
-          child: Container(
-            // width: 80,
-            decoration: BoxDecoration(borderRadius: BorderRadius.circular(8.0),color: kcWhite),
-            child: ValueListenableBuilder<String>(
-              valueListenable: plant,
-              builder: (context, value, child) => Padding(
-                padding: const EdgeInsets.all(2.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    SizedBox(
-                      // width: 100,
-                      child: Text(
-                        value.isEmpty ? "Select Plant" : plant.value,
-                        textAlign: TextAlign.center,
-                        maxLines: 4,
-                        style: TextStyle(color: (plant.value == "Select Plant") ? kcDarkGreyColor : kcLightGrey),
-                      ),
-                    ),
-                    const Icon(Icons.arrow_drop_down_sharp)
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ),
       ),
     );
-
   }
 
   Future<void> _buildallPlantListDialog(List<AllPlantModel> model) {
@@ -1290,49 +1244,27 @@ class _RaisedObservationPageState extends State<RaisedObservationPage> {
   }
 
   Widget _buildUniqueIDLoding(List<UniqueIdModel> uniqueIdModel){
-    return const CircularProgressIndicator();
+    return const LoadingChip();
   }
 
   Widget _buildUNiqueIdContent(List<UniqueIdModel> uniqueIdModel){
-    return Padding(
-      padding: const EdgeInsets.all(2),
-      child: InkWell(
-        onTap: (){
-          uniqueIdBloc.initState();
-          _buildUniqueIdDialog(uniqueIdModel);
-        },
-        child: SizedBox(
-          width: 200,
-          height: 40,
-          child: Container(
-            decoration: BoxDecoration(borderRadius: BorderRadius.circular(8.0),color: kcWhite),
-            child: ValueListenableBuilder<String>(
-              valueListenable: uniqueId,
-              builder: (context, value, child) => Padding(
-                padding: const EdgeInsets.all(2.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    SizedBox(
-                      // width: 150,
-                      // height: 20,
-                      child: Text(
-                        value.isEmpty ? "Select Unique Id" : uniqueId.value,
-                        textAlign: TextAlign.center,
-                        maxLines: 4,
-                        style: TextStyle(color: (uniqueId.value == "Select Unique Id") ? kcDarkGreyColor : kcLightGrey),
-                      ),
-                    ),
-                    const Icon(Icons.arrow_drop_down_sharp)
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
+    return FilterDropdownChip(
+      notifier: uniqueId,
+      placeholder: "Filter Unique ID",
+      onTap: () {
+        uniqueIdBloc.initState(
+            observationRaisedByEmpUnqId: window.localStorage.getItem('kEmployeeCode') ?? "");
+        showObservationPicker<UniqueIdModel>(
+          context: context,
+          title: "Select Observation ID",
+          items: uniqueIdModel,
+          label: (m) => m.uniqueIdentificationNumber,
+          filter: (m, q) =>
+              m.uniqueIdentificationNumber.toLowerCase().contains(q.toLowerCase()),
+          onSelect: (m) => uniqueId.value = m.uniqueIdentificationNumber,
+        );
+      },
     );
-
   }
 
   Future<void> _buildUniqueIdDialog(List<UniqueIdModel> uniqueIdModel) {
@@ -1728,53 +1660,34 @@ class _RaisedObservationPageState extends State<RaisedObservationPage> {
   }
 
   Widget _buildLoading4(List<AllDepartmentModel> departModel){
-    return const CircularProgressIndicator();
+    return const LoadingChip();
   }
 
   Widget _buildContent4(List<AllDepartmentModel> departModel){
-    return Padding(
-      padding: const EdgeInsets.all(2),
-      child: InkWell(
-        onTap: (){
-          if(departCode.isEmpty){
-            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Please Select Plant")));
-          }else{
-            _buildallDepartDialog(departModel);
-          }
-
-        },
-        child: SizedBox(
-          width: 200,
-          height: 40,
-          child: Container(
-            // width: 80,
-            decoration: BoxDecoration(borderRadius: BorderRadius.circular(8.0),color: kcWhite),
-            child: ValueListenableBuilder<String>(
-              valueListenable: stat,
-              builder: (context, value, child) => Padding(
-                padding: const EdgeInsets.all(2.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    SizedBox(
-                      // width: 100,
-                      child: Text(
-                        value.isEmpty ? "Select State" : stat.value,
-                        textAlign: TextAlign.center,
-                        maxLines: 4,
-                        style: TextStyle(color: (stat.value == "Select Department") ? kcDarkGreyColor : kcLightGrey),
-                      ),
-                    ),
-                    const Icon(Icons.arrow_drop_down_sharp)
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
+    return FilterDropdownChip(
+      notifier: stat,
+      placeholder: "Filter Department",
+      onTap: () {
+        if (departCode.isEmpty) {
+          ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text("Please Select Plant")));
+          return;
+        }
+        showObservationPicker<AllDepartmentModel>(
+          context: context,
+          title: "Select Department",
+          items: departModel,
+          label: (m) => m.statName,
+          filter: (m, q) => m.statName.toLowerCase().contains(q.toLowerCase()),
+          onSelect: (m) {
+            stat.value = m.statName;
+            statCode = m.statCode;
+            employeeResponsibilityBloc.initState(
+                departCode, statCode, window.localStorage.getItem('kGradeCode')!);
+          },
+        );
+      },
     );
-
   }
 
   Future<void> _buildallDepartDialog(List<AllDepartmentModel> departModel) {
@@ -2331,48 +2244,22 @@ class _RaisedObservationPageState extends State<RaisedObservationPage> {
   }
 
   Widget _buildLoading7(List<LocationModel> locationModel){
-    return const CircularProgressIndicator();
+    return const LoadingChip();
   }
 
   Widget _buildContent7(List<LocationModel> locationModel){
-    return Padding(
-      padding: const EdgeInsets.all(2),
-      child: InkWell(
-        onTap: (){
-          _buildLocationDialog(locationModel);
-        },
-        child: SizedBox(
-          width: 200,
-          height: 40,
-          child: Container(
-            decoration: BoxDecoration(borderRadius: BorderRadius.circular(8.0),color: kcWhite),
-            child: ValueListenableBuilder<String>(
-              valueListenable: location,
-              builder: (context, value, child) => Padding(
-                padding: const EdgeInsets.all(2.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    SizedBox(
-                      // width: 150,
-                      // height: 20,
-                      child: Text(
-                        value.isEmpty ? "Select Location" : location.value,
-                        textAlign: TextAlign.center,
-                        maxLines: 4,
-                        style: TextStyle(color: (location.value == "Select Location") ? kcDarkGreyColor : kcLightGrey),
-                      ),
-                    ),
-                    const Icon(Icons.arrow_drop_down_sharp)
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ),
+    return FilterDropdownChip(
+      notifier: location,
+      placeholder: "Filter Location",
+      onTap: () => showObservationPicker<LocationModel>(
+        context: context,
+        title: "Select Location",
+        items: locationModel,
+        label: (m) => m.locations,
+        filter: (m, q) => m.locations.toLowerCase().contains(q.toLowerCase()),
+        onSelect: (m) => location.value = m.locations,
       ),
     );
-
   }
 
   Future<void> _buildLocationDialog(List<LocationModel> locationModel) {
@@ -2475,48 +2362,23 @@ class _RaisedObservationPageState extends State<RaisedObservationPage> {
   }
 
   Widget _buildLoading8(List<AllHazardCatModel> hazardModel){
-    return const CircularProgressIndicator();
+    return const LoadingChip();
   }
 
   Widget _buildContent8(List<AllHazardCatModel> hazardModel){
-    return Padding(
-      padding: const EdgeInsets.all(2),
-      child: InkWell(
-        onTap: (){
-          _buildHazardDialog(hazardModel);
-        },
-        child: SizedBox(
-          width: 200,
-          height: 40,
-          child: Container(
-            decoration: BoxDecoration(borderRadius: BorderRadius.circular(8.0),color: kcWhite),
-            child: ValueListenableBuilder<String>(
-              valueListenable: hazard,
-              builder: (context, value, child) => Padding(
-                padding: const EdgeInsets.all(2.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    SizedBox(
-                      // width: 150,
-                      // height: 20,
-                      child: Text(
-                        value.isEmpty ? "Select Hazard" : hazard.value,
-                        textAlign: TextAlign.center,
-                        maxLines: 4,
-                        style: TextStyle(color: (hazard.value == "Select Hazard") ? kcDarkGreyColor : kcLightGrey),
-                      ),
-                    ),
-                    const Icon(Icons.arrow_drop_down_sharp)
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ),
+    return FilterDropdownChip(
+      notifier: hazard,
+      placeholder: "Filter Hazard Category",
+      onTap: () => showObservationPicker<AllHazardCatModel>(
+        context: context,
+        title: "Select Hazard Category",
+        items: hazardModel,
+        label: (m) => m.hazardCategoryName,
+        filter: (m, q) =>
+            m.hazardCategoryName.toLowerCase().contains(q.toLowerCase()),
+        onSelect: (m) => hazard.value = m.hazardCategoryName,
       ),
     );
-
   }
 
   Future<void> _buildHazardDialog(List<AllHazardCatModel> hazardModel) {

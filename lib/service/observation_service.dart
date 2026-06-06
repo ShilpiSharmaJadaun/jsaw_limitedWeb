@@ -665,6 +665,140 @@ class ObservationService{
   }
 
 
+  //Unique Id list scoped to received observations (i.e. where the given
+  //employee is the responsibility engineer) — used by the Received tab.
+  Future<List<UniqueIdModel>> getReceivedUniqueIdList(String responsibilityEnggCode) =>
+      _getScopedUniqueIdList(responsibilityEnggCode: responsibilityEnggCode);
+
+  //Unique Id list scoped to raised observations (i.e. raised by the given
+  //employee) — used by the Raised tab.
+  Future<List<UniqueIdModel>> getRaisedUniqueIdList(String observationRaisedByEmpUnqId) =>
+      _getScopedUniqueIdList(observationRaisedByEmpUnqId: observationRaisedByEmpUnqId);
+
+  //Unique Id list scoped to the given observation statuses (e.g. PENDING /
+  //IN PROGRESS) — used by the Edit tab. The endpoint filters one status at a
+  //time, so each status is paged separately and the distinct UINs merged.
+  Future<List<UniqueIdModel>> getUniqueIdListByStatuses(List<String> statuses) async {
+    final seen = <String>{};
+    final result = <UniqueIdModel>[];
+    for (final status in statuses) {
+      for (final u in await _getScopedUniqueIdList(status: status)) {
+        if (seen.add(u.uniqueIdentificationNumber)) result.add(u);
+      }
+    }
+    return result;
+  }
+
+  //All observations across the given statuses, merged & de-duplicated by UIN.
+  //The endpoint filters one status at a time, so each status is paged fully and
+  //combined. Used by the Edit tab (PENDING + IN PROGRESS), which paginates the
+  //merged list client-side. No sessionID side effects.
+  Future<List<FilterObservationModel>> getObservationsByStatuses(
+    List<String> statuses, {
+    String stationCode = "",
+    String startDate = "",
+    String endDate = "",
+    String location = "",
+    String plantDeptCode = "",
+    String uniqueId = "",
+  }) async {
+    const int size = 100;
+    const int maxPages = 200; // safety cap per status
+    final seen = <String>{};
+    final result = <FilterObservationModel>[];
+    try {
+      for (final status in statuses) {
+        int page = 0;
+        bool morePages = true;
+        while (morePages && page < maxPages) {
+          final url = '${root}observation/filterObservation?page=$page&size=$size';
+          final body = {
+            "stationCode": stationCode,
+            "startDate": startDate,
+            "endDate": endDate,
+            "location": location,
+            "plantDeptCode": plantDeptCode,
+            "status": status,
+            "hazardCategory": "",
+            "responsibilityEnggCode": "",
+            "observationRaisedByEmpUnqId": "",
+            "sessionID": "",
+            "uniqueIdentificationNumber": uniqueId
+          };
+          final response = await authHttp.post(Uri.parse(url), headers: getHeaders(), body: json.encode(body));
+          final responseBody = json.decode(response.body);
+          if (responseBody["status"] != true) break;
+          final itemList = responseBody["model"] as List;
+          for (final e in itemList) {
+            final obs = FilterObservationModel.fromJson(e);
+            if (obs.uniqueIdentificationNumber.isEmpty || seen.add(obs.uniqueIdentificationNumber)) {
+              result.add(obs);
+            }
+          }
+          morePages = itemList.length == size;
+          page++;
+        }
+      }
+    } catch (e) {
+      _handleError(e);
+    }
+    return result;
+  }
+
+  //Shared pager over the filterObservation endpoint that collects distinct
+  //UINs for whichever scope is supplied. Pages through all results and
+  //de-duplicates. Does NOT write any sessionID to localStorage, so it won't
+  //disturb a page's own pagination session.
+  Future<List<UniqueIdModel>> _getScopedUniqueIdList({
+    String responsibilityEnggCode = "",
+    String observationRaisedByEmpUnqId = "",
+    String status = "",
+  }) async {
+    const int size = 100;
+    const int maxPages = 100; // safety cap (<= size * maxPages observations)
+    final seen = <String>{};
+    final result = <UniqueIdModel>[];
+    int page = 0;
+    bool morePages = true;
+    try {
+      // The endpoint's `totalPages` is unreliable (observed returning 0 even
+      // when rows exist), so page until a non-full page comes back rather than
+      // trusting it.
+      while (morePages && page < maxPages) {
+        final url = '${root}observation/filterObservation?page=$page&size=$size';
+        final body = {
+          "stationCode": "",
+          "startDate": "",
+          "endDate": "",
+          "location": "",
+          "plantDeptCode": "",
+          "status": status,
+          "hazardCategory": "",
+          "responsibilityEnggCode": responsibilityEnggCode,
+          "observationRaisedByEmpUnqId": observationRaisedByEmpUnqId,
+          "sessionID": "",
+          "uniqueIdentificationNumber": ""
+        };
+        final response = await authHttp.post(Uri.parse(url), headers: getHeaders(), body: json.encode(body));
+        final responseBody = json.decode(response.body);
+        if (responseBody["status"] != true) break;
+        final itemList = responseBody["model"] as List;
+        for (final e in itemList) {
+          final uin = FilterObservationModel.fromJson(e).uniqueIdentificationNumber;
+          if (uin.isNotEmpty && seen.add(uin)) {
+            result.add(UniqueIdModel(uniqueIdentificationNumber: uin));
+          }
+        }
+        morePages = itemList.length == size; // a full page implies there may be more
+        page++;
+      }
+    } catch (e) {
+      _handleError(e);
+    }
+    return result;
+  }
+
+
   //plant Head
 
   Future<List<PlantHeadModel>> getPlantHead(String plantCode)async{

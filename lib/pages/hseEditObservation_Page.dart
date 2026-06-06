@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 import 'package:jsaw_limited/bloc/deleteObservation_bloc.dart';
+import 'package:jsaw_limited/pages/widgets/observation_filter.dart';
 import 'package:lottie/lottie.dart';
 import 'package:provider/provider.dart';
 import 'package:responsive_builder/responsive_builder.dart';
@@ -10,6 +11,7 @@ import 'package:web/web.dart' show window;
 import 'package:web/web.dart' as html;
 import '../bloc/allDepart_bloc.dart';
 import '../bloc/all_filter_observation_bloc.dart';
+import '../bloc/edit_observation_list_bloc.dart';
 import '../bloc/allhazard_cat_bloc.dart';
 import '../bloc/allplant_bloc.dart';
 import '../bloc/alltype_hazard_bloc.dart';
@@ -54,7 +56,10 @@ class HseEditObservationPage extends StatefulWidget {
   State<HseEditObservationPage> createState() => _HseEditObservationPageState();
 }
 
-class _HseEditObservationPageState extends State<HseEditObservationPage> {
+class _HseEditObservationPageState extends State<HseEditObservationPage>
+    with AutomaticKeepAliveClientMixin {
+  @override
+  bool get wantKeepAlive => true;
 
 
   late final RaisedObservationBloc raisedObservationBloc;
@@ -83,7 +88,7 @@ class _HseEditObservationPageState extends State<HseEditObservationPage> {
   //
   // late final AllObservationBloc allObservationBloc;
 
-  late final AllFilterObservationBloc allFilterObservationBloc;
+  late final EditObservationListBloc editListBloc;
 
   late final DeleteObservationBloc deleteObservationBloc;
 
@@ -137,8 +142,8 @@ class _HseEditObservationPageState extends State<HseEditObservationPage> {
     //filterObservationBloc.initState(currentPage,"", "", "", "", "", "", "", "", window.localStorage.getItem('kEmployeeCode') ?? "");
     allPlantBloc = AllPlantBloc(observationService);
     allPlantBloc.initState();
-    allFilterObservationBloc = AllFilterObservationBloc(observationService);
-    allFilterObservationBloc.initState(currentPage, "", "", "", "", "", "PENDING", "", "", "", "", "");
+    editListBloc = EditObservationListBloc(observationService);
+    editListBloc.loadAll(const ['PENDING', 'IN PROGRESS']);
     allDepartBloc = AllDepartBloc(observationService);
     employeeResponsibilityBloc = EmployeeResponsibilityBloc(observationService);
     employeeName = window.localStorage.getItem('kEmployeename') ?? "";
@@ -160,7 +165,7 @@ class _HseEditObservationPageState extends State<HseEditObservationPage> {
   void _nextPage() {
     setState(() {
       currentPage++;
-      allFilterObservationBloc.initState(currentPage,"", "", "", "", "", "PENDING", "", "", "",raisedSessionID,"");
+      editListBloc.emitPage(currentPage);
     });
   }
 
@@ -168,7 +173,7 @@ class _HseEditObservationPageState extends State<HseEditObservationPage> {
     if (currentPage > 0) {
       setState(() {
         currentPage--;
-        allFilterObservationBloc.initState(currentPage,"", "", "", "", "", "PENDING", "", "", "",raisedSessionID,"");
+        editListBloc.emitPage(currentPage);
       });
     }
   }
@@ -176,14 +181,15 @@ class _HseEditObservationPageState extends State<HseEditObservationPage> {
 
   @override
   Widget build(BuildContext context) {
+    super.build(context); // required by AutomaticKeepAliveClientMixin
     return Scaffold(
       body: _buildObservation(),
     );
   }
 
   _buildObservation() {
-    return BlocConsumer<AllFilterObservationBloc, AllFilterObservationState>(
-      bloc: allFilterObservationBloc,
+    return BlocConsumer<EditObservationListBloc, AllFilterObservationState>(
+      bloc: editListBloc,
       listener: (_, state) {},
       builder: (_, state) {
         return state.when(
@@ -221,27 +227,28 @@ class _HseEditObservationPageState extends State<HseEditObservationPage> {
               ),
               Row(
                 children: [
-                  Container(
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFD4F4DD),
-                      borderRadius: BorderRadius.circular(10),
+                  IconButton(
+                    onPressed: () {
+                      setState(() {
+                        currentPage = 0;
+                      });
+                      editListBloc.loadAll(const ['PENDING', 'IN PROGRESS']);
+                    },
+                    style: IconButton.styleFrom(
+                      backgroundColor: kcgreen,
+                      foregroundColor: kcMediumGrey,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(6),
+                      ),
                     ),
-                    child: IconButton(
-                      tooltip: 'Refresh',
-                      onPressed: () {
-                        setState(() {
-                          currentPage = 0;
-                        });
-                        allFilterObservationBloc.initState(
-                            0, "", "", "", "", "", "PENDING", "", "", "", "", "");
-                      },
-                      icon: Icon(Icons.refresh, color: kcStatGreen),
-                    ),
+                    tooltip: 'Refresh',
+                    icon: const Icon(Icons.refresh),
                   ),
                   const SizedBox(width: 8),
                   ElevatedButton.icon(
                     onPressed: () {
-                      uniqueIdBloc.initState();
+                      uniqueIdBloc.initState(
+                          statuses: const ['PENDING', 'IN PROGRESS']);
                       openFilterDialog();
                     },
                     icon: const Icon(Icons.filter_alt_outlined, size: 18),
@@ -320,7 +327,8 @@ class _HseEditObservationPageState extends State<HseEditObservationPage> {
   void _deleteObservation(String uniqueIdentificationNumber, String updatedByEmpId) async {
     final data = {'uniqueIdentificationNumber': uniqueIdentificationNumber, 'updatedByEmpId': updatedByEmpId};
     await deleteObservationBloc.deleteObservation(data);
-    allFilterObservationBloc.initState(0,"", "", "", "", "", "PENDING", "", "", "","","");
+    currentPage = 0;
+    editListBloc.loadAll(const ['PENDING', 'IN PROGRESS']);
     ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Observation Deleted Successfully")));
     Navigator.of(context).pop(); // Close dialog
   }
@@ -670,8 +678,8 @@ class _HseEditObservationPageState extends State<HseEditObservationPage> {
                             ),
                           );
                           if (shouldInit != null && shouldInit) {
-                            allFilterObservationBloc.initState(currentPage, "", "", "", "",
-                                "", "PENDING", "", "", "", "", "");
+                            currentPage = 0;
+                            editListBloc.loadAll(const ['PENDING', 'IN PROGRESS']);
                           }
                         },
                         icon: const Icon(
@@ -857,59 +865,52 @@ class _HseEditObservationPageState extends State<HseEditObservationPage> {
 
   Future<void> _buildFilterDialog(BuildContext dialogContext, String employeeCode) {
     return showDialog(
-        context: dialogContext,
-        builder: (context) {
-          return AlertDialog(
-            shape: const RoundedRectangleBorder(
-                borderRadius: BorderRadius.all(Radius.circular(10))),
-            contentPadding: const EdgeInsets.all(8.0),
-            content: SizedBox(
-              height: 600,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  const Text("SELECT FILTERS", style: TextStyle(fontWeight: FontWeight.bold),),
-                  _buildDateRangeContainer("Start Date", startDateInput),
-                  _buildDateRangeContainer("End Date", endDateInput),
-                  _buildPlant(),
-                  _buildDepartment(),
-                  _buildStatusContent(statusList),
-                  _buildLocation(),
-                  _buildHazard(),
-                  _buildUniqueId()
-                ],
-              ),
-            ),
-            actions: [
-              ElevatedButton(
-                onPressed: () {
-                  clearFormValues();
-                  Navigator.pop(context);
-                },
-                style: ElevatedButton.styleFrom(backgroundColor: kcRed),
-                child: const Text("Cancel", style: TextStyle(color: kcWhite),),
-              ),
-              ElevatedButton(
-                onPressed: () {
+      context: dialogContext,
+      builder: (ctx) => ObservationFilterDialog(
+        startDateInput: startDateInput,
+        endDateInput: endDateInput,
+        fromDateInput: fromDateInput,
+        plantWidget: _buildPlant(),
+        departWidget: _buildDepartment(),
+        statusWidget: _buildStatusContent(statusList),
+        locationWidget: _buildLocation(),
+        hazardWidget: _buildHazard(),
+        uniqueIdWidget: _buildUniqueId(),
+        onClear: () {
+          clearFormValues();
+          Navigator.pop(ctx);
+        },
+        onApply: () {
+          // Snapshot the chosen filter values before clearFormValues() wipes them.
+          final fStat = statCode;
+          final fFrom = fromDateInput.text;
+          final fEnd = endDateInput.text;
+          final fLoc = location.value;
+          final fDept = departCode;
+          final fUin = uniqueId.value;
 
-                  allFilterObservationBloc.initState(0,statCode, fromDateInput.text, endDateInput.text, location.value,
-                      departCode, "PENDING", "", "", "","",uniqueId.value);
-                  setState(() {
-                    currentPage = 0;
-                  });
-                  html.window.localStorage.removeItem('kRaisedSessionID');
-                  startDateInput.clear();
-                  endDateInput.clear();
-                  clearFormValues();
-                  Navigator.of(dialogContext).pop();
-                },
-                style: ElevatedButton.styleFrom(backgroundColor: kcobservationgreen),
-                child: const Text("Apply Filters", style: TextStyle(color: kcWhite),),
-              ),
-            ],
-          );
-        });
+          // Close the dialog FIRST (using its own context) so it always
+          // dismisses, regardless of what happens with the reload below.
+          Navigator.pop(ctx);
+
+          // Reload the merged PENDING + IN PROGRESS list with the selected
+          // filters; pagination resets to the first (client-side) page below.
+          editListBloc.loadAll(const ['PENDING', 'IN PROGRESS'],
+              stationCode: fStat,
+              startDate: fFrom,
+              endDate: fEnd,
+              location: fLoc,
+              plantDeptCode: fDept,
+              uniqueId: fUin);
+          startDateInput.clear();
+          endDateInput.clear();
+          clearFormValues();
+          if (mounted) {
+            setState(() => currentPage = 0);
+          }
+        },
+      ),
+    );
   }
 
   void clearFormValues() {
@@ -924,6 +925,7 @@ class _HseEditObservationPageState extends State<HseEditObservationPage> {
     location.value = "";
     hazard.value = "";
     hazardType.value = "";
+    uniqueId.value = "";
 
     // Clear TextEditingControllers
     startDateInput.clear();
@@ -1004,39 +1006,16 @@ class _HseEditObservationPageState extends State<HseEditObservationPage> {
   //status
 
   Widget _buildStatusContent(List<String> statusList) {
-    return Padding(
-      padding: const EdgeInsets.all(2),
-      child: InkWell(
-        onTap: (){
-          _buildStatusDialog(statusList);  // Call the status dialog
-        },
-        child: SizedBox(
-          width: 180,
-          height: 40,
-          child: Container(
-            decoration: BoxDecoration(borderRadius: BorderRadius.circular(8.0), color: kcWhite),
-            child: ValueListenableBuilder<String>(
-              valueListenable: priority, // Assuming priority stores the selected status
-              builder: (context, value, child) => Padding(
-                padding: const EdgeInsets.all(2.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    SizedBox(
-                      child: Text(
-                        value.isEmpty ? "Filter Status" : priority.value,
-                        textAlign: TextAlign.center,
-                        maxLines: 4,
-                        style: TextStyle(color: (priority.value == "Filter Status") ? kcDarkGreyColor : kcLightGrey),
-                      ),
-                    ),
-                    const Icon(Icons.arrow_drop_down_sharp)
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ),
+    return FilterDropdownChip(
+      notifier: priority, // priority stores the selected status
+      placeholder: "Filter Status",
+      onTap: () => showObservationPicker<String>(
+        context: context,
+        title: "Select Status",
+        items: statusList,
+        label: (s) => s,
+        filter: (s, q) => s.toLowerCase().contains(q.toLowerCase()),
+        onSelect: (s) => priority.value = s,
       ),
     );
   }
@@ -1144,48 +1123,27 @@ class _HseEditObservationPageState extends State<HseEditObservationPage> {
   }
 
   Widget _buildLoading1(List<AllPlantModel> model){
-    return const CircularProgressIndicator();
+    return const LoadingChip();
   }
 
   Widget _buildContent1(List<AllPlantModel> model){
-    return Padding(
-      padding: const EdgeInsets.all(5),
-      child: InkWell(
-        onTap: (){
-          _buildallPlantListDialog(model);
+    return FilterDropdownChip(
+      notifier: plant,
+      placeholder: "Filter Plant",
+      onTap: () => showObservationPicker<AllPlantModel>(
+        context: context,
+        title: "Select Plant",
+        items: model,
+        label: (m) => m.deptName,
+        filter: (m, q) => m.deptName.toLowerCase().contains(q.toLowerCase()),
+        onSelect: (m) {
+          plant.value = m.deptName;
+          departCode = m.deptCode;
+          allDepartBloc.initState(departCode);
+          locationBloc.initState(departCode);
         },
-        child: SizedBox(
-          width: 250,
-          height: 40,
-          child: Container(
-            // width: 80,
-            decoration: BoxDecoration(borderRadius: BorderRadius.circular(8.0),color: kcWhite),
-            child: ValueListenableBuilder<String>(
-              valueListenable: plant,
-              builder: (context, value, child) => Padding(
-                padding: const EdgeInsets.all(2.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    SizedBox(
-                      // width: 100,
-                      child: Text(
-                        value.isEmpty ? "Select Plant" : plant.value,
-                        textAlign: TextAlign.center,
-                        maxLines: 4,
-                        style: TextStyle(color: (plant.value == "Select Plant") ? kcDarkGreyColor : kcLightGrey),
-                      ),
-                    ),
-                    const Icon(Icons.arrow_drop_down_sharp)
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ),
       ),
     );
-
   }
 
   Future<void> _buildallPlantListDialog(List<AllPlantModel> model) {
@@ -1292,49 +1250,26 @@ class _HseEditObservationPageState extends State<HseEditObservationPage> {
   }
 
   Widget _buildUniqueIDLoding(List<UniqueIdModel> uniqueIdModel){
-    return const CircularProgressIndicator();
+    return const LoadingChip();
   }
 
   Widget _buildUNiqueIdContent(List<UniqueIdModel> uniqueIdModel){
-    return Padding(
-      padding: const EdgeInsets.all(2),
-      child: InkWell(
-        onTap: (){
-          uniqueIdBloc.initState();
-          _buildUniqueIdDialog(uniqueIdModel);
-        },
-        child: SizedBox(
-          width: 200,
-          height: 40,
-          child: Container(
-            decoration: BoxDecoration(borderRadius: BorderRadius.circular(8.0),color: kcWhite),
-            child: ValueListenableBuilder<String>(
-              valueListenable: uniqueId,
-              builder: (context, value, child) => Padding(
-                padding: const EdgeInsets.all(2.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    SizedBox(
-                      // width: 150,
-                      // height: 20,
-                      child: Text(
-                        value.isEmpty ? "Select Unique Id" : uniqueId.value,
-                        textAlign: TextAlign.center,
-                        maxLines: 4,
-                        style: TextStyle(color: (uniqueId.value == "Select Unique Id") ? kcDarkGreyColor : kcLightGrey),
-                      ),
-                    ),
-                    const Icon(Icons.arrow_drop_down_sharp)
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
+    return FilterDropdownChip(
+      notifier: uniqueId,
+      placeholder: "Filter Unique ID",
+      onTap: () {
+        uniqueIdBloc.initState(statuses: const ['PENDING', 'IN PROGRESS']);
+        showObservationPicker<UniqueIdModel>(
+          context: context,
+          title: "Select Unique Id",
+          items: uniqueIdModel,
+          label: (m) => m.uniqueIdentificationNumber,
+          filter: (m, q) =>
+              m.uniqueIdentificationNumber.toLowerCase().contains(q.toLowerCase()),
+          onSelect: (m) => uniqueId.value = m.uniqueIdentificationNumber,
+        );
+      },
     );
-
   }
 
   Future<void> _buildUniqueIdDialog(List<UniqueIdModel> uniqueIdModel) {
@@ -1730,53 +1665,34 @@ class _HseEditObservationPageState extends State<HseEditObservationPage> {
   }
 
   Widget _buildLoading4(List<AllDepartmentModel> departModel){
-    return const CircularProgressIndicator();
+    return const LoadingChip();
   }
 
   Widget _buildContent4(List<AllDepartmentModel> departModel){
-    return Padding(
-      padding: const EdgeInsets.all(2),
-      child: InkWell(
-        onTap: (){
-          if(departCode.isEmpty){
-            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Please Select Plant")));
-          }else{
-            _buildallDepartDialog(departModel);
-          }
-
-        },
-        child: SizedBox(
-          width: 200,
-          height: 40,
-          child: Container(
-            // width: 80,
-            decoration: BoxDecoration(borderRadius: BorderRadius.circular(8.0),color: kcWhite),
-            child: ValueListenableBuilder<String>(
-              valueListenable: stat,
-              builder: (context, value, child) => Padding(
-                padding: const EdgeInsets.all(2.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    SizedBox(
-                      // width: 100,
-                      child: Text(
-                        value.isEmpty ? "Select State" : stat.value,
-                        textAlign: TextAlign.center,
-                        maxLines: 4,
-                        style: TextStyle(color: (stat.value == "Select Department") ? kcDarkGreyColor : kcLightGrey),
-                      ),
-                    ),
-                    const Icon(Icons.arrow_drop_down_sharp)
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
+    return FilterDropdownChip(
+      notifier: stat,
+      placeholder: "Filter Department",
+      onTap: () {
+        if (departCode.isEmpty) {
+          ScaffoldMessenger.of(context)
+              .showSnackBar(const SnackBar(content: Text("Please Select Plant")));
+          return;
+        }
+        showObservationPicker<AllDepartmentModel>(
+          context: context,
+          title: "Select Department",
+          items: departModel,
+          label: (m) => m.statName,
+          filter: (m, q) => m.statName.toLowerCase().contains(q.toLowerCase()),
+          onSelect: (m) {
+            stat.value = m.statName;
+            statCode = m.statCode;
+            employeeResponsibilityBloc.initState(
+                departCode, statCode, window.localStorage.getItem('kGradeCode')!);
+          },
+        );
+      },
     );
-
   }
 
   Future<void> _buildallDepartDialog(List<AllDepartmentModel> departModel) {
@@ -2333,48 +2249,22 @@ class _HseEditObservationPageState extends State<HseEditObservationPage> {
   }
 
   Widget _buildLoading7(List<LocationModel> locationModel){
-    return const CircularProgressIndicator();
+    return const LoadingChip();
   }
 
   Widget _buildContent7(List<LocationModel> locationModel){
-    return Padding(
-      padding: const EdgeInsets.all(2),
-      child: InkWell(
-        onTap: (){
-          _buildLocationDialog(locationModel);
-        },
-        child: SizedBox(
-          width: 200,
-          height: 40,
-          child: Container(
-            decoration: BoxDecoration(borderRadius: BorderRadius.circular(8.0),color: kcWhite),
-            child: ValueListenableBuilder<String>(
-              valueListenable: location,
-              builder: (context, value, child) => Padding(
-                padding: const EdgeInsets.all(2.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    SizedBox(
-                      // width: 150,
-                      // height: 20,
-                      child: Text(
-                        value.isEmpty ? "Select Location" : location.value,
-                        textAlign: TextAlign.center,
-                        maxLines: 4,
-                        style: TextStyle(color: (location.value == "Select Location") ? kcDarkGreyColor : kcLightGrey),
-                      ),
-                    ),
-                    const Icon(Icons.arrow_drop_down_sharp)
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ),
+    return FilterDropdownChip(
+      notifier: location,
+      placeholder: "Filter Location",
+      onTap: () => showObservationPicker<LocationModel>(
+        context: context,
+        title: "Select Location",
+        items: locationModel,
+        label: (m) => m.locations,
+        filter: (m, q) => m.locations.toLowerCase().contains(q.toLowerCase()),
+        onSelect: (m) => location.value = m.locations,
       ),
     );
-
   }
 
   Future<void> _buildLocationDialog(List<LocationModel> locationModel) {
@@ -2477,48 +2367,23 @@ class _HseEditObservationPageState extends State<HseEditObservationPage> {
   }
 
   Widget _buildLoading8(List<AllHazardCatModel> hazardModel){
-    return const CircularProgressIndicator();
+    return const LoadingChip();
   }
 
   Widget _buildContent8(List<AllHazardCatModel> hazardModel){
-    return Padding(
-      padding: const EdgeInsets.all(2),
-      child: InkWell(
-        onTap: (){
-          _buildHazardDialog(hazardModel);
-        },
-        child: SizedBox(
-          width: 200,
-          height: 40,
-          child: Container(
-            decoration: BoxDecoration(borderRadius: BorderRadius.circular(8.0),color: kcWhite),
-            child: ValueListenableBuilder<String>(
-              valueListenable: hazard,
-              builder: (context, value, child) => Padding(
-                padding: const EdgeInsets.all(2.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    SizedBox(
-                      // width: 150,
-                      // height: 20,
-                      child: Text(
-                        value.isEmpty ? "Select Hazard" : hazard.value,
-                        textAlign: TextAlign.center,
-                        maxLines: 4,
-                        style: TextStyle(color: (hazard.value == "Select Hazard") ? kcDarkGreyColor : kcLightGrey),
-                      ),
-                    ),
-                    const Icon(Icons.arrow_drop_down_sharp)
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ),
+    return FilterDropdownChip(
+      notifier: hazard,
+      placeholder: "Filter Hazard",
+      onTap: () => showObservationPicker<AllHazardCatModel>(
+        context: context,
+        title: "Select Hazard",
+        items: hazardModel,
+        label: (m) => m.hazardCategoryName,
+        filter: (m, q) =>
+            m.hazardCategoryName.toLowerCase().contains(q.toLowerCase()),
+        onSelect: (m) => hazard.value = m.hazardCategoryName,
       ),
     );
-
   }
 
   Future<void> _buildHazardDialog(List<AllHazardCatModel> hazardModel) {

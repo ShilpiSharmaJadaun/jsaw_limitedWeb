@@ -54,7 +54,9 @@
       "Bash(netstat -ano)",
       "Bash(taskkill *)",
       "Bash(grep -E --line-buffered \"Compiling|Built|Error|Exception|Failed|error:|Warning|✓|✗|build/web|Tree-shaking|build\\\\\\\\\\\\\\\\web\")",
-      "Bash(grep -E --line-buffered \"Compiling|Built|Error|Exception|Failed|error:|✓|✗|build\\\\\\\\\\\\\\\\web\")"
+      "Bash(grep -E --line-buffered \"Compiling|Built|Error|Exception|Failed|error:|✓|✗|build\\\\\\\\\\\\\\\\web\")",
+      "Skill(run)",
+      "PowerShell(netsh interface *)"
     ]
   }
 }

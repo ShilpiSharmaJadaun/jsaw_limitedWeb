@@ -187,7 +187,13 @@ class AllObservationPage extends StatefulWidget {
   State<AllObservationPage> createState() => _AllObservationPageState();
 }
 
-class _AllObservationPageState extends State<AllObservationPage> {
+class _AllObservationPageState extends State<AllObservationPage>
+    with AutomaticKeepAliveClientMixin {
+  // Keep this tab's State (and blocs) alive inside the TabBarView so dialogs
+  // opened from it never reference a disposed State.
+  @override
+  bool get wantKeepAlive => true;
+
   late final AllObservaionTillDateBloc allObservaionTillDateBloc;
   late final ObservationbyUniBloc observationbyUniBloc;
   late final AllPlantBloc allPlantBloc;
@@ -284,6 +290,7 @@ class _AllObservationPageState extends State<AllObservationPage> {
   // ─────────────────────────────────────────────────────────────────────────
   @override
   Widget build(BuildContext context) {
+    super.build(context); // required by AutomaticKeepAliveClientMixin
     return Scaffold(
       body: SingleChildScrollView(child: _buildObservation()),
     );
@@ -343,15 +350,20 @@ class _AllObservationPageState extends State<AllObservationPage> {
           ),
           Row(
             children: [
-              _toolbarIconButton(
-                icon: Icons.refresh_rounded,
-                tooltip: 'Refresh',
-                color: kcgreen,
+              IconButton(
                 onPressed: () {
                   setState(() => currentPage = 0);
                   allFilterObservationBloc.initState(
                       0, '', '', '', '', '', '', '', '', '', '', '');
                 },
+                style: IconButton.styleFrom(
+                  backgroundColor: kcgreen,
+                  foregroundColor: kcMediumGrey,
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(6)),
+                ),
+                tooltip: 'Refresh',
+                icon: const Icon(Icons.refresh),
               ),
               const SizedBox(width: 10),
               ElevatedButton.icon(
@@ -606,26 +618,30 @@ class _AllObservationPageState extends State<AllObservationPage> {
           Navigator.pop(dialogContext);
         },
         onApply: () {
+          // Snapshot the chosen filter values before _clearFormValues() wipes them.
+          final fStat = statCode;
+          final fFrom = fromDateInput.text;
+          final fEnd = endDateInput.text;
+          final fLoc = location.value;
+          final fDept = departCode;
+          final fStatus = priority.value;
+          final fHazard = hazard.value;
+          final fUin = uniqueId.value;
+
+          // Close the dialog FIRST so it always dismisses.
+          Navigator.of(dialogContext).pop();
+
+          // Reload all observations (no employee filter) with the chosen filters.
           allFilterObservationBloc.initState(
-            0,
-            statCode,
-            fromDateInput.text,
-            endDateInput.text,
-            location.value,
-            departCode,
-            priority.value,
-            hazard.value,
-            '',
-            '',
-            '',
-            uniqueId.value,
-          );
-          setState(() => currentPage = 0);
+              0, fStat, fFrom, fEnd, fLoc, fDept, fStatus, fHazard, '', '', '', fUin);
+
           html.window.localStorage.removeItem('kAllSessionID');
           startDateInput.clear();
           endDateInput.clear();
           _clearFormValues();
-          Navigator.of(dialogContext).pop();
+          if (mounted) {
+            setState(() => currentPage = 0);
+          }
         },
       ),
     );
@@ -642,6 +658,7 @@ class _AllObservationPageState extends State<AllObservationPage> {
     location.value = '';
     hazard.value = '';
     hazardType.value = '';
+    uniqueId.value = '';
     startDateInput.clear();
     endDateInput.clear();
     fromDateInput.clear();
