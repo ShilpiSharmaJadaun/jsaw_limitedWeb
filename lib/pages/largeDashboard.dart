@@ -206,15 +206,17 @@ class _LargeDashboardPageState extends State<LargeDashboardPage> {
   }
 
   Widget _statCard(_StatTile t) {
+    // Soft pastel tint of the status color, blended over white so it stays light.
+    final tintBg = Color.alphaBlend(t.color.withOpacity(0.12), kcWhite);
     return Container(
       padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
-        color: kcWhite,
+        color: tintBg,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.shade200),
+        border: Border.all(color: t.color.withOpacity(0.25)),
         boxShadow: [
           BoxShadow(
-            color: t.color.withOpacity(0.08),
+            color: t.color.withOpacity(0.10),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -226,7 +228,7 @@ class _LargeDashboardPageState extends State<LargeDashboardPage> {
           Container(
             padding: const EdgeInsets.all(6),
             decoration: BoxDecoration(
-              color: t.color.withOpacity(0.13),
+              color: t.color.withOpacity(0.16),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Icon(t.icon, color: t.color, size: 16),
@@ -244,12 +246,12 @@ class _LargeDashboardPageState extends State<LargeDashboardPage> {
           const SizedBox(height: 1),
           Text(
             t.label,
-            maxLines: 1,
+            maxLines: 2,
             overflow: TextOverflow.ellipsis,
             style: const TextStyle(
-              fontSize: 10,
+              fontSize: 14,
               color: kcLabelGrey,
-              fontWeight: FontWeight.w600,
+              fontWeight: FontWeight.w700,
             ),
           ),
         ],
@@ -450,8 +452,9 @@ class _LargeDashboardPageState extends State<LargeDashboardPage> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         _topCategoriesCard(),
-        const SizedBox(height: 16),
-        _writeUsCard(),
+        // Write Us card hidden from dashboard.
+        // const SizedBox(height: 16),
+        // _writeUsCard(),
       ],
     );
   }

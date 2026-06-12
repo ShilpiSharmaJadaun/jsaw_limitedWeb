@@ -43,7 +43,7 @@ class _InvestigationTeamPageState extends State<InvestigationTeamPage>
   // Inline edit mode (kept inside the tab so the app shell stays visible)
   InvestigationReportResponse? _editingReport;
 
-  String _selectedIncidentUniqueId = "Select Unique Id";
+  String _selectedIncidentUniqueId = "Select Incident ID";
 
   // ---------- Unique IDs (Incident Report) ----------
   final IncidentService _incidentService = IncidentService();
@@ -248,7 +248,9 @@ class _InvestigationTeamPageState extends State<InvestigationTeamPage>
       _uniqueIdsError = null;
     });
     try {
-      final list = await _incidentService.getAllIncidentReportUniqueIds();
+      // Only incidents that have BOTH a Medical Officer Response and Safety
+      // Remarks recorded are eligible for an Investigation.
+      final list = await _incidentService.getInvestigationReadyIncidentIds();
       if (!mounted) return;
       setState(() {
         _uniqueIds = list;
@@ -502,8 +504,8 @@ class _InvestigationTeamPageState extends State<InvestigationTeamPage>
   Future<void> _submit() async {
     if (_submitting) return;
 
-    if (_selectedIncidentUniqueId.trim().isEmpty || _selectedIncidentUniqueId == "Select Unique Id") {
-      _showSnack('Please select an Incident Unique Id');
+    if (_selectedIncidentUniqueId.trim().isEmpty || _selectedIncidentUniqueId == "Select Incident ID") {
+      _showSnack('Please select an Incident ID');
       return;
     }
     if (_associatedRiskBytes == null || _associatedRiskBytes!.isEmpty) {
@@ -573,7 +575,7 @@ class _InvestigationTeamPageState extends State<InvestigationTeamPage>
 
   void _resetForm() {
     setState(() {
-      _selectedIncidentUniqueId = "Select Unique Id";
+      _selectedIncidentUniqueId = "Select Incident ID";
 
       for (final c in _rootCauseControllers) {
         c.dispose();
@@ -684,7 +686,7 @@ class _InvestigationTeamPageState extends State<InvestigationTeamPage>
             _labeledField(
               icon: Icons.qr_code_2,
               color: kcStatBlue,
-              label: 'Select Unique Id',
+              label: 'Select Incident ID',
               required: true,
               child: _buildInvestigationTeam(),
             ),
@@ -1007,7 +1009,7 @@ class _InvestigationTeamPageState extends State<InvestigationTeamPage>
   }
 
   Widget _buildInvestigationTeam() {
-    final isPlaceholder = _selectedIncidentUniqueId == "Select Unique Id";
+    final isPlaceholder = _selectedIncidentUniqueId == "Select Incident ID";
     return InkWell(
       onTap: _buildInvestigationTeamList,
       borderRadius: BorderRadius.circular(6),
@@ -1109,7 +1111,7 @@ class _InvestigationTeamPageState extends State<InvestigationTeamPage>
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
-                        color: _selectedIncidentUniqueId == "Select Unique Id"
+                        color: _selectedIncidentUniqueId == "Select Incident ID"
                             ? kcDarkGreyColor
                             : kcLightGrey,
                       ),
@@ -1314,7 +1316,7 @@ class _InvestigationTeamPageState extends State<InvestigationTeamPage>
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
-                        color: _selectedIncidentUniqueId == "Select Unique Id"
+                        color: _selectedIncidentUniqueId == "Select Incident ID"
                             ? kcDarkGreyColor
                             : kcLightGrey,
                       ),
@@ -1411,7 +1413,7 @@ class _InvestigationTeamPageState extends State<InvestigationTeamPage>
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
-                        color: _selectedIncidentUniqueId == "Select Unique Id"
+                        color: _selectedIncidentUniqueId == "Select Incident ID"
                             ? kcDarkGreyColor
                             : kcLightGrey,
                       ),
@@ -2806,7 +2808,7 @@ class _UniqueIdPickerDialogState extends State<_UniqueIdPickerDialog> {
                 children: [
                   const Expanded(
                     child: Text(
-                      'Select Unique Id',
+                      'Select Incident ID',
                       style: TextStyle(
                           fontSize: 16, fontWeight: FontWeight.w700),
                     ),

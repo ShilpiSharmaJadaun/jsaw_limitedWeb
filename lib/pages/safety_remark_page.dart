@@ -14,9 +14,18 @@ import '../utils/app_color.dart';
 import 'medical_Officer_page.dart';
 
 class SafetyRemarkPage extends StatefulWidget {
-  const SafetyRemarkPage({super.key, required this.safetyRemarkListModel});
+  const SafetyRemarkPage({
+    super.key,
+    required this.safetyRemarkListModel,
+    this.onClose,
+  });
 
   final SafetyRemarkListModel safetyRemarkListModel;
+
+  /// When provided, the page is rendered INLINE inside the app shell and this
+  /// callback closes it (the bool is whether the list should refresh) instead
+  /// of popping a full-screen route.
+  final ValueChanged<bool>? onClose;
 
   @override
   State<SafetyRemarkPage> createState() => _SafetyRemarkPageState();
@@ -50,6 +59,15 @@ class _SafetyRemarkPageState extends State<SafetyRemarkPage> {
   void dispose() {
     safetyRemarkController.dispose();
     super.dispose();
+  }
+
+  // Close the page: inline mode calls back to the host; route mode pops.
+  void _close(bool refresh) {
+    if (widget.onClose != null) {
+      widget.onClose!(refresh);
+    } else {
+      Navigator.pop(context, refresh);
+    }
   }
 
   @override
@@ -102,9 +120,9 @@ class _SafetyRemarkPageState extends State<SafetyRemarkPage> {
     return Container(
       decoration: const BoxDecoration(
         gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [navyBlue, cream, golden],
+          begin: Alignment.centerLeft,
+          end: Alignment.centerRight,
+          colors: [Color(0xFFFF7B2C), Color(0xFFEF4A8B), Color(0xFF8B5CF6)],
         ),
         boxShadow: [
           BoxShadow(
@@ -126,7 +144,7 @@ class _SafetyRemarkPageState extends State<SafetyRemarkPage> {
                 shape: const CircleBorder(),
                 child: IconButton(
                   icon: const Icon(Icons.arrow_back, color: kcWhite),
-                  onPressed: () => Navigator.pop(context, true),
+                  onPressed: () => _close(false),
                   tooltip: 'Back',
                 ),
               ),
@@ -149,7 +167,7 @@ class _SafetyRemarkPageState extends State<SafetyRemarkPage> {
                     Text(
                       m.incidentUniqueId.isEmpty
                           ? "Incident details"
-                          : m.incidentUniqueId,
+                          : "Incident ID: ${m.incidentUniqueId}",
                       style: TextStyle(
                         fontSize: 13,
                         color: Colors.white.withValues(alpha: 0.92),
@@ -383,6 +401,15 @@ class _SafetyRemarkPageState extends State<SafetyRemarkPage> {
     );
   }
 
+  // Medical officer (submitter) display: "Name (Code)" / just one / blank.
+  String _medicalOfficerDisplay(SafetyRemarkListModel m) {
+    final name = m.medicalOfficerName.trim();
+    final code = m.medicalOfficerCode.trim();
+    if (name.isNotEmpty && code.isNotEmpty) return "$name ($code)";
+    if (name.isNotEmpty) return name;
+    return code;
+  }
+
   // -------------------- Medical Assessment --------------------
   Widget _buildMedicalAssessmentCard(SafetyRemarkListModel m) {
     return _sectionCard(
@@ -391,6 +418,15 @@ class _SafetyRemarkPageState extends State<SafetyRemarkPage> {
       color: Colors.red.shade400,
       child: Column(
         children: [
+          _infoRow([
+            _infoTile(
+              icon: Icons.badge_outlined,
+              color: Colors.teal,
+              label: "Medical Officer",
+              value: _medicalOfficerDisplay(m),
+            ),
+          ]),
+          const SizedBox(height: 12),
           _infoRow([
             _infoTile(
               icon: Icons.healing_outlined,
@@ -486,7 +522,7 @@ class _SafetyRemarkPageState extends State<SafetyRemarkPage> {
             ScaffoldMessenger.of(context).showSnackBar(SnackBar(
               content: Text(message ?? "Data Saved Successfully"),
             ));
-            Navigator.pop(context, true);
+            _close(true);
           },
           failed: (_, message) {
             ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
@@ -499,11 +535,46 @@ class _SafetyRemarkPageState extends State<SafetyRemarkPage> {
           loading: (_) => true,
           orElse: () => false,
         );
-        return SizedBox(
+        // Safety Remarks can only be submitted once the Medical Officer has
+        // logged their remark for this incident.
+        final hasMedicalRemark = widget
+            .safetyRemarkListModel.medicalOfficerRemarks
+            .trim()
+            .isNotEmpty;
+        return Column(
+          children: [
+            if (!hasMedicalRemark) ...[
+              Container(
+                padding: const EdgeInsets.all(12),
+                margin: const EdgeInsets.only(bottom: 12),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFFF4E5),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: const Color(0xFFFFC107)),
+                ),
+                child: const Row(
+                  children: [
+                    Icon(Icons.info_outline,
+                        size: 18, color: Color(0xFFB26A00)),
+                    SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'The Medical Officer has not submitted their remark for '
+                        'this incident yet. Safety Remarks can be submitted only '
+                        'after the Medical Officer response is recorded.',
+                        style: TextStyle(
+                            fontSize: 12.5, color: Color(0xFFB26A00)),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+            SizedBox(
           width: 300,
           height: 48,
           child: ElevatedButton.icon(
-            onPressed: isLoading
+            onPressed: (isLoading || !hasMedicalRemark)
                 ? null
                 : () {
               final data = {
@@ -539,6 +610,8 @@ class _SafetyRemarkPageState extends State<SafetyRemarkPage> {
               ),
             ),
           ),
+        ),
+          ],
         );
       },
     );

@@ -265,7 +265,6 @@ class _ApproveRejectTablePageState extends State<ApproveRejectTablePage> {
                 width: 2800,
                 child: Row(
                   children: [
-                    _buildTableHeaderContainer("Select", 170),
                     _buildTableHeaderContainer("Raised By", 170),
                     _buildTableHeaderContainer("Unique ID", 170),
                     _buildTableHeaderContainer("Date", 170),
@@ -278,6 +277,7 @@ class _ApproveRejectTablePageState extends State<ApproveRejectTablePage> {
                     _buildTableHeaderContainer("Status", 170),
                     _buildTableHeaderContainer("Observation", 170),
                     _buildTableHeaderContainer("Before / After", 170),
+                    _buildTableHeaderContainer("Select", 170),
                     _buildTableHeaderContainer("Remark", 170),
                   ],
                 ),
@@ -297,9 +297,17 @@ class _ApproveRejectTablePageState extends State<ApproveRejectTablePage> {
                     itemCount: model.model.length,
                     shrinkWrap: true,
                     itemBuilder: (BuildContext context, int index) {
-                      return Row(
+                      return IntrinsicHeight(
+                        // IntrinsicHeight gives the Row a bounded height so the
+                        // stretch below works inside the vertical ListView
+                        // (otherwise the height constraint is infinite and the
+                        // list fails to render).
+                        child: Row(
+                        // Stretch so every cell matches the tallest cell's
+                        // height (the full-text Observation cell), keeping the
+                        // zebra fill and dividing borders continuous.
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          _buildApproveRejectBodyContainer(model, index),
                           _buildTableBodyContainer(model.model[index].observationRaisedBy.toString(), 200, rowIndex: index),
                           _buildTableBodyContainer(model.model[index].uniqueIdentificationNumber.toString(), 200, rowIndex: index),
                           _buildTableBodyContainer(model.model[index].raisedDate.toString(), 200, rowIndex: index),
@@ -310,10 +318,12 @@ class _ApproveRejectTablePageState extends State<ApproveRejectTablePage> {
                           _buildTableBodyContainer(model.model[index].hazardCategory.toString(), 200, rowIndex: index),
                           _buildTableBodyContainer(model.model[index].observationCompletionTargetDate.toString(), 200, rowIndex: index),
                           _buildTableBodyContainer(model.model[index].status.toString(), 200, isStatus: true, rowIndex: index),
-                          _buildTableBodyContainer(model.model[index].observationText.toString(), 200, rowIndex: index),
+                          _buildTableBodyContainer(model.model[index].observationText.toString(), 200, rowIndex: index, expand: true),
                           _buildImageContainer(model, index),
+                          _buildApproveRejectBodyContainer(model, index),
                           _buildRemarkCell(index),
                         ],
+                        ),
                       );
                     },
 
@@ -532,7 +542,7 @@ class _ApproveRejectTablePageState extends State<ApproveRejectTablePage> {
   }
 
   _buildTableBodyContainer(String title, double width,
-      {bool isStatus = false, int rowIndex = 0}) {
+      {bool isStatus = false, int rowIndex = 0, bool expand = false}) {
     final zebra = rowIndex.isOdd ? kcDashboardBg1 : kcWhite;
     return Container(
       width: 200,
@@ -550,9 +560,11 @@ class _ApproveRejectTablePageState extends State<ApproveRejectTablePage> {
           ? _statusPill(title)
           : Text(
               title.isEmpty ? '—' : title,
-              maxLines: 2,
+              // expand → show the full text (wraps to as many lines as needed);
+              // otherwise clamp to 2 lines with an ellipsis.
+              maxLines: expand ? null : 2,
               textAlign: TextAlign.center,
-              overflow: TextOverflow.ellipsis,
+              overflow: expand ? TextOverflow.visible : TextOverflow.ellipsis,
               style: const TextStyle(
                 fontWeight: FontWeight.w600,
                 fontSize: 12.5,
@@ -894,6 +906,7 @@ class _ApproveRejectTablePageState extends State<ApproveRejectTablePage> {
         ),
       ),
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+      child: Center(
       child: TextField(
         controller: _remarkFor(index),
         maxLines: 2,
@@ -923,6 +936,7 @@ class _ApproveRejectTablePageState extends State<ApproveRejectTablePage> {
             borderSide: const BorderSide(color: kcvoilet, width: 1.5),
           ),
         ),
+      ),
       ),
     );
   }

@@ -21,9 +21,18 @@ import '../utils/app_color.dart';
 import '../utils/progressive_image.dart';
 
 class MedicalOfficerPage extends StatefulWidget {
-  MedicalOfficerPage({super.key, required this.allMedicalOfficerListModel});
+  MedicalOfficerPage({
+    super.key,
+    required this.allMedicalOfficerListModel,
+    this.onClose,
+  });
 
   AllMedicalOfficerListModel allMedicalOfficerListModel;
+
+  /// When provided, the page is rendered INLINE inside the app shell and this
+  /// callback closes it (the bool is whether the list should refresh) instead
+  /// of popping a full-screen route.
+  final ValueChanged<bool>? onClose;
 
   @override
   State<MedicalOfficerPage> createState() => _MedicalOfficerPageState();
@@ -100,6 +109,15 @@ class _MedicalOfficerPageState extends State<MedicalOfficerPage> {
     detailsController.dispose();
     remarkController.dispose();
     super.dispose();
+  }
+
+  // Close the page: inline mode calls back to the host; route mode pops.
+  void _close(bool refresh) {
+    if (widget.onClose != null) {
+      widget.onClose!(refresh);
+    } else {
+      Navigator.pop(context, refresh);
+    }
   }
 
   @override
@@ -319,7 +337,11 @@ class _MedicalOfficerPageState extends State<MedicalOfficerPage> {
     return Container(
       width: double.infinity,
       decoration: const BoxDecoration(
-        gradient: LinearGradient(colors: [navyBlue, cream, golden]),
+        gradient: LinearGradient(
+          begin: Alignment.centerLeft,
+          end: Alignment.centerRight,
+          colors: [Color(0xFFFF7B2C), Color(0xFFEF4A8B), Color(0xFF8B5CF6)],
+        ),
       ),
       child: SafeArea(
         bottom: false,
@@ -328,16 +350,36 @@ class _MedicalOfficerPageState extends State<MedicalOfficerPage> {
           children: [
             IconButton(
               icon: const Icon(Icons.arrow_back, color: kcWhite),
-              onPressed: () { Navigator.pop(context, true); },
+              onPressed: () { _close(false); },
             ),
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 10),
-              child: Text(
-                title,
-                style: const TextStyle(
-                  fontSize: 25,
-                  fontWeight: FontWeight.bold,
-                  color: kcWhite,
+            Expanded(
+              child: Padding(
+                padding:
+                    const EdgeInsets.symmetric(vertical: 10, horizontal: 10),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      title,
+                      style: const TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                        color: kcWhite,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      widget.allMedicalOfficerListModel.uniqueId.isEmpty
+                          ? "Incident details"
+                          : "Incident ID: ${widget.allMedicalOfficerListModel.uniqueId}",
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.white.withValues(alpha: 0.92),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
@@ -771,7 +813,7 @@ class _MedicalOfficerPageState extends State<MedicalOfficerPage> {
             ScaffoldMessenger.of(context).showSnackBar(SnackBar(
               content: Text(message ?? "Data Saved Successfully"),
             ));
-            Navigator.pop(context, true);
+            _close(true);
           },
           failed: (_, message) {
             ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));

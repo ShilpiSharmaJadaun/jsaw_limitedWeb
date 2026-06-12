@@ -56,7 +56,29 @@
       "Bash(grep -E --line-buffered \"Compiling|Built|Error|Exception|Failed|error:|Warning|✓|✗|build/web|Tree-shaking|build\\\\\\\\\\\\\\\\web\")",
       "Bash(grep -E --line-buffered \"Compiling|Built|Error|Exception|Failed|error:|✓|✗|build\\\\\\\\\\\\\\\\web\")",
       "Skill(run)",
-      "PowerShell(netsh interface *)"
+      "PowerShell(netsh interface *)",
+      "PowerShell(Get-NetTCPConnection *)",
+      "Bash(Get-ChildItem -Path \"D:\\\\JSAW_BACKEND_API\\\\JSAW\" -Directory)",
+      "Bash(Select-Object Name)",
+      "Bash(Get-ChildItem -Path D:\\\\JSAW_BACKEND_API\\\\jsaw_limitedWeb -Directory)",
+      "Bash(Get-ChildItem -Path \"D:\\\\JSAW_BACKEND_API\\\\JSAW\\\\database\" -Recurse -File)",
+      "Bash(Select-Object FullName)",
+      "Read(//mnt/d/**)",
+      "Bash(curl -s -o NUL -w \"backend HTTP %{http_code}\\\\n\" http://localhost:8091/JSAW/v3/api-docs)",
+      "PowerShell($c = Get-NetTCPConnection -LocalPort 8090 -State Listen -ErrorAction SilentlyContinue; if \\($c\\) { $c.OwningProcess | Select-Object -Unique | ForEach-Object { $p = Get-Process -Id $_ -ErrorAction SilentlyContinue; Write-Output \"Killing PID $_ \\($\\($p.ProcessName\\)\\)\"; Stop-Process -Id $_ -Force -ErrorAction SilentlyContinue } } else { Write-Output \"Nothing listening on 8090\" }; Start-Sleep -Milliseconds 800; \\(Get-NetTCPConnection -LocalPort 8090 -State Listen -ErrorAction SilentlyContinue\\) ? \"STILL BOUND\" : \"8090 free\")",
+      "PowerShell($c = Get-NetTCPConnection -LocalPort 8090 -State Listen -ErrorAction SilentlyContinue; if \\($c\\) { $c.OwningProcess | Select-Object -Unique | ForEach-Object { Stop-Process -Id $_ -Force -ErrorAction SilentlyContinue }; Start-Sleep -Milliseconds 800 }; \\(Get-NetTCPConnection -LocalPort 8090 -State Listen -ErrorAction SilentlyContinue\\) ? \"STILL BOUND\" : \"8090 free\")",
+      "Bash(curl -s -o NUL -w \"web HTTP %{http_code}\\\\n\" http://localhost:8090/)",
+      "PowerShell(Start-Process \"http://localhost:8090/\"; Write-Output \"Opened http://localhost:8090/ in default browser\")",
+      "Bash(curl -s -I --max-time 12 \"http://103.107.26.146:8078/JSAW/file/11062026194845.jpg\")",
+      "Bash(curl -s -I --max-time 12 -H \"Origin: http://localhost:8090\" \"http://103.107.26.146:8078/JSAW/file/11062026194845.jpg\")",
+      "Bash(curl -s -o /dev/null -w \"local GET HTTP %{http_code}  size=%{size_download}\\\\n\" --max-time 12 \"http://localhost:8091/JSAW/file/11062026194845.jpg\")",
+      "Bash(curl -s -I --max-time 12 -H \"Origin: http://localhost:8090\" \"http://localhost:8091/JSAW/file/11062026194845.jpg\")",
+      "Bash(curl -s -D - -o /dev/null --max-time 12 -H \"Origin: http://localhost:8090\" \"http://localhost:8091/JSAW/file/11062026194845.jpg\")",
+      "Bash(curl *)",
+      "PowerShell(& \"D:\\\\JSAW_BACKEND_API\\\\JSAW\\\\mvnw.cmd\" -f \"D:\\\\JSAW_BACKEND_API\\\\JSAW\\\\pom.xml\" -q -DskipTests compile; Write-Output \"EXIT=$LASTEXITCODE\")",
+      "Bash(grep -iE \"\\\\.sql$|trigger\")",
+      "Bash(grep -vi 'errorBuilder\\\\|part_of_different\\\\|safetyremarklist\\\\|redirect_to_non_class\\\\|_$SafetyRemark')",
+      "Bash(grep -iA6 -B2 \"distinct\\\\|uniqueId\\\\|@Query\")"
     ]
   }
 }

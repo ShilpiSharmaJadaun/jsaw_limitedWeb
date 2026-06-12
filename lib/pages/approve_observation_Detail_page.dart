@@ -23,7 +23,6 @@ import 'package:jsaw_limited/state/allplant_state.dart';
 import 'package:jsaw_limited/state/complainceApproveReject_state.dart';
 import 'package:jsaw_limited/state/employeeResponsibility_state.dart';
 import 'package:jsaw_limited/state/observationby_uni_state.dart';
-import 'package:jsaw_limited/state/update_observation_state.dart';
 import 'package:provider/provider.dart';
 import 'package:responsive_builder/responsive_builder.dart';
 import '../bloc/allhazard_cat_bloc.dart';
@@ -100,7 +99,7 @@ class _ApproveObservationDetailPageState extends State<ApproveObservationDetailP
     final observationService = Provider.of<ObservationService>(context, listen: false);
     final dashboardService = Provider.of<DashboardService>(context, listen: false);
     observationbyUniBloc = ObservationbyUniBloc(observationService);
-    observationbyUniBloc.initState(widget.model.observationRaisedByEmpUnqId.toString(), widget.model.observationRaisedBy.toString());
+    observationbyUniBloc.initState(widget.model.uniqueIdentificationNumber.toString(), widget.model.observationRaisedByEmpUnqId.toString());
     allPlantBloc = AllPlantBloc(observationService);
     allPlantBloc.initState();
     allDepartBloc = AllDepartBloc(observationService);
@@ -656,13 +655,37 @@ class _ApproveObservationDetailPageState extends State<ApproveObservationDetailP
                     ],
                   ),
                   const SizedBox(height: 16),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      _buildReject(),
-                      const SizedBox(width: 8),
-                      _buildUpdate(),
-                    ],
+                  // Single consumer drives loading/success/error for BOTH the
+                  // Reopen and Close buttons, since both call the same
+                  // complainceApproveRejectBloc.updateObservation(...).
+                  BlocConsumer<ComplainceApproveRejectBloc,
+                      ComplainceApproveRejectState>(
+                    bloc: complainceApproveRejectBloc,
+                    listener: (_, state) {
+                      // Success is confirmed via a dialog in each button's
+                      // onPressed; here we only surface failures.
+                      state.maybeWhen(
+                        failed: (_, message) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text(message)));
+                        },
+                        orElse: () {},
+                      );
+                    },
+                    builder: (context, state) {
+                      return state.maybeWhen(
+                        loading: (_) =>
+                            const Center(child: CircularProgressIndicator()),
+                        orElse: () => Row(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: [
+                            _buildReject(),
+                            const SizedBox(width: 8),
+                            _buildUpdate(),
+                          ],
+                        ),
+                      );
+                    },
                   ),
                 ],
               ),
@@ -890,116 +913,109 @@ class _ApproveObservationDetailPageState extends State<ApproveObservationDetailP
       borderSide:  const BorderSide(color: Colors.white,width: 1)
   );
 
-  _buildUpdate() {
-    return BlocConsumer<ComplainceApproveRejectBloc, ComplainceApproveRejectState>(
-      bloc: complainceApproveRejectBloc,
-      listener: (_, state) {
-        state.maybeWhen(
-          success: (_, message) {
-            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-              content: Text(message ?? "Observation In Progress Now"),
-            ));
-          },
-          failed: (_, message) {
-            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
-          },
-          orElse: () {},
-        );
-      },
-      builder: (context, state) {
-        return state.maybeWhen(
-          loading: (_) {
-            return const Center(child: CircularProgressIndicator());
-          },
-          orElse: () {
-            return Center(
-              child: Padding(
-                padding: const EdgeInsets.all(10.0),
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                      fixedSize: const Size(200, 30),
-                      backgroundColor: kcobservationgreen
-                  ),
-                  onPressed: () async {
-                    final data = {
-                      "uniqueIdentificationNumber": widget.model.uniqueIdentificationNumber.toString(),
-                      "observationText": widget.model.observationText.toString(),
-                      "actionTaken": widget.model.actionTaken.toString(),
-                      "status": "CLOSED",
-                      "remarks": remarkController.text,
-                      "updatedByEmpId": html.window.localStorage.getItem('kEmployeeCode')!,
-                      "updatedByEmpName": html.window.localStorage.getItem('kEmployeename')!,
-                      "updatedByEmail": html.window.localStorage.getItem('kUserEmail')!,
-                      "raisedByEmpID": widget.model.observationRaisedByEmpUnqId.toString(),
-                      "imgURL": widget.model.imageCompliance
-                    };
-                    await complainceApproveRejectBloc.updateObservation(data);
-                    observationbyUniBloc.initState(widget.model.uniqueIdentificationNumber.toString(), widget.model.observationRaisedByEmpUnqId.toString());
-                  Navigator.pop(context);
-                    },
-                  child: const Text("Close", style: TextStyle(color: kcWhite),),
-                ),
+  // Success confirmation dialog shown after a Close/Reopen action.
+  // Completes when the user taps OK, after which the page is popped.
+  Future<void> _showResultDialog(String message) {
+    return showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        content: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.check_circle, color: kcobservationgreen, size: 28),
+            const SizedBox(width: 12),
+            Flexible(
+              child: Text(
+                message,
+                style: const TextStyle(
+                    fontSize: 15, fontWeight: FontWeight.w600),
               ),
-            );
-          },
-        );
-      },
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(),
+            child: const Text("OK"),
+          ),
+        ],
+      ),
+    );
+  }
+
+  _buildUpdate() {
+    return Padding(
+      padding: const EdgeInsets.all(10.0),
+      child: ElevatedButton(
+        style: ElevatedButton.styleFrom(
+            fixedSize: const Size(200, 30), backgroundColor: kcobservationgreen),
+        onPressed: () async {
+          final data = {
+            "uniqueIdentificationNumber":
+                widget.model.uniqueIdentificationNumber.toString(),
+            "observationText": widget.model.observationText.toString(),
+            "actionTaken": widget.model.actionTaken.toString(),
+            "status": "CLOSED",
+            "remarks": remarkController.text,
+            "updatedByEmpId": html.window.localStorage.getItem('kEmployeeCode')!,
+            "updatedByEmpName":
+                html.window.localStorage.getItem('kEmployeename')!,
+            "updatedByEmail": html.window.localStorage.getItem('kUserEmail')!,
+            "raisedByEmpID":
+                widget.model.observationRaisedByEmpUnqId.toString(),
+            "imgURL": widget.model.imageCompliance
+          };
+          await complainceApproveRejectBloc.updateObservation(data);
+          final ok = complainceApproveRejectBloc.state
+              .maybeWhen(success: (_, __) => true, orElse: () => false);
+          if (ok && mounted) {
+            // Confirm with a dialog first, then return to the queue (with
+            // `true` so it refreshes and drops this now-CLOSED record).
+            await _showResultDialog("Observation closed successfully");
+            if (mounted) Navigator.pop(context, true);
+          }
+        },
+        child: const Text("Close", style: TextStyle(color: kcWhite)),
+      ),
     );
   }
 
   _buildReject() {
-    return BlocConsumer<UpdateObservationBloc, UpdateObservationState>(
-      bloc: updateObservationBloc,
-      listener: (_, state) {
-        state.maybeWhen(
-          success: (_, message) {
-            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-              content: Text(message ?? "Observation In Progress Now"),
-            ));
-          },
-          failed: (_, message) {
-            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
-          },
-          orElse: () {},
-        );
-      },
-      builder: (context, state) {
-        return state.maybeWhen(
-          loading: (_) {
-            return const Center(child: CircularProgressIndicator());
-          },
-          orElse: () {
-            return Center(
-              child: Padding(
-                padding: const EdgeInsets.all(10.0),
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                      fixedSize: const Size(200, 30),
-                      backgroundColor: kcRed
-                  ),
-                  onPressed: () async {
-                    final data = {
-                      "uniqueIdentificationNumber": widget.model.uniqueIdentificationNumber.toString(),
-                      "observationText": widget.model.observationText.toString(),
-                      "actionTaken": widget.model.actionTaken.toString(),
-                      "status": "IN PROGRESS",
-                      "remarks": remarkController.text,
-                      "updatedByEmpId": html.window.localStorage.getItem('kEmployeeCode')!,
-                      "updatedByEmpName": html.window.localStorage.getItem('kEmployeename')!,
-                      "updatedByEmail": html.window.localStorage.getItem('kUserEmail')!,
-                      "raisedByEmpID": widget.model.observationRaisedByEmpUnqId.toString(),
-                      "imgURL": widget.model.imageCompliance
-                    };
-                    await complainceApproveRejectBloc.updateObservation(data);
-                    observationbyUniBloc.initState(widget.model.observationRaisedByEmpUnqId.toString(), widget.model.observationRaisedBy.toString());
-                  },
-                  child: const Text("Reopen", style: TextStyle(color: kcWhite),),
-                ),
-              ),
-            );
-          },
-        );
-      },
+    return Padding(
+      padding: const EdgeInsets.all(10.0),
+      child: ElevatedButton(
+        style: ElevatedButton.styleFrom(
+            fixedSize: const Size(200, 30), backgroundColor: kcRed),
+        onPressed: () async {
+          final data = {
+            "uniqueIdentificationNumber":
+                widget.model.uniqueIdentificationNumber.toString(),
+            "observationText": widget.model.observationText.toString(),
+            "actionTaken": widget.model.actionTaken.toString(),
+            "status": "IN PROGRESS",
+            "remarks": remarkController.text,
+            "updatedByEmpId": html.window.localStorage.getItem('kEmployeeCode')!,
+            "updatedByEmpName":
+                html.window.localStorage.getItem('kEmployeename')!,
+            "updatedByEmail": html.window.localStorage.getItem('kUserEmail')!,
+            "raisedByEmpID":
+                widget.model.observationRaisedByEmpUnqId.toString(),
+            "imgURL": widget.model.imageCompliance
+          };
+          await complainceApproveRejectBloc.updateObservation(data);
+          final ok = complainceApproveRejectBloc.state
+              .maybeWhen(success: (_, __) => true, orElse: () => false);
+          if (ok && mounted) {
+            // Confirm with a dialog first, then return to the queue (with
+            // `true` so it refreshes; this record moves to IN PROGRESS).
+            await _showResultDialog("Observation reopened successfully");
+            if (mounted) Navigator.pop(context, true);
+          }
+        },
+        child: const Text("Reopen", style: TextStyle(color: kcWhite)),
+      ),
     );
   }
 

@@ -50,6 +50,9 @@ mixin _$SafetyRemarkListModel {
   @JsonKey(fromJson: _restUptoFromJson)
   int get restUpto => throw _privateConstructorUsedError;
   String get fitForDutyFrom => throw _privateConstructorUsedError;
+  String get medicalOfficerRemarks => throw _privateConstructorUsedError;
+  String get medicalOfficerName => throw _privateConstructorUsedError;
+  String get medicalOfficerCode => throw _privateConstructorUsedError;
   String get raisedDate => throw _privateConstructorUsedError;
   String get lowQualityImageUrl => throw _privateConstructorUsedError;
   String get highQualityImageUrl => throw _privateConstructorUsedError;
@@ -95,6 +98,9 @@ abstract class $SafetyRemarkListModelCopyWith<$Res> {
       String natureOfInjury,
       @JsonKey(fromJson: _restUptoFromJson) int restUpto,
       String fitForDutyFrom,
+      String medicalOfficerRemarks,
+      String medicalOfficerName,
+      String medicalOfficerCode,
       String raisedDate,
       String lowQualityImageUrl,
       String highQualityImageUrl});
@@ -142,6 +148,9 @@ class _$SafetyRemarkListModelCopyWithImpl<$Res,
     Object? natureOfInjury = null,
     Object? restUpto = null,
     Object? fitForDutyFrom = null,
+    Object? medicalOfficerRemarks = null,
+    Object? medicalOfficerName = null,
+    Object? medicalOfficerCode = null,
     Object? raisedDate = null,
     Object? lowQualityImageUrl = null,
     Object? highQualityImageUrl = null,
@@ -259,6 +268,18 @@ class _$SafetyRemarkListModelCopyWithImpl<$Res,
           ? _value.fitForDutyFrom
           : fitForDutyFrom // ignore: cast_nullable_to_non_nullable
               as String,
+      medicalOfficerRemarks: null == medicalOfficerRemarks
+          ? _value.medicalOfficerRemarks
+          : medicalOfficerRemarks // ignore: cast_nullable_to_non_nullable
+              as String,
+      medicalOfficerName: null == medicalOfficerName
+          ? _value.medicalOfficerName
+          : medicalOfficerName // ignore: cast_nullable_to_non_nullable
+              as String,
+      medicalOfficerCode: null == medicalOfficerCode
+          ? _value.medicalOfficerCode
+          : medicalOfficerCode // ignore: cast_nullable_to_non_nullable
+              as String,
       raisedDate: null == raisedDate
           ? _value.raisedDate
           : raisedDate // ignore: cast_nullable_to_non_nullable
@@ -313,6 +334,9 @@ abstract class _$$SafetyRemarkListModelImplCopyWith<$Res>
       String natureOfInjury,
       @JsonKey(fromJson: _restUptoFromJson) int restUpto,
       String fitForDutyFrom,
+      String medicalOfficerRemarks,
+      String medicalOfficerName,
+      String medicalOfficerCode,
       String raisedDate,
       String lowQualityImageUrl,
       String highQualityImageUrl});
@@ -358,6 +382,9 @@ class __$$SafetyRemarkListModelImplCopyWithImpl<$Res>
     Object? natureOfInjury = null,
     Object? restUpto = null,
     Object? fitForDutyFrom = null,
+    Object? medicalOfficerRemarks = null,
+    Object? medicalOfficerName = null,
+    Object? medicalOfficerCode = null,
     Object? raisedDate = null,
     Object? lowQualityImageUrl = null,
     Object? highQualityImageUrl = null,
@@ -475,6 +502,18 @@ class __$$SafetyRemarkListModelImplCopyWithImpl<$Res>
           ? _value.fitForDutyFrom
           : fitForDutyFrom // ignore: cast_nullable_to_non_nullable
               as String,
+      medicalOfficerRemarks: null == medicalOfficerRemarks
+          ? _value.medicalOfficerRemarks
+          : medicalOfficerRemarks // ignore: cast_nullable_to_non_nullable
+              as String,
+      medicalOfficerName: null == medicalOfficerName
+          ? _value.medicalOfficerName
+          : medicalOfficerName // ignore: cast_nullable_to_non_nullable
+              as String,
+      medicalOfficerCode: null == medicalOfficerCode
+          ? _value.medicalOfficerCode
+          : medicalOfficerCode // ignore: cast_nullable_to_non_nullable
+              as String,
       raisedDate: null == raisedDate
           ? _value.raisedDate
           : raisedDate // ignore: cast_nullable_to_non_nullable
@@ -523,6 +562,9 @@ class _$SafetyRemarkListModelImpl implements _SafetyRemarkListModel {
       this.natureOfInjury = "",
       @JsonKey(fromJson: _restUptoFromJson) this.restUpto = 0,
       this.fitForDutyFrom = "",
+      this.medicalOfficerRemarks = "",
+      this.medicalOfficerName = "",
+      this.medicalOfficerCode = "",
       this.raisedDate = "",
       this.lowQualityImageUrl = "",
       this.highQualityImageUrl = ""});
@@ -616,6 +658,15 @@ class _$SafetyRemarkListModelImpl implements _SafetyRemarkListModel {
   final String fitForDutyFrom;
   @override
   @JsonKey()
+  final String medicalOfficerRemarks;
+  @override
+  @JsonKey()
+  final String medicalOfficerName;
+  @override
+  @JsonKey()
+  final String medicalOfficerCode;
+  @override
+  @JsonKey()
   final String raisedDate;
   @override
   @JsonKey()
@@ -626,7 +677,7 @@ class _$SafetyRemarkListModelImpl implements _SafetyRemarkListModel {
 
   @override
   String toString() {
-    return 'SafetyRemarkListModel(id: $id, incidentReportId: $incidentReportId, incidentUniqueId: $incidentUniqueId, incidentDateTime: $incidentDateTime, shift: $shift, employeeCode: $employeeCode, employeeName: $employeeName, age: $age, contractorName: $contractorName, contCode: $contCode, plant: $plant, plantCode: $plantCode, deptName: $deptName, deptCode: $deptCode, location: $location, responsibleShiftEngg: $responsibleShiftEngg, responsibleHod: $responsibleHod, contactNumber: $contactNumber, incidentType: $incidentType, workInjury: $workInjury, descpOfIncident: $descpOfIncident, firDateTime: $firDateTime, imageUrl: $imageUrl, typeOfInjury: $typeOfInjury, bodyPart: $bodyPart, natureOfInjury: $natureOfInjury, restUpto: $restUpto, fitForDutyFrom: $fitForDutyFrom, raisedDate: $raisedDate, lowQualityImageUrl: $lowQualityImageUrl, highQualityImageUrl: $highQualityImageUrl)';
+    return 'SafetyRemarkListModel(id: $id, incidentReportId: $incidentReportId, incidentUniqueId: $incidentUniqueId, incidentDateTime: $incidentDateTime, shift: $shift, employeeCode: $employeeCode, employeeName: $employeeName, age: $age, contractorName: $contractorName, contCode: $contCode, plant: $plant, plantCode: $plantCode, deptName: $deptName, deptCode: $deptCode, location: $location, responsibleShiftEngg: $responsibleShiftEngg, responsibleHod: $responsibleHod, contactNumber: $contactNumber, incidentType: $incidentType, workInjury: $workInjury, descpOfIncident: $descpOfIncident, firDateTime: $firDateTime, imageUrl: $imageUrl, typeOfInjury: $typeOfInjury, bodyPart: $bodyPart, natureOfInjury: $natureOfInjury, restUpto: $restUpto, fitForDutyFrom: $fitForDutyFrom, medicalOfficerRemarks: $medicalOfficerRemarks, medicalOfficerName: $medicalOfficerName, medicalOfficerCode: $medicalOfficerCode, raisedDate: $raisedDate, lowQualityImageUrl: $lowQualityImageUrl, highQualityImageUrl: $highQualityImageUrl)';
   }
 
   @override
@@ -686,6 +737,12 @@ class _$SafetyRemarkListModelImpl implements _SafetyRemarkListModel {
                 other.restUpto == restUpto) &&
             (identical(other.fitForDutyFrom, fitForDutyFrom) ||
                 other.fitForDutyFrom == fitForDutyFrom) &&
+            (identical(other.medicalOfficerRemarks, medicalOfficerRemarks) ||
+                other.medicalOfficerRemarks == medicalOfficerRemarks) &&
+            (identical(other.medicalOfficerName, medicalOfficerName) ||
+                other.medicalOfficerName == medicalOfficerName) &&
+            (identical(other.medicalOfficerCode, medicalOfficerCode) ||
+                other.medicalOfficerCode == medicalOfficerCode) &&
             (identical(other.raisedDate, raisedDate) ||
                 other.raisedDate == raisedDate) &&
             (identical(other.lowQualityImageUrl, lowQualityImageUrl) ||
@@ -726,6 +783,9 @@ class _$SafetyRemarkListModelImpl implements _SafetyRemarkListModel {
         natureOfInjury,
         restUpto,
         fitForDutyFrom,
+        medicalOfficerRemarks,
+        medicalOfficerName,
+        medicalOfficerCode,
         raisedDate,
         lowQualityImageUrl,
         highQualityImageUrl
@@ -776,6 +836,9 @@ abstract class _SafetyRemarkListModel implements SafetyRemarkListModel {
       final String natureOfInjury,
       @JsonKey(fromJson: _restUptoFromJson) final int restUpto,
       final String fitForDutyFrom,
+      final String medicalOfficerRemarks,
+      final String medicalOfficerName,
+      final String medicalOfficerCode,
       final String raisedDate,
       final String lowQualityImageUrl,
       final String highQualityImageUrl}) = _$SafetyRemarkListModelImpl;
@@ -840,6 +903,12 @@ abstract class _SafetyRemarkListModel implements SafetyRemarkListModel {
   int get restUpto;
   @override
   String get fitForDutyFrom;
+  @override
+  String get medicalOfficerRemarks;
+  @override
+  String get medicalOfficerName;
+  @override
+  String get medicalOfficerCode;
   @override
   String get raisedDate;
   @override

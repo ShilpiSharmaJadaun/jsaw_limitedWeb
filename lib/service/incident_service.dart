@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 import 'package:http/http.dart' as http;
+import 'package:web/web.dart' show window;
 import 'auth_http.dart';
 import 'package:jsaw_limited/model/allBodyParts_model.dart';
 import 'package:jsaw_limited/model/allContractor_model.dart';
@@ -193,11 +194,16 @@ class IncidentService{
       if (finalres['status'] == true) {
         return finalres['msg'];
       } else {
-        throw Exception(finalres['msg']);
+        // Business/validation error from the backend — surface its message
+        // verbatim to the UI.
+        throw ApiError.fromResponse(
+            finalres['msg']?.toString() ?? 'Unable to save the incident');
       }
+    } on ApiError {
+      rethrow; // keep the clean backend message; don't re-wrap it
     } catch (e) {
       if (e is String) {
-        throw Exception(e);
+        throw ApiError.fromResponse(e);
       }
       // Only wrap genuinely unexpected errors (network, parsing, etc.)
       throw Exception("An error occurred while saving the observation: $e");
@@ -415,6 +421,26 @@ class IncidentService{
     return [];
   }
 
+  /// Incident IDs eligible for an Investigation: only incidents that have BOTH
+  /// a Medical Officer Response and a Safety Remarks entry recorded.
+  Future<List<String>> getInvestigationReadyIncidentIds() async {
+    const url = "${root}incidentReport/getUniqueIdsReadyForInvestigation";
+    final response = await authHttp.get(Uri.parse(url), headers: getHeaders());
+    try {
+      final responseBody = json.decode(response.body);
+      if (responseBody["status"] == true) {
+        final itemList = responseBody["model"] as List;
+        return itemList.map((e) => e.toString()).toList();
+      } else {
+        // status=false here just means "none ready" — return empty, not an error.
+        return [];
+      }
+    } catch (e) {
+      _handleError(e);
+    }
+    return [];
+  }
+
   Future<List<AllMedicalOfficerListModel>> getAllMedicalOfficerList()async{
     const url = "${root}incidentReport/getPendingForMedicalOfficer";
     final response = await authHttp.get(Uri.parse(url),headers: getHeaders());
@@ -436,7 +462,11 @@ class IncidentService{
 
   Future<String?> saveMedicalResponse(Map<String, dynamic>data) async {
     const url = '${root}medicalOfficerResponse/saveMedicalOfficerResponse';
-    final body = data;
+    // Stamp the logged-in submitter (who is filling this Medical Officer
+    // Response) so the backend can save their code + name.
+    final body = Map<String, dynamic>.from(data)
+      ..['medicalOfficerCode'] = window.localStorage.getItem('kEmployeeCode') ?? ''
+      ..['medicalOfficerName'] = window.localStorage.getItem('kEmployeename') ?? '';
     try {
       final response = await authHttp.post(Uri.parse(url), body: json.encode(body), headers: getHeaders());
       if (response.statusCode < 200 || response.statusCode >= 300) {
@@ -626,7 +656,11 @@ class IncidentService{
 
   Future<String?> saveSafetyRemarkResponse(Map<String, dynamic>data) async {
     const url = '${root}safetyRemarks/saveSafetyRemarks';
-    final body = data;
+    // Stamp the logged-in submitter (who is filling these Safety Remarks) so
+    // the backend can save their code + name.
+    final body = Map<String, dynamic>.from(data)
+      ..['safetyOfficerCode'] = window.localStorage.getItem('kEmployeeCode') ?? ''
+      ..['safetyOfficerName'] = window.localStorage.getItem('kEmployeename') ?? '';
     try {
       final response = await authHttp.post(Uri.parse(url), body: json.encode(body), headers: getHeaders());
       final responseBody = json.decode(response.body);

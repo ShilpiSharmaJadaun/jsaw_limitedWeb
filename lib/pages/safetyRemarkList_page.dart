@@ -166,6 +166,13 @@ class _SafetyRemarkListPageState extends State<SafetyRemarkListPage> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   _buildInfoSection(
+                                    icon: Icons.tag,
+                                    iconColor: kcvoilet,
+                                    label: "Incident ID",
+                                    value: model[index].incidentUniqueId,
+                                    valueColor: kcValueDark,
+                                  ),
+                                  _buildInfoSection(
                                     icon: Icons.person_outline_rounded,
                                     iconColor: kcStatBlue,
                                     label: "Employee Name / Code",
@@ -283,37 +290,6 @@ class _SafetyRemarkListPageState extends State<SafetyRemarkListPage> {
                           ],
                         ),
                         const SizedBox(height: 10),
-
-                        // Injury type + Incident date
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Expanded(
-                              child: Row(
-                                children: [
-                                  _buildIconBadge(
-                                      Icons.medical_services_outlined,
-                                      kcInfoInjury),
-                                  const SizedBox(width: 8),
-                                  _buildLabel("Injury :"),
-                                  const SizedBox(width: 6),
-                                  Expanded(
-                                    child: Text(
-                                      model[index].workInjury,
-                                      maxLines: 2,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: const TextStyle(
-                                        color: kcValueDark,
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 12),
 
                         // Observations
                         Row(

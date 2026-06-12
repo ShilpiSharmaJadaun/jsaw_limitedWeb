@@ -46,8 +46,26 @@ class _SafetyRemarkPendingApprovalPageState extends State<SafetyRemarkPendingApp
 
   int currentPage = 0;
   late String raisedSessionID = window.localStorage.getItem('kRaisedSessionID') ?? "";
+
+  // When set, the Safety Remark form is shown INLINE (inside the app shell)
+  // instead of being pushed as a separate full-screen route.
+  SafetyRemarkListModel? _selectedModel;
+
   @override
   Widget build(BuildContext context) {
+    if (_selectedModel != null) {
+      final selected = _selectedModel!;
+      return SafetyRemarkPage(
+        safetyRemarkListModel: selected,
+        onClose: (refresh) {
+          setState(() => _selectedModel = null);
+          if (refresh) {
+            safetyRemarkListBloc
+                .removeByIncidentUniqueId(selected.incidentUniqueId);
+          }
+        },
+      );
+    }
     return Scaffold(
       backgroundColor: kcDashboardBg1,
       body: _buildAllIncidentList(),
@@ -162,6 +180,13 @@ class _SafetyRemarkPendingApprovalPageState extends State<SafetyRemarkPendingApp
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
+                                    _buildInfoSection(
+                                      icon: Icons.tag,
+                                      iconColor: kcvoilet,
+                                      label: "Incident ID",
+                                      value: model[index].incidentUniqueId,
+                                      valueColor: kcValueDark,
+                                    ),
                                     _buildInfoSection(
                                       icon: Icons.person_outline_rounded,
                                       iconColor: kcStatBlue,
@@ -281,39 +306,6 @@ class _SafetyRemarkPendingApprovalPageState extends State<SafetyRemarkPendingApp
                           ),
                           const SizedBox(height: 10),
 
-                          // Injury type + Incident date
-                          Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Expanded(
-                                child: Row(
-                                  children: [
-                                    _buildIconBadge(
-                                        Icons.medical_services_outlined,
-                                        kcInfoInjury),
-                                    const SizedBox(width: 8),
-                                    _buildLabel("Injury :"),
-                                    const SizedBox(width: 6),
-                                    Expanded(
-                                      child: Text(
-                                        model[index].workInjury,
-                                        maxLines: 2,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: const TextStyle(
-                                          color: kcValueDark,
-                                          fontWeight: FontWeight.w600,
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-
-
-                            ],
-                          ),
-                          const SizedBox(height: 12),
-
                           // Observations
                           Row(
                             //crossAxisAlignment: CrossAxisAlignment.start,
@@ -375,15 +367,8 @@ class _SafetyRemarkPendingApprovalPageState extends State<SafetyRemarkPendingApp
                                 },
                               ),
                               IconButton(
-                                  onPressed: () async{
-                                    final savedUniqueId = model[index].incidentUniqueId;
-                                    final shouldRefresh = await Navigator.of(context).push<bool>(
-                                      MaterialPageRoute(builder: (context) => SafetyRemarkPage(safetyRemarkListModel: model[index],),
-                                          fullscreenDialog: true),
-                                    );
-                                    if (shouldRefresh == true) {
-                                      safetyRemarkListBloc.removeByIncidentUniqueId(savedUniqueId);
-                                    }
+                                  onPressed: () {
+                                    setState(() => _selectedModel = model[index]);
                                   },
                                   icon: const Icon(
                                       Icons.arrow_forward_ios_sharp)),

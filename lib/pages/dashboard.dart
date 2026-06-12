@@ -663,8 +663,9 @@ class _ExtraLargeDashboardPageState extends State<ExtraLargeDashboardPage> {
         _buildGridBody(),
         const SizedBox(height: 16),
         _buildTopCategoriesCard(),
-        const SizedBox(height: 16),
-        _buildInfoCard(),
+        // Write Us card hidden from dashboard.
+        // const SizedBox(height: 16),
+        // _buildInfoCard(),
       ],
     );
   }
@@ -781,15 +782,17 @@ class _ExtraLargeDashboardPageState extends State<ExtraLargeDashboardPage> {
 
   Widget _buildStatCard(
       String label, String value, IconData icon, Color color) {
+    // Soft pastel tint of the status color, blended over white so it stays light.
+    final tintBg = Color.alphaBlend(color.withOpacity(0.12), kcWhite);
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: tintBg,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: Colors.grey.shade200),
+        border: Border.all(color: color.withOpacity(0.25)),
         boxShadow: [
           BoxShadow(
-            color: color.withOpacity(0.08),
+            color: color.withOpacity(0.10),
             blurRadius: 10,
             offset: const Offset(0, 3),
           ),
@@ -802,7 +805,7 @@ class _ExtraLargeDashboardPageState extends State<ExtraLargeDashboardPage> {
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: color.withOpacity(0.12),
+              color: color.withOpacity(0.16),
               borderRadius: BorderRadius.circular(10),
             ),
             child: Icon(icon, color: color, size: 20),
@@ -824,8 +827,8 @@ class _ExtraLargeDashboardPageState extends State<ExtraLargeDashboardPage> {
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: const TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
+                  fontSize: 15,
+                  fontWeight: FontWeight.w700,
                   color: kcLabelGrey,
                 ),
               ),

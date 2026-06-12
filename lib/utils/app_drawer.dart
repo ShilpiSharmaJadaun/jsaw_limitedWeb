@@ -3,6 +3,8 @@ import 'package:jsaw_limited/pages/allIncident_page.dart';
 import 'package:jsaw_limited/pages/approve_reject_table_page.dart';
 import 'package:jsaw_limited/pages/approved_observation_page.dart';
 import 'package:jsaw_limited/pages/change_password_page.dart';
+import 'package:jsaw_limited/pages/compliance_hod_page.dart';
+import 'package:jsaw_limited/pages/compliance_incident_page.dart';
 import 'package:jsaw_limited/pages/dashboardSelection.dart';
 import 'package:jsaw_limited/pages/employee_reporting_page.dart';
 import 'package:jsaw_limited/pages/graph_page.dart';
@@ -141,6 +143,20 @@ class AppDrawer extends StatelessWidget {
         color: _cyan,
         page: InvestigationTeamPage(),
       ),
+      const _DrawerEntry(
+        section: 'Reporting',
+        title: 'Compliance Incident',
+        icon: Icons.verified_user_outlined,
+        color: _fuchsia,
+        page: ComplianceIncidentPage(),
+      ),
+      const _DrawerEntry(
+        section: 'Reporting',
+        title: 'Compliance Review',
+        icon: Icons.rate_review_outlined,
+        color: _indigo,
+        page: ComplianceHodPage(),
+      ),
       if (khse)
         const _DrawerEntry(
           section: 'Admin',
@@ -165,14 +181,15 @@ class AppDrawer extends StatelessWidget {
           color: _pink,
           page: PriorityChangesPage(),
         ),
-      if (khse)
-        const _DrawerEntry(
-          section: 'Admin',
-          title: 'Write Us',
-          icon: Icons.forum_outlined,
-          color: _orange,
-          page: SuggestionFeedbackPage(),
-        ),
+      // Write Us drawer entry hidden.
+      // if (khse)
+      //   const _DrawerEntry(
+      //     section: 'Admin',
+      //     title: 'Write Us',
+      //     icon: Icons.forum_outlined,
+      //     color: _orange,
+      //     page: SuggestionFeedbackPage(),
+      //   ),
       const _DrawerEntry(
         section: 'Account',
         title: 'Profile',

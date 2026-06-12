@@ -314,6 +314,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                         SizedBox(width: 8),
                         Text(
                           "HARESAMUDRAM",
+                          // "KUDATINI",
                           style: TextStyle(
                             color: Colors.white,
                             fontSize: 15,
