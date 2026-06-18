@@ -4,6 +4,7 @@ import 'package:web/web.dart' show window;
 
 import '../model/allemployee_model.dart';
 import '../service/employee_reporting_service.dart';
+import '../service/graph.dart';
 import '../service/observation_service.dart';
 import '../utils/app_color.dart';
 
@@ -23,6 +24,8 @@ class _ProfilePageState extends State<ProfilePage> {
   Map<String, String> _deptToPlantName = {};
   // statCode -> station/dept name (from stations/getAllStationByDeptCode)
   Map<String, String> _statToDeptName = {};
+  // designation/grade code -> designation name (from observation/getAllDesignation)
+  Map<String, String> _desgToName = {};
 
   @override
   void initState() {
@@ -33,6 +36,23 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   Future<void> _loadLookups() async {
+    try {
+      // Designation/grade name lookup (keyed by both designation_code and
+      // wrkGrp-grade code so either of the employee's codes can resolve).
+      final graphService = Provider.of<GraphService>(context, listen: false);
+      final designations = await graphService.getAllDesignation();
+      if (mounted) {
+        setState(() {
+          _desgToName = {
+            for (final d in designations)
+              if (d.designation_code.isNotEmpty)
+                d.designation_code: d.designation_name,
+          };
+        });
+      }
+    } catch (_) {
+      // Non-fatal: fall back to the code.
+    }
     try {
       final obsService =
           Provider.of<ObservationService>(context, listen: false);
@@ -186,18 +206,19 @@ class _ProfilePageState extends State<ProfilePage> {
                 rows: [
                   _Row(Icons.badge_outlined, 'Employee Code', emp.empUnqId,
                       kcStatBlue),
-                  _Row(Icons.assignment_ind_outlined, 'Designation',
-                      emp.desgCode, kcInfoResponsibility),
+                  _Row(
+                      Icons.assignment_ind_outlined,
+                      'Designation',
+                      _desgToName[emp.desgCode] ??
+                          _desgToName[emp.gradeCode] ??
+                          emp.desgCode,
+                      kcInfoResponsibility),
                   _Row(Icons.business_outlined, 'Plant',
                       _deptToPlantName[emp.deptCode] ?? emp.deptCode,
                       kcInfoPlant),
-                  _Row(Icons.factory_outlined, 'Unit', emp.unitCode,
-                      kcInfoContractor),
                   _Row(Icons.location_city_outlined, 'Department',
                       _statToDeptName[emp.statCode] ?? emp.statCode,
                       kcInfoLocation),
-                  _Row(Icons.category_outlined, 'Category', emp.catCode,
-                      kcInfoObservation),
                   _Row(Icons.groups_outlined, 'Work Group', emp.wrkGrp,
                       kcStatPurple),
                 ],

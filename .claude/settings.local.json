@@ -78,7 +78,8 @@
       "PowerShell(& \"D:\\\\JSAW_BACKEND_API\\\\JSAW\\\\mvnw.cmd\" -f \"D:\\\\JSAW_BACKEND_API\\\\JSAW\\\\pom.xml\" -q -DskipTests compile; Write-Output \"EXIT=$LASTEXITCODE\")",
       "Bash(grep -iE \"\\\\.sql$|trigger\")",
       "Bash(grep -vi 'errorBuilder\\\\|part_of_different\\\\|safetyremarklist\\\\|redirect_to_non_class\\\\|_$SafetyRemark')",
-      "Bash(grep -iA6 -B2 \"distinct\\\\|uniqueId\\\\|@Query\")"
+      "Bash(grep -iA6 -B2 \"distinct\\\\|uniqueId\\\\|@Query\")",
+      "Bash(break)"
     ]
   }
 }

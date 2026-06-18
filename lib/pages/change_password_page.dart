@@ -24,6 +24,7 @@ class _ChangePasswordPageState extends State<ChangePasswordPage>
 
   bool _showPassword = false;
   bool _showResetPassword = false;
+  bool _redirecting = false;
 
   bool get _canResetForOthers =>
       html.window.localStorage.getItem('kResetPasswordAuth') == '1';
@@ -120,19 +121,30 @@ class _ChangePasswordPageState extends State<ChangePasswordPage>
       buttonText: 'Save Password',
       buttonIcon: Icons.save_outlined,
       buttonColor: kcvoilet,
-      onPressed: () {
+      onPressed: () async {
         final newPassword = newPasswordController.text.trim();
         if (newPassword.isEmpty) {
           _snack('Password cannot be empty', kcRed);
           return;
         }
-        _updatePassword(
+        final ok = await _updatePassword(
           html.window.localStorage.getItem('kEmployeeCode') ?? '',
           html.window.localStorage.getItem('kEmployeePassStatus') ?? '',
           newPassword,
         );
+        if (!mounted) return;
+        if (!ok) {
+          _snack(_passwordError(), kcRed);
+          return;
+        }
         newPasswordController.clear();
-        _snack('Password changed successfully', kcobservationgreen);
+        // End the session IMMEDIATELY, before showing the dialog. On Flutter
+        // web the browser back button doesn't pop the dialog — it re-runs
+        // onGenerateRoute and pushes a fresh route. With the auth token already
+        // cleared, main.dart's guard routes that push to LoginPage instead of
+        // the dashboard. (The Login button path reloads to login as well.)
+        html.window.localStorage.clear();
+        await _showPasswordChangedDialog();
       },
     );
   }
@@ -187,17 +199,22 @@ class _ChangePasswordPageState extends State<ChangePasswordPage>
       buttonText: 'Reset Password',
       buttonIcon: Icons.lock_reset_outlined,
       buttonColor: kcStatAmber,
-      onPressed: () {
+      onPressed: () async {
         final code = employeeCodeController.text.trim();
         if (code.isEmpty) {
           _snack('Employee code cannot be empty', kcRed);
           return;
         }
-        _updatePassword(
+        final ok = await _updatePassword(
           code,
           html.window.localStorage.getItem('kEmployeePassStatus') ?? '',
           code,
         );
+        if (!mounted) return;
+        if (!ok) {
+          _snack(_passwordError(), kcRed);
+          return;
+        }
         employeeCodeController.clear();
         _snack('Password reset successfully', kcobservationgreen);
       },
@@ -363,10 +380,77 @@ class _ChangePasswordPageState extends State<ChangePasswordPage>
 
   // ===== Actions =====
 
-  void _updatePassword(
+  // Returns true only when the backend confirms the password was changed.
+  Future<bool> _updatePassword(
       String empUnqId, String empPassStatus, String empNewPass) async {
     final data = {'empUnqId': empUnqId, 'empNewPass': empNewPass};
     await changepasswordBloc.forgetPassword(data);
+    return changepasswordBloc.state.maybeWhen(
+      success: (_, __) => true,
+      orElse: () => false,
+    );
+  }
+
+  String _passwordError() => changepasswordBloc.state.maybeWhen(
+        failed: (_, msg) => msg,
+        orElse: () => 'Failed to change password. Please try again.',
+      );
+
+  // Confirms the change, then ends the session and forces a fresh login. The
+  // redirect happens only when the user taps the "Login" button.
+  Future<void> _showPasswordChangedDialog() async {
+    await showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => WillPopScope(
+        // Block the back button from dismissing the dialog: the password has
+        // already changed, so the only way forward is to log in again.
+        onWillPop: () async => false,
+        child: AlertDialog(
+          shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(14)),
+          title: const Row(
+            children: [
+              Icon(Icons.check_circle, color: kcobservationgreen, size: 26),
+              SizedBox(width: 10),
+              Text('Password Changed'),
+            ],
+          ),
+          content: const Text(
+            'Your password has been updated successfully. '
+            'Please sign in again with your new password.',
+          ),
+          actions: [
+            ElevatedButton.icon(
+              onPressed: _goToLogin,
+              icon: const Icon(Icons.login, size: 18, color: kcWhite),
+              label: const Text('Login',
+                  style: TextStyle(
+                      color: kcWhite, fontWeight: FontWeight.w700)),
+              style: ElevatedButton.styleFrom(backgroundColor: kcvoilet),
+            ),
+          ],
+        ),
+      ),
+    );
+    // If the dialog's future resolves (e.g. the Login button), redirect. The
+    // browser back button is handled separately: it re-runs onGenerateRoute,
+    // which routes to login because the session was already cleared on success.
+    _goToLogin();
+  }
+
+  // The new password takes effect immediately, so clear the session and force
+  // a fresh login. We do a hard browser redirect + reload rather than an
+  // in-app Navigator push: on Flutter web the browser back button races with
+  // the in-app router (it would close the dialog and drop back to the
+  // dashboard). A full reload with the auth token cleared resets all state, and
+  // onGenerateRoute then routes every protected page to LoginPage.
+  void _goToLogin() {
+    if (_redirecting) return;
+    _redirecting = true;
+    html.window.localStorage.clear();
+    html.window.location.hash = '/login_page';
+    html.window.location.reload();
   }
 
   void _updateEmail(String empUnqId, String empNewEmail) async {
