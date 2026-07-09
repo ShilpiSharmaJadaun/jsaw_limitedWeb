@@ -12,6 +12,7 @@ LoginModel _$LoginModelFromJson(Map<String, dynamic> json) => LoginModel(
       fatherName: json['fatherName'] as String?,
       active: (json['active'] as num?)?.toInt(),
       desgCode: json['desgCode'] as String?,
+      designationName: json['designationName'] as String?,
       deptCode: json['deptCode'] as String?,
       unitCode: json['unitCode'] as String?,
       email: json['email'] as String?,
@@ -41,6 +42,7 @@ Map<String, dynamic> _$LoginModelToJson(LoginModel instance) {
   writeNotNull('fatherName', instance.fatherName);
   writeNotNull('active', instance.active);
   writeNotNull('desgCode', instance.desgCode);
+  writeNotNull('designationName', instance.designationName);
   writeNotNull('deptCode', instance.deptCode);
   writeNotNull('unitCode', instance.unitCode);
   writeNotNull('email', instance.email);

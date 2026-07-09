@@ -12,6 +12,7 @@ class LoginModel {
   late final String? fatherName;
   late final int? active;
   late final String? desgCode;
+  late final String? designationName;
   late final String? deptCode;
   late final String? unitCode;
   late final String? email;
@@ -32,6 +33,7 @@ class LoginModel {
     this.fatherName,
     this.active,
     this.desgCode,
+    this.designationName,
     this.deptCode,
     this.unitCode,
     this.email,

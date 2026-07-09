@@ -26,11 +26,15 @@ class _ProfilePageState extends State<ProfilePage> {
   Map<String, String> _statToDeptName = {};
   // designation/grade code -> designation name (from observation/getAllDesignation)
   Map<String, String> _desgToName = {};
+  // designation name resolved by the login API (from the Designations table)
+  String _loginDesignationName = '';
 
   @override
   void initState() {
     super.initState();
     _emp = _buildFromLocalStorage();
+    _loginDesignationName =
+        window.localStorage.getItem('kDesignationName') ?? '';
     _enrichFromApi();
     _loadLookups();
   }
@@ -209,9 +213,11 @@ class _ProfilePageState extends State<ProfilePage> {
                   _Row(
                       Icons.assignment_ind_outlined,
                       'Designation',
-                      _desgToName[emp.desgCode] ??
-                          _desgToName[emp.gradeCode] ??
-                          emp.desgCode,
+                      _loginDesignationName.isNotEmpty
+                          ? _loginDesignationName
+                          : (_desgToName[emp.desgCode] ??
+                              _desgToName[emp.gradeCode] ??
+                              emp.desgCode),
                       kcInfoResponsibility),
                   _Row(Icons.business_outlined, 'Plant',
                       _deptToPlantName[emp.deptCode] ?? emp.deptCode,

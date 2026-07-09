@@ -25,6 +25,7 @@ class LoginService {
         window.localStorage.setItem('kstatCode', responseBody['model']['statCode'].toString());
         window.localStorage.setItem('kdeptCode', responseBody['model']['deptCode'].toString());
         window.localStorage.setItem('kDesgnCode', responseBody['model']['desgCode'].toString());
+        window.localStorage.setItem('kDesignationName', responseBody['model']['designationName']?.toString() ?? '');
         window.localStorage.setItem('kGradeCode', responseBody['model']['gradeCode'].toString());
         window.localStorage.setItem('khseCode', responseBody['model']['hseteamAuthorization'].toString());
         window.localStorage.setItem('kempAuthPlantHead', responseBody['model']['employeeAuthorizationForPlantUnitHead'].toString());
