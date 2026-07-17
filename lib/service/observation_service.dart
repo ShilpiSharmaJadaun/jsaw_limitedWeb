@@ -18,6 +18,7 @@ import 'package:jsaw_limited/model/observationby_uni_model.dart';
 import 'package:jsaw_limited/model/plantHead_model.dart';
 import 'package:jsaw_limited/model/priority_model.dart';
 import 'package:jsaw_limited/model/raisedObservation_model.dart';
+import 'package:jsaw_limited/model/complaint_reply_model.dart';
 import 'package:jsaw_limited/model/raised_feedback_model.dart';
 import 'package:jsaw_limited/model/uniqueId_model.dart';
 import 'package:jsaw_limited/model/unithead_model.dart';
@@ -920,6 +921,81 @@ class ObservationService{
     // return null;
   }
 
+
+  Future<Map<String, dynamic>> developerLogin(String username, String password) async {
+    const url = '${root}complaint/developerLogin';
+    final response = await http.post(
+      Uri.parse(url),
+      headers: {'Content-Type': 'application/json'},
+      body: json.encode({'username': username, 'password': password}),
+    );
+    final responseBody = json.decode(response.body) as Map<String, dynamic>;
+    if (responseBody['status'] == true) {
+      return responseBody['model'] as Map<String, dynamic>;
+    } else {
+      throw responseBody['msg'] as String? ?? 'Invalid credentials';
+    }
+  }
+
+  Future<ComplaintReplyModel> addComplaintReply({
+    required int complaintId,
+    required String senderType,
+    required String senderName,
+    required String message,
+    Uint8List? imageBytes,
+  }) async {
+    const url = '${root}complaint/addReply';
+    try {
+      var request = http.MultipartRequest('POST', Uri.parse(url));
+      authHttp.attachAuth(request);
+      request.fields['complaintId'] = complaintId.toString();
+      request.fields['senderType'] = senderType;
+      request.fields['senderName'] = senderName;
+      request.fields['message'] = message;
+      if (imageBytes != null && imageBytes.isNotEmpty) {
+        request.files.add(http.MultipartFile.fromBytes(
+          'image',
+          imageBytes,
+          filename: 'reply_attachment.jpg',
+          contentType: MediaType('image', 'jpeg'),
+        ));
+      }
+      final streamed = await request.send();
+      final response = await http.Response.fromStream(streamed);
+      authHttp.check(response);
+      final responseBody = json.decode(response.body) as Map<String, dynamic>;
+      if (responseBody['status'] == true) {
+        return ComplaintReplyModel.fromJson(responseBody['model'] as Map<String, dynamic>);
+      } else {
+        throw ApiError.fromResponse(responseBody['msg']);
+      }
+    } catch (e) {
+      _handleError(e);
+      rethrow;
+    }
+  }
+
+  Future<void> deleteComplaint(int id) async {
+    final url = '${root}complaint/deleteComplaint/$id';
+    final response = await authHttp.delete(Uri.parse(url), headers: getHeaders());
+    final responseBody = json.decode(response.body) as Map<String, dynamic>;
+    if (responseBody['status'] != true) {
+      throw ApiError.fromResponse(responseBody['msg']);
+    }
+  }
+
+  Future<void> closeComplaint(int id, String solutionRemark) async {
+    const url = '${root}complaint/closeComplaint';
+    final response = await authHttp.post(
+      Uri.parse(url),
+      headers: {...getHeaders(), 'Content-Type': 'application/json'},
+      body: json.encode({'id': id, 'solutionRemark': solutionRemark}),
+    );
+    final responseBody = json.decode(response.body) as Map<String, dynamic>;
+    if (responseBody['status'] != true) {
+      throw ApiError.fromResponse(responseBody['msg']);
+    }
+  }
 
   _handleError(var e) {
     if (e is String) throw e;

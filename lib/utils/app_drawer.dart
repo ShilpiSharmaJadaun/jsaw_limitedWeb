@@ -14,6 +14,7 @@ import 'package:jsaw_limited/pages/priority_changes_page.dart';
 import 'package:jsaw_limited/pages/profile_page.dart';
 import 'package:jsaw_limited/pages/register_observation_page.dart';
 import 'package:jsaw_limited/pages/safetyRemarkResponse_page.dart';
+import 'package:jsaw_limited/pages/admin_complaints_page.dart';
 import 'package:jsaw_limited/pages/suggestion_page.dart';
 import 'package:responsive_builder/responsive_builder.dart';
 import '../pages/medicalOfficerResponse_page.dart';
@@ -78,6 +79,9 @@ class AppDrawer extends StatelessWidget {
   List<_DrawerEntry> _getEntries() {
     final khse = html.window.localStorage.getItem('khseCode') == '1';
     final reporting = html.window.localStorage.getItem('kreporting') == '1';
+    final empCode = html.window.localStorage.getItem('kEmployeeCode') ?? '';
+    final isIncidentUser = empCode == '115163';
+    final canWriteUs = empCode == '116500';
 
     return [
       const _DrawerEntry(
@@ -101,13 +105,14 @@ class AppDrawer extends StatelessWidget {
         color: _indigo,
         page: GraphPage(),
       ),
-      const _DrawerEntry(
-        section: 'Workspace',
-        title: 'All Incident',
-        icon: Icons.report_problem_outlined,
-        color: _red,
-        page: AllIncidentPage(),
-      ),
+      if (isIncidentUser)
+        const _DrawerEntry(
+          section: 'Workspace',
+          title: 'All Incident',
+          icon: Icons.report_problem_outlined,
+          color: _red,
+          page: AllIncidentPage(),
+        ),
       const _DrawerEntry(
         section: 'Reporting',
         title: 'Raise Observation',
@@ -115,48 +120,54 @@ class AppDrawer extends StatelessWidget {
         color: _green,
         page: RegisterObservationPage(),
       ),
-      const _DrawerEntry(
-        section: 'Reporting',
-        title: 'Incident Tracking',
-        icon: Icons.warning_amber_outlined,
-        color: _amber,
-        page: IncidentReportingPage(),
-      ),
-      const _DrawerEntry(
-        section: 'Reporting',
-        title: 'Medical Officer Response',
-        icon: Icons.medical_services_outlined,
-        color: _teal,
-        page: MedicalOfficerResponsePage(),
-      ),
-      const _DrawerEntry(
-        section: 'Reporting',
-        title: 'Safety Remark Form',
-        icon: Icons.health_and_safety_outlined,
-        color: _orange,
-        page: SafetyRemarkResponsePage(),
-      ),
-      const _DrawerEntry(
-        section: 'Reporting',
-        title: 'Investigation Form',
-        icon: Icons.fact_check_outlined,
-        color: _cyan,
-        page: InvestigationTeamPage(),
-      ),
-      const _DrawerEntry(
-        section: 'Reporting',
-        title: 'Compliance Incident',
-        icon: Icons.verified_user_outlined,
-        color: _fuchsia,
-        page: ComplianceIncidentPage(),
-      ),
-      const _DrawerEntry(
-        section: 'Reporting',
-        title: 'Compliance Review',
-        icon: Icons.rate_review_outlined,
-        color: _indigo,
-        page: ComplianceHodPage(),
-      ),
+      if (isIncidentUser)
+        const _DrawerEntry(
+          section: 'Reporting',
+          title: 'Incident Tracking',
+          icon: Icons.warning_amber_outlined,
+          color: _amber,
+          page: IncidentReportingPage(),
+        ),
+      if (isIncidentUser)
+        const _DrawerEntry(
+          section: 'Reporting',
+          title: 'Medical Officer Response',
+          icon: Icons.medical_services_outlined,
+          color: _teal,
+          page: MedicalOfficerResponsePage(),
+        ),
+      if (isIncidentUser)
+        const _DrawerEntry(
+          section: 'Reporting',
+          title: 'Safety Remark Form',
+          icon: Icons.health_and_safety_outlined,
+          color: _orange,
+          page: SafetyRemarkResponsePage(),
+        ),
+      if (isIncidentUser)
+        const _DrawerEntry(
+          section: 'Reporting',
+          title: 'Investigation Form',
+          icon: Icons.fact_check_outlined,
+          color: _cyan,
+          page: InvestigationTeamPage(),
+        ),
+      if (isIncidentUser)
+        const _DrawerEntry(
+          section: 'Reporting',
+          title: 'Compliance Incident',
+          icon: Icons.verified_user_outlined,
+          color: _fuchsia,
+          page: ComplianceIncidentPage(),
+        ),
+      if (isIncidentUser)
+        const _DrawerEntry(
+          section: 'Reporting',
+          title: 'Compliance Review',
+          icon: Icons.rate_review_outlined,
+          color: _indigo,
+          page: ComplianceHodPage(),
+        ),
       if (khse)
         const _DrawerEntry(
           section: 'Admin',
@@ -181,15 +192,14 @@ class AppDrawer extends StatelessWidget {
           color: _pink,
           page: PriorityChangesPage(),
         ),
-      // Write Us drawer entry hidden.
-      // if (khse)
-      //   const _DrawerEntry(
-      //     section: 'Admin',
-      //     title: 'Write Us',
-      //     icon: Icons.forum_outlined,
-      //     color: _orange,
-      //     page: SuggestionFeedbackPage(),
-      //   ),
+      if (khse)
+        const _DrawerEntry(
+          section: 'Admin',
+          title: 'Complaints',
+          icon: Icons.support_agent,
+          color: _teal,
+          page: AdminComplaintsPage(),
+        ),
       const _DrawerEntry(
         section: 'Account',
         title: 'Profile',
@@ -211,6 +221,14 @@ class AppDrawer extends StatelessWidget {
           icon: Icons.groups_outlined,
           color: _green,
           page: EmployeeReportingPage(),
+        ),
+      if (canWriteUs)
+        const _DrawerEntry(
+          section: 'Account',
+          title: 'Write Us',
+          icon: Icons.support_agent,
+          color: _amber,
+          page: SuggestionFeedbackPage(),
         ),
     ];
   }

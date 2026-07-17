@@ -25,6 +25,13 @@ _$SuggestionFeedbackModelImpl _$$SuggestionFeedbackModelImplFromJson(
       statusColor: json['statusColor'] as String? ?? "",
       lowQualityImageUrl: json['lowQualityImageUrl'] as String? ?? "",
       highQualityImageUrl: json['highQualityImageUrl'] as String? ?? "",
+      solutionRemark: json['solutionRemark'] as String? ?? "",
+      complaintNumber: json['complaintNumber'] as String? ?? "",
+      replies: (json['replies'] as List<dynamic>?)
+              ?.map((e) =>
+                  ComplaintReplyModel.fromJson(e as Map<String, dynamic>))
+              .toList() ??
+          const [],
     );
 
 Map<String, dynamic> _$$SuggestionFeedbackModelImplToJson(
@@ -46,4 +53,7 @@ Map<String, dynamic> _$$SuggestionFeedbackModelImplToJson(
       'statusColor': instance.statusColor,
       'lowQualityImageUrl': instance.lowQualityImageUrl,
       'highQualityImageUrl': instance.highQualityImageUrl,
+      'solutionRemark': instance.solutionRemark,
+      'complaintNumber': instance.complaintNumber,
+      'replies': instance.replies,
     };

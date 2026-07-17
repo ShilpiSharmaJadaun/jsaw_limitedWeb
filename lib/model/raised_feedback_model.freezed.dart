@@ -37,6 +37,9 @@ mixin _$SuggestionFeedbackModel {
   String get statusColor => throw _privateConstructorUsedError;
   String get lowQualityImageUrl => throw _privateConstructorUsedError;
   String get highQualityImageUrl => throw _privateConstructorUsedError;
+  String get solutionRemark => throw _privateConstructorUsedError;
+  String get complaintNumber => throw _privateConstructorUsedError;
+  List<ComplaintReplyModel> get replies => throw _privateConstructorUsedError;
 
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
   @JsonKey(ignore: true)
@@ -66,7 +69,10 @@ abstract class $SuggestionFeedbackModelCopyWith<$Res> {
       String status,
       String statusColor,
       String lowQualityImageUrl,
-      String highQualityImageUrl});
+      String highQualityImageUrl,
+      String solutionRemark,
+      String complaintNumber,
+      List<ComplaintReplyModel> replies});
 }
 
 /// @nodoc
@@ -99,6 +105,9 @@ class _$SuggestionFeedbackModelCopyWithImpl<$Res,
     Object? statusColor = null,
     Object? lowQualityImageUrl = null,
     Object? highQualityImageUrl = null,
+    Object? solutionRemark = null,
+    Object? complaintNumber = null,
+    Object? replies = null,
   }) {
     return _then(_value.copyWith(
       id: null == id
@@ -165,6 +174,18 @@ class _$SuggestionFeedbackModelCopyWithImpl<$Res,
           ? _value.highQualityImageUrl
           : highQualityImageUrl // ignore: cast_nullable_to_non_nullable
               as String,
+      solutionRemark: null == solutionRemark
+          ? _value.solutionRemark
+          : solutionRemark // ignore: cast_nullable_to_non_nullable
+              as String,
+      complaintNumber: null == complaintNumber
+          ? _value.complaintNumber
+          : complaintNumber // ignore: cast_nullable_to_non_nullable
+              as String,
+      replies: null == replies
+          ? _value.replies
+          : replies // ignore: cast_nullable_to_non_nullable
+              as List<ComplaintReplyModel>,
     ) as $Val);
   }
 }
@@ -194,7 +215,10 @@ abstract class _$$SuggestionFeedbackModelImplCopyWith<$Res>
       String status,
       String statusColor,
       String lowQualityImageUrl,
-      String highQualityImageUrl});
+      String highQualityImageUrl,
+      String solutionRemark,
+      String complaintNumber,
+      List<ComplaintReplyModel> replies});
 }
 
 /// @nodoc
@@ -226,6 +250,9 @@ class __$$SuggestionFeedbackModelImplCopyWithImpl<$Res>
     Object? statusColor = null,
     Object? lowQualityImageUrl = null,
     Object? highQualityImageUrl = null,
+    Object? solutionRemark = null,
+    Object? complaintNumber = null,
+    Object? replies = null,
   }) {
     return _then(_$SuggestionFeedbackModelImpl(
       id: null == id
@@ -292,6 +319,18 @@ class __$$SuggestionFeedbackModelImplCopyWithImpl<$Res>
           ? _value.highQualityImageUrl
           : highQualityImageUrl // ignore: cast_nullable_to_non_nullable
               as String,
+      solutionRemark: null == solutionRemark
+          ? _value.solutionRemark
+          : solutionRemark // ignore: cast_nullable_to_non_nullable
+              as String,
+      complaintNumber: null == complaintNumber
+          ? _value.complaintNumber
+          : complaintNumber // ignore: cast_nullable_to_non_nullable
+              as String,
+      replies: null == replies
+          ? _value._replies
+          : replies // ignore: cast_nullable_to_non_nullable
+              as List<ComplaintReplyModel>,
     ));
   }
 }
@@ -315,7 +354,11 @@ class _$SuggestionFeedbackModelImpl implements _SuggestionFeedbackModel {
       this.status = "",
       this.statusColor = "",
       this.lowQualityImageUrl = "",
-      this.highQualityImageUrl = ""});
+      this.highQualityImageUrl = "",
+      this.solutionRemark = "",
+      this.complaintNumber = "",
+      final List<ComplaintReplyModel> replies = const []})
+      : _replies = replies;
 
   factory _$SuggestionFeedbackModelImpl.fromJson(Map<String, dynamic> json) =>
       _$$SuggestionFeedbackModelImplFromJson(json);
@@ -368,10 +411,24 @@ class _$SuggestionFeedbackModelImpl implements _SuggestionFeedbackModel {
   @override
   @JsonKey()
   final String highQualityImageUrl;
+  @override
+  @JsonKey()
+  final String solutionRemark;
+  @override
+  @JsonKey()
+  final String complaintNumber;
+  final List<ComplaintReplyModel> _replies;
+  @override
+  @JsonKey()
+  List<ComplaintReplyModel> get replies {
+    if (_replies is EqualUnmodifiableListView) return _replies;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableListView(_replies);
+  }
 
   @override
   String toString() {
-    return 'SuggestionFeedbackModel(id: $id, issueTitle: $issueTitle, issueDescription: $issueDescription, dateTimeOfOccurrence: $dateTimeOfOccurrence, softwareVersion: $softwareVersion, operatingSystem: $operatingSystem, severity: $severity, attachments: $attachments, empUnId: $empUnId, empName: $empName, ticketRaisedDate: $ticketRaisedDate, closingTicketDate: $closingTicketDate, status: $status, statusColor: $statusColor, lowQualityImageUrl: $lowQualityImageUrl, highQualityImageUrl: $highQualityImageUrl)';
+    return 'SuggestionFeedbackModel(id: $id, issueTitle: $issueTitle, issueDescription: $issueDescription, dateTimeOfOccurrence: $dateTimeOfOccurrence, softwareVersion: $softwareVersion, operatingSystem: $operatingSystem, severity: $severity, attachments: $attachments, empUnId: $empUnId, empName: $empName, ticketRaisedDate: $ticketRaisedDate, closingTicketDate: $closingTicketDate, status: $status, statusColor: $statusColor, lowQualityImageUrl: $lowQualityImageUrl, highQualityImageUrl: $highQualityImageUrl, solutionRemark: $solutionRemark, complaintNumber: $complaintNumber, replies: $replies)';
   }
 
   @override
@@ -406,29 +463,38 @@ class _$SuggestionFeedbackModelImpl implements _SuggestionFeedbackModel {
             (identical(other.lowQualityImageUrl, lowQualityImageUrl) ||
                 other.lowQualityImageUrl == lowQualityImageUrl) &&
             (identical(other.highQualityImageUrl, highQualityImageUrl) ||
-                other.highQualityImageUrl == highQualityImageUrl));
+                other.highQualityImageUrl == highQualityImageUrl) &&
+            (identical(other.solutionRemark, solutionRemark) ||
+                other.solutionRemark == solutionRemark) &&
+            (identical(other.complaintNumber, complaintNumber) ||
+                other.complaintNumber == complaintNumber) &&
+            const DeepCollectionEquality().equals(other._replies, _replies));
   }
 
   @JsonKey(ignore: true)
   @override
-  int get hashCode => Object.hash(
-      runtimeType,
-      id,
-      issueTitle,
-      issueDescription,
-      dateTimeOfOccurrence,
-      softwareVersion,
-      operatingSystem,
-      severity,
-      attachments,
-      empUnId,
-      empName,
-      ticketRaisedDate,
-      closingTicketDate,
-      status,
-      statusColor,
-      lowQualityImageUrl,
-      highQualityImageUrl);
+  int get hashCode => Object.hashAll([
+        runtimeType,
+        id,
+        issueTitle,
+        issueDescription,
+        dateTimeOfOccurrence,
+        softwareVersion,
+        operatingSystem,
+        severity,
+        attachments,
+        empUnId,
+        empName,
+        ticketRaisedDate,
+        closingTicketDate,
+        status,
+        statusColor,
+        lowQualityImageUrl,
+        highQualityImageUrl,
+        solutionRemark,
+        complaintNumber,
+        const DeepCollectionEquality().hash(_replies)
+      ]);
 
   @JsonKey(ignore: true)
   @override
@@ -462,7 +528,10 @@ abstract class _SuggestionFeedbackModel implements SuggestionFeedbackModel {
       final String status,
       final String statusColor,
       final String lowQualityImageUrl,
-      final String highQualityImageUrl}) = _$SuggestionFeedbackModelImpl;
+      final String highQualityImageUrl,
+      final String solutionRemark,
+      final String complaintNumber,
+      final List<ComplaintReplyModel> replies}) = _$SuggestionFeedbackModelImpl;
 
   factory _SuggestionFeedbackModel.fromJson(Map<String, dynamic> json) =
       _$SuggestionFeedbackModelImpl.fromJson;
@@ -499,6 +568,12 @@ abstract class _SuggestionFeedbackModel implements SuggestionFeedbackModel {
   String get lowQualityImageUrl;
   @override
   String get highQualityImageUrl;
+  @override
+  String get solutionRemark;
+  @override
+  String get complaintNumber;
+  @override
+  List<ComplaintReplyModel> get replies;
   @override
   @JsonKey(ignore: true)
   _$$SuggestionFeedbackModelImplCopyWith<_$SuggestionFeedbackModelImpl>

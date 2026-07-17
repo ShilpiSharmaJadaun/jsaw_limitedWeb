@@ -242,6 +242,29 @@ class GraphService{
     return const DepartmentgraphExportModel();
   }
 
+  Future<DepartmentgraphExportModel?> generateRaisedExport()async{
+    const url = "${root}observation/departmentRaisedGraphExport";
+    final body = {
+      "startDate": "" ,
+      "endDate": "" ,
+      "designationName": "",
+      "sessionID": window.localStorage.getItem('kgraph2session') ,
+    };
+    try {
+      final response = await authHttp.post(Uri.parse(url), body: json.encode(body),headers: getHeaders());
+      final responseBody = json.decode(response.body);
+      if (responseBody['status'] == true) {
+        final exportUrl = responseBody['model']?['url'] ?? '';
+        return DepartmentgraphExportModel(url: exportUrl.toString());
+      } else {
+        ApiError.fromResponse(responseBody['msg']);
+      }
+    } catch (e) {
+      _handleError(e);
+    }
+    return const DepartmentgraphExportModel();
+  }
+
   Future<HazardGraphExportModel?> generateHazardGraphExport(String startDate, String endDate)async{
     const url = "${root}observation/HazardGraphExport";
     final body = {

@@ -12,7 +12,7 @@ import 'package:syncfusion_flutter_charts/charts.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../bloc/allSafetyObservationByManagerGraph_bloc.dart';
 import '../bloc/allSafetyObservationRaisedByManagerPieChart_bloc.dart';
-import '../bloc/departmentgraphexport_bloc.dart';
+import '../bloc/departmentRaisedGraphexport_bloc.dart';
 import '../bloc/observation_status_List_bloc.dart';
 import '../model/allSafetyObservationByManager_Graph_model.dart';
 import '../model/allsafetyObservationRaisedModelbyengg_model.dart';
@@ -31,7 +31,7 @@ class SafetyobservationchartRaisedPage extends StatefulWidget {
 
 class _SafetyobservationchartRaisedPageState extends State<SafetyobservationchartRaisedPage> {
 
-  late DepartmentgraphExportBloc departmentgraphExportBloc;
+  late DepartmentRaisedGraphExportBloc departmentgraphExportBloc;
 
   late ObservationStatusListBloc observationStatusListBloc;
 
@@ -49,7 +49,7 @@ class _SafetyobservationchartRaisedPageState extends State<Safetyobservationchar
     //context.read<SafetyRaisedByManagerPieChartBloc>().initState("", ""); // Pass the necessary deptCode here
     context.read<ObservationStatusListBloc>().initState();
     final graphService = Provider.of<GraphService>(context, listen: false);
-    departmentgraphExportBloc = DepartmentgraphExportBloc(graphService);
+    departmentgraphExportBloc = DepartmentRaisedGraphExportBloc(graphService);
     observationStatusListBloc = ObservationStatusListBloc(graphService);
     startDateInput.text = "";
     endDateInput.text = "";
@@ -438,7 +438,7 @@ class _SafetyobservationchartRaisedPageState extends State<Safetyobservationchar
       borderSide: const BorderSide(width: 1.5, color: kcvoilet));
 
   _buildDownloadExcel() {
-    return BlocConsumer<DepartmentgraphExportBloc, DepartmentgraphExportState>(
+    return BlocConsumer<DepartmentRaisedGraphExportBloc, DepartmentgraphExportState>(
         bloc: departmentgraphExportBloc,
         listener: (_, state) {
           state.maybeWhen(

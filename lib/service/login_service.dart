@@ -10,7 +10,14 @@ import 'package:web/web.dart' show window;
 
 class LoginService {
 
-  Future<LoginModel?> logIn(String employeeId,String empNewPass) async {
+  static const _devUsername = '20071991';
+
+  Future<LoginModel?> logIn(String employeeId, String empNewPass) async {
+    // Developer / support-team login — separate endpoint, no company record
+    if (employeeId.trim() == _devUsername) {
+      return _developerLogIn(empNewPass.trim());
+    }
+
     final data = {'empUnqId': employeeId, 'empNewPass' : empNewPass};
     const url = '${root}employees/loginPortal';
     try {
@@ -44,6 +51,35 @@ class LoginService {
       }
     } catch (e, trace) {
       print("Error: $e");
+      _handleError(e);
+    }
+  }
+
+  Future<LoginModel?> _developerLogIn(String password) async {
+    const url = '${root}complaint/developerLogin';
+    try {
+      final response = await http.post(
+        Uri.parse(url),
+        body: json.encode({'username': _devUsername, 'password': password}),
+        headers: headers,
+      );
+      final responseBody = json.decode(response.body);
+      if (responseBody['status'] == true) {
+        final model = responseBody['model'] as Map<String, dynamic>;
+        window.localStorage.setItem('kAuthToken', model['token']?.toString() ?? '');
+        window.localStorage.setItem('kEmployeename', model['name']?.toString() ?? 'Support Team');
+        window.localStorage.setItem('kEmployeeCode', _devUsername);
+        window.localStorage.setItem('kDevPortal', '1');
+        return LoginModel(
+          empUnqId: _devUsername,
+          empName: model['name']?.toString() ?? 'Support Team',
+          token: model['token']?.toString(),
+        );
+      } else {
+        throw ApiError.fromResponse(responseBody['msg']);
+      }
+    } catch (e) {
+      print("Developer login error: $e");
       _handleError(e);
     }
   }

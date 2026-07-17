@@ -46,7 +46,11 @@ class ImagePickerPageState extends State<ImagePickerPage> { // No underscore her
         print('No image selected.');
       }
     } catch (e) {
-      print('Error picking image: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Could not select image: $e')),
+        );
+      }
     } finally {
       setState(() {
         _isLoading = false;

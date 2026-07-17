@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:jsaw_limited/routes/app_routes.dart';
 import 'package:lottie/lottie.dart';
 import 'package:provider/provider.dart';
+import 'package:web/web.dart' show window;
 
 import '../bloc/login_bloc.dart';
 import '../service/login_service.dart';
@@ -456,7 +457,14 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
       listener: (_, state) {
         state.maybeWhen(
             success: (_) {
-              Navigator.pushNamed(context, AppRoutes.dashboardSelection);
+              final isDevPortal =
+                  window.localStorage.getItem('kDevPortal') == '1';
+              if (isDevPortal) {
+                Navigator.pushNamedAndRemoveUntil(
+                    context, '/developer-portal', (_) => false);
+              } else {
+                Navigator.pushNamed(context, AppRoutes.dashboardSelection);
+              }
             },
             failed: (_, message) {
               ScaffoldMessenger.of(context)

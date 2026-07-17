@@ -1,4 +1,5 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:jsaw_limited/model/complaint_reply_model.dart';
 
 part 'raised_feedback_model.g.dart';
 part 'raised_feedback_model.freezed.dart';
@@ -23,6 +24,9 @@ class SuggestionFeedbackModel with _$SuggestionFeedbackModel{
     @Default("") String statusColor,
     @Default("") String lowQualityImageUrl,
     @Default("") String highQualityImageUrl,
+    @Default("") String solutionRemark,
+    @Default("") String complaintNumber,
+    @Default([]) List<ComplaintReplyModel> replies,
   }) = _SuggestionFeedbackModel;
 
   factory SuggestionFeedbackModel.fromJson(Map<String, dynamic> json) => _$SuggestionFeedbackModelFromJson(json);

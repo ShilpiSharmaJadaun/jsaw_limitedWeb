@@ -20,6 +20,7 @@ import 'package:jsaw_limited/pages/priority_changes_page.dart';
 import 'package:jsaw_limited/pages/profile_page.dart';
 import 'package:jsaw_limited/pages/register_observation_page.dart';
 import 'package:jsaw_limited/pages/approved_observation_page.dart';
+import 'package:jsaw_limited/pages/developer_portal_page.dart';
 import 'package:jsaw_limited/pages/safetyRemarkResponse_page.dart';
 import 'package:jsaw_limited/pages/suggestion_page.dart';
 import 'package:jsaw_limited/service/dashboard_service.dart';
@@ -247,10 +248,16 @@ class MyApp extends StatelessWidget {
                 child: EmployeeReportingPage(),
               ),
               AppRoutes.loginPage: (context) => const LoginPage(),
+              '/developer-portal': (context) => const DeveloperPortalPage(),
             };
 
             final token = window.localStorage.getItem('kAuthToken');
             final builder = pages[settings.name];
+
+            // Developer portal bypasses normal company auth
+            if (settings.name == '/developer-portal' && builder != null) {
+              return MaterialPageRoute(builder: builder, settings: settings);
+            }
 
             if (builder == null) {
               return MaterialPageRoute(
