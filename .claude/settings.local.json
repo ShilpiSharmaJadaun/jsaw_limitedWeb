@@ -119,7 +119,22 @@
       "PowerShell(Start-Process \"chrome\" \"http://103.107.26.146:8078/jsawportal\")",
       "WebFetch(domain:103.107.26.146)",
       "PowerShell(Invoke-WebRequest -Uri \"http://103.107.26.146:8078/jsawportal/index.html\" -UseBasicParsing | Select-Object -ExpandProperty Content)",
-      "PowerShell(Invoke-WebRequest -Uri \"http://103.107.26.146:8078/jsawportal/flutter_bootstrap.js\" -UseBasicParsing | Select-Object -ExpandProperty Content)"
+      "PowerShell(Invoke-WebRequest -Uri \"http://103.107.26.146:8078/jsawportal/flutter_bootstrap.js\" -UseBasicParsing | Select-Object -ExpandProperty Content)",
+      "Bash(tasklist *)",
+      "PowerShell(Get-CimInstance *)",
+      "Bash(powershell -Command \"Get-Process chrome -ErrorAction SilentlyContinue | Select-Object Id,MainWindowTitle | Format-Table -AutoSize\")",
+      "Bash(grep -n \"^class \\\\|^}$\" \"D:\\\\JSAW_BACKEND_API\\\\jsaw_limitedWeb\\\\lib\\\\pages\\\\investigation_team_page.dart\")",
+      "PowerShell(Test-NetConnection *)",
+      "Bash(echo \"EXIT:$?\")",
+      "Bash(sqlcmd -S 172.16.23.7 -U sa -P \"testomonials@123\" -d HSE_DEV -h -1 -W -Q \"SET NOCOUNT ON; SELECT EmpUnqID, EmpNewPass, Emp_Pass_Status, wrkgrp, Active, EmpName FROM Employees WHERE EmpUnqID='116500'\")",
+      "Bash(sqlcmd *)",
+      "PowerShell($c = Get-NetTCPConnection -LocalPort 5000 -State Listen -ErrorAction SilentlyContinue; if \\($c\\) { $procId = $c[0].OwningProcess; Get-Process -Id $procId | Select-Object Id,ProcessName,StartTime | Format-List; Stop-Process -Id $procId -Force -Confirm:$false; \"killed orphan $procId\" } else { \"port 5000 free\" })",
+      "Bash([ -s \"$f\" ])",
+      "PowerShell($c = Get-NetTCPConnection -LocalPort 5000 -State Listen -ErrorAction SilentlyContinue; if \\($c\\) { Stop-Process -Id $c[0].OwningProcess -Force -Confirm:$false; \"killed orphan\" } else { \"port free\" })",
+      "PowerShell($c = Get-NetTCPConnection -LocalPort 5000 -State Listen -ErrorAction SilentlyContinue; if \\($c\\) { Stop-Process -Id $c[0].OwningProcess -Force -Confirm:$false; \"killed orphan dev server\" } else { \"port free\" })"
     ]
-  }
+  },
+  "disabledMcpjsonServers": [
+    "idea"
+  ]
 }

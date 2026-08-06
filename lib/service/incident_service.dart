@@ -151,6 +151,7 @@ class IncidentService{
       String contactNumber,
       String incidentType,
       String descpOfIncident,
+      String responsibleHodCode,
       ) async {
     const url = "${root}incidentReport/saveNewIncidentReport";
 
@@ -186,6 +187,7 @@ class IncidentService{
       request.fields['contactNumber'] = contactNumber;
       request.fields['incidentType'] = incidentType;
       request.fields['descpOfIncident'] = descpOfIncident;
+      request.fields['responsibleHodCode'] = responsibleHodCode;
       var res = await request.send();
       var results = await http.Response.fromStream(res);
       authHttp.check(results);

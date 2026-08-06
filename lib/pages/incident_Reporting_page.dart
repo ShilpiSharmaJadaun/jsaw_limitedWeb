@@ -102,7 +102,7 @@ class _IncidentReportingPageState extends State<IncidentReportingPage> {
 
   late String responsibleCode;
   late String responsibleEnggDesignationCode;
-  late String responsibleHODCode;
+  String responsibleHODCode = "";
 
 
   ValueNotifier<String> employeeName = ValueNotifier("");
@@ -685,7 +685,8 @@ class _IncidentReportingPageState extends State<IncidentReportingPage> {
                       responsibleHOD.value,
                       mobileController.text,
                       typeOfIncident.value,
-                      detailsController.text
+                      detailsController.text,
+                      responsibleHODCode,
                     );
                   },
                   child: const Padding(
@@ -788,7 +789,7 @@ class _IncidentReportingPageState extends State<IncidentReportingPage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const Text(
-                  "Select or search Location",
+                  "Select or search Employee",
                   style:
                   TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
                 ),
@@ -946,7 +947,7 @@ class _IncidentReportingPageState extends State<IncidentReportingPage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const Text(
-                  "Select or search Location",
+                  "Select or search Shift",
                   style:
                   TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
                 ),
@@ -1536,7 +1537,7 @@ class _IncidentReportingPageState extends State<IncidentReportingPage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const Text(
-                  "Select or search Location",
+                  "Select or search Incident Type",
                   style:
                   TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
                 ),

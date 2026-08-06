@@ -4,6 +4,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
+import '../model/allDepartment_model.dart';
 import '../model/allemployee_model.dart';
 import '../model/investigationReport_response_model.dart';
 import '../service/employee_reporting_service.dart';
@@ -55,7 +56,11 @@ class _EditInvestigationPageState extends State<EditInvestigationPage> {
   // ---------- Lookup state (employees + departments) ----------
   List<AllEmployeeModel> _allEmployees = [];
   bool _loadingEmployees = false;
-  Map<String, String> _deptCodeToName = {};
+
+  // "deptCode|statCode" -> statName, for CAPA "Resp. Station" lookup
+  // (station table filtered by employee's DeptCode/StatCode/WrkGrp)
+  final Map<String, String> _stationNameCache = {};
+  final Set<String> _stationFetchInFlight = {};
 
   @override
   void initState() {
@@ -98,7 +103,6 @@ class _EditInvestigationPageState extends State<EditInvestigationPage> {
     if (_capa.isEmpty) _capa.add(_CapaDraft.empty());
 
     _loadEmployees();
-    _loadDepartments();
   }
 
   String _normaliseDate(String input) {
@@ -123,31 +127,60 @@ class _EditInvestigationPageState extends State<EditInvestigationPage> {
         _allEmployees = list;
         _loadingEmployees = false;
       });
+      // Existing CAPA rows only carry respDeptCode from the backend; resolve
+      // each row's StatCode/WrkGrp from the employee record so the station
+      // name can be looked up, same as a freshly-picked employee.
+      for (final row in _capa) {
+        if (row.empCode.isEmpty || row.statCode.isNotEmpty) continue;
+        final match = _allEmployees.where((e) => e.empUnqId == row.empCode);
+        if (match.isEmpty) continue;
+        final emp = match.first;
+        row.statCode = emp.statCode;
+        row.wrkGrp = emp.wrkGrp;
+        _ensureStationName(emp);
+      }
     } catch (_) {
       if (!mounted) return;
       setState(() => _loadingEmployees = false);
     }
   }
 
-  Future<void> _loadDepartments() async {
+  // Resolves the employee's station name via stations/getAllStationByDeptCode,
+  // filtered to the employee's own DeptCode/StatCode/WrkGrp, and caches it.
+  Future<void> _ensureStationName(AllEmployeeModel emp) async {
+    if (emp.deptCode.isEmpty || emp.statCode.isEmpty) return;
+    final key = '${emp.deptCode}|${emp.statCode}';
+    if (_stationNameCache.containsKey(key) ||
+        _stationFetchInFlight.contains(key)) {
+      return;
+    }
+    _stationFetchInFlight.add(key);
     try {
       final service = Provider.of<ObservationService>(context, listen: false);
-      final plants = await service.getAllPlant();
+      final stations = await service.getDepartment(emp.deptCode);
+      final match = stations.firstWhere(
+        (s) => s.statCode == emp.statCode && s.wrkGrp == emp.wrkGrp,
+        orElse: () => stations.firstWhere(
+          (s) => s.statCode == emp.statCode,
+          orElse: () => const AllDepartmentModel(),
+        ),
+      );
       if (!mounted) return;
       setState(() {
-        _deptCodeToName = {
-          for (final p in plants)
-            if (p.deptCode.isNotEmpty) p.deptCode: p.deptName,
-        };
+        _stationNameCache[key] =
+            match.statName.isNotEmpty ? match.statName : emp.statCode;
       });
     } catch (_) {
-      // Non-fatal; falls back to deptCode
+      // Non-fatal: fall back to statCode
+    } finally {
+      _stationFetchInFlight.remove(key);
     }
   }
 
-  String _deptDisplay(String? deptCode) {
-    if (deptCode == null || deptCode.isEmpty) return '';
-    return _deptCodeToName[deptCode] ?? deptCode;
+  String _stationDisplay(_CapaDraft row) {
+    if (row.deptCode.isEmpty || row.statCode.isEmpty) return '';
+    final key = '${row.deptCode}|${row.statCode}';
+    return _stationNameCache[key] ?? row.statCode;
   }
 
   Future<AllEmployeeModel?> _openEmployeePicker({
@@ -186,7 +219,10 @@ class _EditInvestigationPageState extends State<EditInvestigationPage> {
       row.empCode = picked.empUnqId;
       row.empName = picked.empName;
       row.deptCode = picked.deptCode;
+      row.statCode = picked.statCode;
+      row.wrkGrp = picked.wrkGrp;
     });
+    _ensureStationName(picked);
   }
 
   @override
@@ -999,7 +1035,7 @@ class _EditInvestigationPageState extends State<EditInvestigationPage> {
         children: const [
           Expanded(flex: 3, child: _HeaderCell('CAPA')),
           Expanded(flex: 4, child: _HeaderCell('Responsible Employee')),
-          Expanded(flex: 2, child: _HeaderCell('Department')),
+          Expanded(flex: 2, child: _HeaderCell('Station')),
           Expanded(flex: 2, child: _HeaderCell('Target Date')),
           SizedBox(width: 44),
         ],
@@ -1079,7 +1115,7 @@ class _EditInvestigationPageState extends State<EditInvestigationPage> {
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 6),
               child: Text(
-                row.deptCode.isEmpty ? '—' : _deptDisplay(row.deptCode),
+                row.statCode.isEmpty ? '—' : _stationDisplay(row),
                 style: const TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
@@ -1384,6 +1420,8 @@ class _CapaDraft {
   String empCode;
   String empName;
   String deptCode;
+  String statCode;
+  String wrkGrp;
   TextEditingController targetDateController;
 
   _CapaDraft({
@@ -1393,6 +1431,8 @@ class _CapaDraft {
     required this.empCode,
     required this.empName,
     required this.deptCode,
+    this.statCode = '',
+    this.wrkGrp = '',
     required this.targetDateController,
   });
 
@@ -1403,6 +1443,8 @@ class _CapaDraft {
         empCode: '',
         empName: '',
         deptCode: '',
+        statCode: '',
+        wrkGrp: '',
         targetDateController: TextEditingController(),
       );
 

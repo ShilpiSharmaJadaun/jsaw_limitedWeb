@@ -39,6 +39,25 @@ class LoginService {
         window.localStorage.setItem('kreporting', responseBody['model']['reporting'].toString());
         window.localStorage.setItem('kResetPasswordAuth', responseBody['model']['resetPasswordAuth'].toString());
         window.localStorage.setItem('kAuthToken', responseBody['model']['token']?.toString() ?? '');
+        // 'M' = medical officer (Employees.OfficerType) — gates the Medical Officer Response page.
+        window.localStorage.setItem('kOfficerType', responseBody['model']['officerType']?.toString() ?? '');
+
+        // Cache the user's investigation roles so the drawer shows the right pages.
+        try {
+          final rolesRes = await http.get(
+              Uri.parse('${root}compliance/myInvestigationRoles'),
+              headers: getHeaders());
+          final rb = json.decode(rolesRes.body);
+          if (rb is Map && rb['status'] == true && rb['model'] is Map) {
+            final rm = (rb['model'] as Map);
+            window.localStorage.setItem('kInvCreator', (rm['creator'] == true).toString());
+            window.localStorage.setItem('kInvTeam', (rm['teamMember'] == true).toString());
+            window.localStorage.setItem('kInvCapa', (rm['capaEngineer'] == true).toString());
+            window.localStorage.setItem('kInvHod', (rm['hod'] == true).toString());
+          }
+        } catch (_) {
+          // Non-fatal: roles just default to hidden until next login.
+        }
 
         // Get shared preferences instance
         // final SharedPreferences prefs = await SharedPreferences.getInstance();

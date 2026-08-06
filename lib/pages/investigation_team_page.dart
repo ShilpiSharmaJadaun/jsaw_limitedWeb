@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart' show Uint8List;
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import '../model/allDepartment_model.dart';
 import '../model/allemployee_model.dart';
 import '../model/investigationReport_response_model.dart';
 import '../service/employee_reporting_service.dart';
@@ -120,8 +121,10 @@ class _InvestigationTeamPageState extends State<InvestigationTeamPage>
   bool _loadingEmployees = false;
   String? _employeesError;
 
-  // deptCode -> deptName, for CAPA "Resp. Department" lookup
-  Map<String, String> _deptCodeToName = {};
+  // "deptCode|statCode" -> statName, for CAPA "Resp. Station" lookup
+  // (station table filtered by employee's DeptCode/StatCode/WrkGrp)
+  final Map<String, String> _stationNameCache = {};
+  final Set<String> _stationFetchInFlight = {};
 
   // ---------- Root Cause inputs ----------
   static const int _maxRootCauses = 2;
@@ -168,23 +171,6 @@ class _InvestigationTeamPageState extends State<InvestigationTeamPage>
     _loadEmployees();
     _loadAuthUsers();
     _loadUniqueIds();
-    _loadDepartments();
-  }
-
-  Future<void> _loadDepartments() async {
-    try {
-      final service = Provider.of<ObservationService>(context, listen: false);
-      final list = await service.getAllPlant();
-      if (!mounted) return;
-      setState(() {
-        _deptCodeToName = {
-          for (final d in list)
-            if (d.deptCode.isNotEmpty) d.deptCode: d.deptName,
-        };
-      });
-    } catch (_) {
-      // Non-fatal: fall back to deptCode if lookup fails
-    }
   }
 
   Future<void> _loadInvestigationList({int? page}) async {
@@ -1896,7 +1882,7 @@ class _InvestigationTeamPageState extends State<InvestigationTeamPage>
           Expanded(flex: 3, child: _CapaHeaderCell('CAPA')),
           Expanded(flex: 2, child: _CapaHeaderCell('Resp. Emp. Code')),
           Expanded(flex: 2, child: _CapaHeaderCell('Resp. Emp. Name')),
-          Expanded(flex: 2, child: _CapaHeaderCell('Resp. Department')),
+          Expanded(flex: 2, child: _CapaHeaderCell('Resp. Station')),
           Expanded(flex: 2, child: _CapaHeaderCell('Target Date')),
           SizedBox(width: 44),
         ],
@@ -1919,7 +1905,7 @@ class _InvestigationTeamPageState extends State<InvestigationTeamPage>
           Expanded(flex: 3, child: _capaTextCell(row)),
           Expanded(flex: 2, child: _capaEmployeeDropdown(row)),
           Expanded(flex: 2, child: _capaReadOnlyCell(row.employee?.empName)),
-          Expanded(flex: 2, child: _capaReadOnlyCell(_deptDisplay(row.employee?.deptCode))),
+          Expanded(flex: 2, child: _capaReadOnlyCell(_stationDisplay(row.employee))),
           Expanded(flex: 2, child: _capaDateCell(row)),
           SizedBox(
             width: 44,
@@ -2022,6 +2008,39 @@ class _InvestigationTeamPageState extends State<InvestigationTeamPage>
     );
     if (picked != null) {
       setState(() => row.employee = picked);
+      _ensureStationName(picked);
+    }
+  }
+
+  // Resolves the employee's station name via stations/getAllStationByDeptCode,
+  // filtered to the employee's own DeptCode/StatCode/WrkGrp, and caches it.
+  Future<void> _ensureStationName(AllEmployeeModel emp) async {
+    if (emp.deptCode.isEmpty || emp.statCode.isEmpty) return;
+    final key = '${emp.deptCode}|${emp.statCode}';
+    if (_stationNameCache.containsKey(key) ||
+        _stationFetchInFlight.contains(key)) {
+      return;
+    }
+    _stationFetchInFlight.add(key);
+    try {
+      final service = Provider.of<ObservationService>(context, listen: false);
+      final stations = await service.getDepartment(emp.deptCode);
+      final match = stations.firstWhere(
+        (s) => s.statCode == emp.statCode && s.wrkGrp == emp.wrkGrp,
+        orElse: () => stations.firstWhere(
+          (s) => s.statCode == emp.statCode,
+          orElse: () => const AllDepartmentModel(),
+        ),
+      );
+      if (!mounted) return;
+      setState(() {
+        _stationNameCache[key] =
+            match.statName.isNotEmpty ? match.statName : emp.statCode;
+      });
+    } catch (_) {
+      // Non-fatal: fall back to statCode
+    } finally {
+      _stationFetchInFlight.remove(key);
     }
   }
 
@@ -2051,11 +2070,12 @@ class _InvestigationTeamPageState extends State<InvestigationTeamPage>
     );
   }
 
-  String? _deptDisplay(String? deptCode) {
-    if (deptCode == null || deptCode.isEmpty) return null;
-    final name = _deptCodeToName[deptCode];
-    if (name == null || name.isEmpty) return deptCode;
-    return name;
+  String? _stationDisplay(AllEmployeeModel? emp) {
+    if (emp == null || emp.deptCode.isEmpty || emp.statCode.isEmpty) {
+      return null;
+    }
+    final key = '${emp.deptCode}|${emp.statCode}';
+    return _stationNameCache[key] ?? emp.statCode;
   }
 
   Widget _capaReadOnlyCell(String? value) {

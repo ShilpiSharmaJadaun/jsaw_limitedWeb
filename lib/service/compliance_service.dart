@@ -48,6 +48,36 @@ class ComplianceService {
     return <ComplianceSummary>[];
   }
 
+  /// Investigations where the logged-in user is a TEAM member (read-only
+  /// "Investigations Raised" list). Scoped server-side from the JWT.
+  Future<List<ComplianceSummary>> getInvestigationsRaised() async {
+    final url = "${root}compliance/getInvestigationsForTeamMember";
+    final response = await authHttp.get(Uri.parse(url), headers: getHeaders());
+    final body = json.decode(response.body);
+    if (body is Map && body['status'] == true && body['model'] is List) {
+      return (body['model'] as List)
+          .whereType<Map>()
+          .map((e) => ComplianceSummary.fromJson(e.cast<String, dynamic>()))
+          .toList();
+    }
+    return <ComplianceSummary>[];
+  }
+
+  /// Investigations the logged-in HOD monitors (a subordinate is the creator,
+  /// a team member, or a CAPA engineer). Read-only. Scoped server-side from JWT.
+  Future<List<ComplianceSummary>> getInvestigationsToMonitor() async {
+    final url = "${root}compliance/getInvestigationsForHod";
+    final response = await authHttp.get(Uri.parse(url), headers: getHeaders());
+    final body = json.decode(response.body);
+    if (body is Map && body['status'] == true && body['model'] is List) {
+      return (body['model'] as List)
+          .whereType<Map>()
+          .map((e) => ComplianceSummary.fromJson(e.cast<String, dynamic>()))
+          .toList();
+    }
+    return <ComplianceSummary>[];
+  }
+
   /// Full read-only bundle for one incident (mapped to the UI model).
   Future<ComplianceIncident> getComplianceDetail(String incidentUniqueId) async {
     final url = "${root}compliance/getComplianceDetail";

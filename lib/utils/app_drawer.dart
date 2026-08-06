@@ -9,6 +9,7 @@ import 'package:jsaw_limited/pages/dashboardSelection.dart';
 import 'package:jsaw_limited/pages/employee_reporting_page.dart';
 import 'package:jsaw_limited/pages/graph_page.dart';
 import 'package:jsaw_limited/pages/investigation_team_page.dart';
+import 'package:jsaw_limited/pages/investigations_raised_page.dart';
 import 'package:jsaw_limited/pages/observation.dart';
 import 'package:jsaw_limited/pages/priority_changes_page.dart';
 import 'package:jsaw_limited/pages/profile_page.dart';
@@ -80,8 +81,14 @@ class AppDrawer extends StatelessWidget {
     final khse = html.window.localStorage.getItem('khseCode') == '1';
     final reporting = html.window.localStorage.getItem('kreporting') == '1';
     final empCode = html.window.localStorage.getItem('kEmployeeCode') ?? '';
-    final isIncidentUser = empCode == '115163';
+    final isIncidentUser = true; // was: empCode == '115163' — now visible to all logged-in users
+    final isMedicalOfficer = html.window.localStorage.getItem('kOfficerType') == 'M';
     final canWriteUs = empCode == '116500';
+    // Investigation role flags — cached at login from /compliance/myInvestigationRoles.
+    final invCreator = html.window.localStorage.getItem('kInvCreator') == 'true';
+    final invTeam = html.window.localStorage.getItem('kInvTeam') == 'true';
+    final invCapa = html.window.localStorage.getItem('kInvCapa') == 'true';
+    final invHod = html.window.localStorage.getItem('kInvHod') == 'true';
 
     return [
       const _DrawerEntry(
@@ -128,7 +135,7 @@ class AppDrawer extends StatelessWidget {
           color: _amber,
           page: IncidentReportingPage(),
         ),
-      if (isIncidentUser)
+      if (isMedicalOfficer)
         const _DrawerEntry(
           section: 'Reporting',
           title: 'Medical Officer Response',
@@ -152,7 +159,24 @@ class AppDrawer extends StatelessWidget {
           color: _cyan,
           page: InvestigationTeamPage(),
         ),
-      if (isIncidentUser)
+      if (invTeam)
+        const _DrawerEntry(
+          section: 'Reporting',
+          title: 'Investigations Raised',
+          icon: Icons.assignment_ind_outlined,
+          color: _teal,
+          page: InvestigationsRaisedPage(),
+        ),
+      if (invHod)
+        const _DrawerEntry(
+          section: 'Reporting',
+          title: 'Investigations to Monitor',
+          icon: Icons.supervisor_account_outlined,
+          color: _indigo,
+          page: InvestigationsRaisedPage(
+              hodView: true, title: 'Investigations to Monitor'),
+        ),
+      if (invCapa)
         const _DrawerEntry(
           section: 'Reporting',
           title: 'Compliance Incident',
@@ -160,7 +184,7 @@ class AppDrawer extends StatelessWidget {
           color: _fuchsia,
           page: ComplianceIncidentPage(),
         ),
-      if (isIncidentUser)
+      if (invCreator)
         const _DrawerEntry(
           section: 'Reporting',
           title: 'Compliance Review',
