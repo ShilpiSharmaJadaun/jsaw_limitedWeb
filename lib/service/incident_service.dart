@@ -221,6 +221,9 @@ class IncidentService{
     required List<Map<String, String>> team,
     required List<String> rootCauses,
     required List<Map<String, dynamic>> capa,
+    String machineryDetails = '',
+    required String activityBeforeIncident,
+    List<Map<String, String>> inquiredWith = const [],
   }) async {
     const url = "${root}investigationReport/saveInvestigationReport";
     try {
@@ -239,6 +242,9 @@ class IncidentService{
       request.fields['team'] = jsonEncode(team);
       request.fields['rootCauses'] = jsonEncode(rootCauses);
       request.fields['capa'] = jsonEncode(capa);
+      request.fields['machineryDetails'] = machineryDetails;
+      request.fields['activityBeforeIncident'] = activityBeforeIncident;
+      request.fields['inquiredWith'] = jsonEncode(inquiredWith);
 
       var res = await request.send();
       var results = await http.Response.fromStream(res);
@@ -267,6 +273,9 @@ class IncidentService{
     required List<Map<String, String>> team,
     required List<String> rootCauses,
     required List<Map<String, dynamic>> capa,
+    String machineryDetails = '',
+    required String activityBeforeIncident,
+    List<Map<String, String>> inquiredWith = const [],
     Uint8List? newImageBytes,
     bool clearImage = false,
   }) async {
@@ -291,6 +300,9 @@ class IncidentService{
       request.fields['team'] = jsonEncode(team);
       request.fields['rootCauses'] = jsonEncode(rootCauses);
       request.fields['capa'] = jsonEncode(capa);
+      request.fields['machineryDetails'] = machineryDetails;
+      request.fields['activityBeforeIncident'] = activityBeforeIncident;
+      request.fields['inquiredWith'] = jsonEncode(inquiredWith);
 
       var res = await request.send();
       var results = await http.Response.fromStream(res);

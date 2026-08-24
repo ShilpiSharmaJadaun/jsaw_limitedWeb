@@ -40,6 +40,7 @@ import 'package:web/web.dart' show window;
 import 'dart:typed_data';
 
 import 'image_picker.dart';
+import 'package:jsaw_limited/utils/employee_picker.dart';
 
 class EditRaisedObservationsPage extends StatefulWidget {
    EditRaisedObservationsPage({super.key,  required this.filterObservationModel
@@ -1114,90 +1115,19 @@ class _EditRaisedObservationsPageState extends State<EditRaisedObservationsPage>
 
   }
 
-  Future<void> _buildResponsibilityDialog(List<EmployeeResponsibilityModel> responsibilityModel) {
-    final responsibilityListNotifier = responsibilitySearchableListNotifier(responsibilityModel);
-    return showDialog(
-        context: context,
-        builder: (context) {
-          return AlertDialog(
-            shape: const RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(5))),
-            title: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  "Select or search Responsibility",
-                  style:
-                  TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-                ),
-                TextFormField(
-                  onChanged: responsibilityListNotifier.filterBasedOn,
-                  decoration: const InputDecoration(
-                      hintText: "search here...",
-                      prefixIcon: Icon(
-                        Icons.search,
-                        color: kcLightGrey,
-                      )),
-                )
-              ],
-            ),
-            content: SizedBox(
-                width: 210,
-                height: 800,
-                child:ValueListenableBuilder<List<EmployeeResponsibilityModel>>(
-                    valueListenable: responsibilityListNotifier,
-                    builder: (context, list, widget){
-                      return ListView.builder(
-                          itemCount: list.length,
-                          shrinkWrap: true,
-                          itemBuilder: (context, index) {
-                            return Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                InkWell(
-                                  onTap: () {
-                                    responsibility.value = list[index].empName;
-                                    responsibleEnggCode = list[index].empUnqId;
-                                    responsibleEnggDesignationCode = list[index].gradeCode;
-                                    responsibleHODBloc.initState(departCode, stateCode, responsibleEnggDesignationCode, responsibleEnggCode);
-                                    Navigator.pop(context);
-                                  },
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(2.0),
-                                    child: Text(list[index].empName,
-                                    ),
-                                  ),
-                                ),
-                                const Padding(
-                                  padding: EdgeInsets.all(8.0),
-                                  child: Divider(
-                                    height: 0.8,
-                                    thickness: 1,
-                                    color: kcDarkGreyColor,
-                                  ),
-                                )
-                              ],
-                            );
-                          });
-                    }
-                )
-            ),
-            actions: [
-              Align(
-                alignment: Alignment.centerRight,
-                child: TextButton(
-                  onPressed: () {
-                    Navigator.pop(context);
-                  },
-                  child: const Text(
-                    "close",
-                    style: TextStyle(color: kcDarkGreyColor, fontSize: 18),
-                  ),
-                ),
-              )
-            ],
-          );
-        }
+  Future<void> _buildResponsibilityDialog(List<EmployeeResponsibilityModel> responsibilityModel) async {
+    final picked = await showEmployeePicker<EmployeeResponsibilityModel>(
+      context,
+      items: responsibilityModel,
+      name: (e) => e.empName,
+      code: (e) => e.empUnqId,
+      title: 'Select Responsible Engineer',
     );
+    if (picked == null || !mounted) return;
+    responsibility.value = picked.empName;
+    responsibleEnggCode = picked.empUnqId;
+    responsibleEnggDesignationCode = picked.gradeCode;
+    responsibleHODBloc.initState(departCode, stateCode, responsibleEnggDesignationCode, responsibleEnggCode);
   }
 
   //Responsible HOD
@@ -1261,88 +1191,17 @@ class _EditRaisedObservationsPageState extends State<EditRaisedObservationsPage>
 
   }
 
-  Future<void> _buildResponsibilityBYHODDialog(List<EmployeeResponsibilityModel> responsibilityModel) {
-    final responsibilityListNotifier = responsibilitySearchableListNotifier(responsibilityModel);
-    return showDialog(
-        context: context,
-        builder: (context) {
-          return AlertDialog(
-            shape: const RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(5))),
-            title: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  "Select or search Responsible HOD",
-                  style:
-                  TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-                ),
-                TextFormField(
-                  onChanged: responsibilityListNotifier.filterBasedOn,
-                  decoration: const InputDecoration(
-                      hintText: "search here...",
-                      prefixIcon: Icon(
-                        Icons.search,
-                        color: kcLightGrey,
-                      )),
-                )
-              ],
-            ),
-            content: SizedBox(
-                width: 210,
-                height: 800,
-                child:ValueListenableBuilder<List<EmployeeResponsibilityModel>>(
-                    valueListenable: responsibilityListNotifier,
-                    builder: (context, list, widget){
-                      return ListView.builder(
-                          itemCount: list.length,
-                          shrinkWrap: true,
-                          itemBuilder: (context, index) {
-                            return Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                InkWell(
-                                  onTap: () {
-                                    responsibleHOD.value = list[index].empName;
-                                    responsibleHODCode = list[index].empUnqId;
-                                    Navigator.pop(context);
-                                  },
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(2.0),
-                                    child: Text(list[index].empName,
-                                    ),
-                                  ),
-                                ),
-                                const Padding(
-                                  padding: EdgeInsets.all(8.0),
-                                  child: Divider(
-                                    height: 0.8,
-                                    thickness: 1,
-                                    color: kcDarkGreyColor,
-                                  ),
-                                )
-                              ],
-                            );
-                          });
-                    }
-                )
-            ),
-            actions: [
-              Align(
-                alignment: Alignment.centerRight,
-                child: TextButton(
-                  onPressed: () {
-                    Navigator.pop(context);
-                  },
-                  child: const Text(
-                    "close",
-                    style: TextStyle(color: kcDarkGreyColor, fontSize: 18),
-                  ),
-                ),
-              )
-            ],
-          );
-        }
+  Future<void> _buildResponsibilityBYHODDialog(List<EmployeeResponsibilityModel> responsibilityModel) async {
+    final picked = await showEmployeePicker<EmployeeResponsibilityModel>(
+      context,
+      items: responsibilityModel,
+      name: (e) => e.empName,
+      code: (e) => e.empUnqId,
+      title: 'Select Responsible HOD',
     );
+    if (picked == null || !mounted) return;
+    responsibleHOD.value = picked.empName;
+    responsibleHODCode = picked.empUnqId;
   }
 
   //Priority

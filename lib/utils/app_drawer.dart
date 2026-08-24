@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show debugPrint;
 import 'package:flutter/material.dart';
 import 'package:jsaw_limited/pages/allIncident_page.dart';
 import 'package:jsaw_limited/pages/approve_reject_table_page.dart';
@@ -15,7 +16,6 @@ import 'package:jsaw_limited/pages/priority_changes_page.dart';
 import 'package:jsaw_limited/pages/profile_page.dart';
 import 'package:jsaw_limited/pages/register_observation_page.dart';
 import 'package:jsaw_limited/pages/safetyRemarkResponse_page.dart';
-import 'package:jsaw_limited/pages/admin_complaints_page.dart';
 import 'package:jsaw_limited/pages/suggestion_page.dart';
 import 'package:responsive_builder/responsive_builder.dart';
 import '../pages/medicalOfficerResponse_page.dart';
@@ -28,6 +28,15 @@ class AppDrawer extends StatelessWidget {
 
   static final ValueNotifier<int> _selectedIndexNotifier =
       ValueNotifier<int>(0);
+
+  /// Re-sync the drawer highlight with the page actually on screen.
+  /// The notifier is static (survives logout → login), so the shell calls
+  /// this in initState and Logout calls it before leaving — otherwise the
+  /// indicator stays on the last page the previous session selected.
+  static void resetSelection([String title = 'Dashboard']) {
+    final i = _getEntries().indexWhere((e) => e.title == title);
+    _selectedIndexNotifier.value = i < 0 ? 0 : i;
+  }
 
   const AppDrawer({Key? key, required this.onSelectPage}) : super(key: key);
 
@@ -51,7 +60,9 @@ class AppDrawer extends StatelessWidget {
     switch (section) {
       case 'Workspace':
         return _blue;
-      case 'Reporting':
+      case 'Observation':
+        return _purple;
+      case 'Incident Tracking':
         return _orange;
       case 'Admin':
         return _purple;
@@ -66,8 +77,10 @@ class AppDrawer extends StatelessWidget {
     switch (section) {
       case 'Workspace':
         return Icons.workspaces_outline;
-      case 'Reporting':
-        return Icons.summarize_outlined;
+      case 'Observation':
+        return Icons.visibility_outlined;
+      case 'Incident Tracking':
+        return Icons.track_changes_outlined;
       case 'Admin':
         return Icons.admin_panel_settings_outlined;
       case 'Account':
@@ -77,7 +90,7 @@ class AppDrawer extends StatelessWidget {
     }
   }
 
-  List<_DrawerEntry> _getEntries() {
+  static List<_DrawerEntry> _getEntries() {
     final khse = html.window.localStorage.getItem('khseCode') == '1';
     final reporting = html.window.localStorage.getItem('kreporting') == '1';
     final empCode = html.window.localStorage.getItem('kEmployeeCode') ?? '';
@@ -85,12 +98,12 @@ class AppDrawer extends StatelessWidget {
     final isMedicalOfficer = html.window.localStorage.getItem('kOfficerType') == 'M';
     final canWriteUs = empCode == '116500';
     // Investigation role flags — cached at login from /compliance/myInvestigationRoles.
-    final invCreator = html.window.localStorage.getItem('kInvCreator') == 'true';
     final invTeam = html.window.localStorage.getItem('kInvTeam') == 'true';
     final invCapa = html.window.localStorage.getItem('kInvCapa') == 'true';
     final invHod = html.window.localStorage.getItem('kInvHod') == 'true';
 
     return [
+      // ---- Workspace ------------------------------------------------------
       const _DrawerEntry(
         section: 'Workspace',
         title: 'Dashboard',
@@ -100,98 +113,117 @@ class AppDrawer extends StatelessWidget {
       ),
       const _DrawerEntry(
         section: 'Workspace',
+        title: 'Graph',
+        icon: Icons.insights_outlined,
+        color: _indigo,
+        page: GraphPage(),
+      ),
+      // ---- Observation (normal observation, kept apart from incidents) -----
+      const _DrawerEntry(
+        section: 'Observation',
         title: 'Observation',
         icon: Icons.visibility_outlined,
         color: _purple,
         page: ObservationPage(),
       ),
       const _DrawerEntry(
-        section: 'Workspace',
-        title: 'Graph',
-        icon: Icons.insights_outlined,
-        color: _indigo,
-        page: GraphPage(),
-      ),
-      if (isIncidentUser)
-        const _DrawerEntry(
-          section: 'Workspace',
-          title: 'All Incident',
-          icon: Icons.report_problem_outlined,
-          color: _red,
-          page: AllIncidentPage(),
-        ),
-      const _DrawerEntry(
-        section: 'Reporting',
+        section: 'Observation',
         title: 'Raise Observation',
         icon: Icons.add_alert_outlined,
         color: _green,
         page: RegisterObservationPage(),
       ),
+      // ---- Incident Tracking (customer points 11 / 13 / 14, Aug-2026) -----
+      // Order follows the workflow: Reporting -> Medical -> Safety ->
+      // Investigation -> Compliance.
+      // Overview list of every incident first (point 13: ALL incident pages
+      // live under this heading), then the workflow pages.
       if (isIncidentUser)
         const _DrawerEntry(
-          section: 'Reporting',
-          title: 'Incident Tracking',
+          section: 'Incident Tracking',
+          title: 'All Incident',
+          icon: Icons.report_problem_outlined,
+          color: _red,
+          page: AllIncidentPage(),
+        ),
+      if (isIncidentUser)
+        const _DrawerEntry(
+          section: 'Incident Tracking',
+          title: 'Incident Reporting',
           icon: Icons.warning_amber_outlined,
           color: _amber,
           page: IncidentReportingPage(),
         ),
       if (isMedicalOfficer)
         const _DrawerEntry(
-          section: 'Reporting',
-          title: 'Medical Officer Response',
+          section: 'Incident Tracking',
+          title: 'Medical Assessment',
           icon: Icons.medical_services_outlined,
           color: _teal,
           page: MedicalOfficerResponsePage(),
         ),
-      if (isIncidentUser)
+      // Safety Observation is a Safety / HSE-team activity only (point 11).
+      if (khse)
         const _DrawerEntry(
-          section: 'Reporting',
-          title: 'Safety Remark Form',
+          section: 'Incident Tracking',
+          title: 'Safety Observation',
           icon: Icons.health_and_safety_outlined,
           color: _orange,
           page: SafetyRemarkResponsePage(),
         ),
       if (isIncidentUser)
         const _DrawerEntry(
-          section: 'Reporting',
-          title: 'Investigation Form',
+          section: 'Incident Tracking',
+          title: 'Investigation Details',
           icon: Icons.fact_check_outlined,
           color: _cyan,
           page: InvestigationTeamPage(),
         ),
       if (invTeam)
         const _DrawerEntry(
-          section: 'Reporting',
-          title: 'Investigations Raised',
+          section: 'Incident Tracking',
+          title: 'Investigation Initiated',
           icon: Icons.assignment_ind_outlined,
           color: _teal,
           page: InvestigationsRaisedPage(),
         ),
       if (invHod)
         const _DrawerEntry(
-          section: 'Reporting',
+          section: 'Incident Tracking',
           title: 'Investigations to Monitor',
           icon: Icons.supervisor_account_outlined,
           color: _indigo,
           page: InvestigationsRaisedPage(
               hodView: true, title: 'Investigations to Monitor'),
         ),
+      // CAPA owners submit their compliance here (was "Compliance Incident").
       if (invCapa)
         const _DrawerEntry(
-          section: 'Reporting',
-          title: 'Compliance Incident',
+          section: 'Incident Tracking',
+          title: 'Compliance Action',
           icon: Icons.verified_user_outlined,
           color: _fuchsia,
           page: ComplianceIncidentPage(),
         ),
-      if (invCreator)
+      // Compliance Review is a HOD activity (customer decision Aug-2026).
+      if (invHod)
         const _DrawerEntry(
-          section: 'Reporting',
+          section: 'Incident Tracking',
           title: 'Compliance Review',
           icon: Icons.rate_review_outlined,
           color: _indigo,
           page: ComplianceHodPage(),
         ),
+      // Final closure by the Safety / HSE team (points 9, 10, 12).
+      if (khse)
+        const _DrawerEntry(
+          section: 'Incident Tracking',
+          title: 'Compliance Closure',
+          icon: Icons.verified_outlined,
+          color: _green,
+          page: ComplianceHodPage(closureMode: true),
+        ),
+      // ---- Admin ----------------------------------------------------------
       if (khse)
         const _DrawerEntry(
           section: 'Admin',
@@ -216,14 +248,9 @@ class AppDrawer extends StatelessWidget {
           color: _pink,
           page: PriorityChangesPage(),
         ),
-      if (khse)
-        const _DrawerEntry(
-          section: 'Admin',
-          title: 'Complaints',
-          icon: Icons.support_agent,
-          color: _teal,
-          page: AdminComplaintsPage(),
-        ),
+      // Complaint management (with delete) is developer-only: 20071991 reaches
+      // AdminComplaintsPage via the developer portal, not the drawer.
+      // ---- Account --------------------------------------------------------
       const _DrawerEntry(
         section: 'Account',
         title: 'Profile',
@@ -445,6 +472,7 @@ class AppDrawer extends StatelessWidget {
                 borderRadius: BorderRadius.circular(10),
                 onTap: () {
                   _selectedIndexNotifier.value = index;
+                  debugPrint('[TAP] menu → ${entry.title}');
                   onSelectPage(index, entry.title, entry.page);
                 },
                 child: Padding(
@@ -536,6 +564,7 @@ class AppDrawer extends StatelessWidget {
           child: ElevatedButton.icon(
             onPressed: () {
               html.window.localStorage.clear();
+              AppDrawer.resetSelection();
               Navigator.pushNamedAndRemoveUntil(
                 context,
                 '/login_page',

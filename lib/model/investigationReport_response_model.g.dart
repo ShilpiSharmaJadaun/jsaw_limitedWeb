@@ -16,6 +16,8 @@ _$InvestigationReportResponseImpl _$$InvestigationReportResponseImplFromJson(
       associatedRiskImageUrl: json['associatedRiskImageUrl'] as String? ?? "",
       lowQualityImageUrl: json['lowQualityImageUrl'] as String? ?? "",
       highQualityImageUrl: json['highQualityImageUrl'] as String? ?? "",
+      machineryDetails: json['machineryDetails'] as String? ?? "",
+      activityBeforeIncident: json['activityBeforeIncident'] as String? ?? "",
       raisedDate: json['raisedDate'] as String? ?? "",
       updatedDate: json['updatedDate'] as String? ?? "",
       team: (json['team'] as List<dynamic>?)
@@ -33,6 +35,11 @@ _$InvestigationReportResponseImpl _$$InvestigationReportResponseImplFromJson(
                   InvestigationCapaItem.fromJson(e as Map<String, dynamic>))
               .toList() ??
           const [],
+      inquiredWith: (json['inquiredWith'] as List<dynamic>?)
+              ?.map((e) => InvestigationInquiredWithItem.fromJson(
+                  e as Map<String, dynamic>))
+              .toList() ??
+          const [],
     );
 
 Map<String, dynamic> _$$InvestigationReportResponseImplToJson(
@@ -45,11 +52,14 @@ Map<String, dynamic> _$$InvestigationReportResponseImplToJson(
       'associatedRiskImageUrl': instance.associatedRiskImageUrl,
       'lowQualityImageUrl': instance.lowQualityImageUrl,
       'highQualityImageUrl': instance.highQualityImageUrl,
+      'machineryDetails': instance.machineryDetails,
+      'activityBeforeIncident': instance.activityBeforeIncident,
       'raisedDate': instance.raisedDate,
       'updatedDate': instance.updatedDate,
       'team': instance.team,
       'rootCauses': instance.rootCauses,
       'capa': instance.capa,
+      'inquiredWith': instance.inquiredWith,
     };
 
 _$InvestigationTeamItemImpl _$$InvestigationTeamItemImplFromJson(
@@ -108,4 +118,30 @@ Map<String, dynamic> _$$InvestigationCapaItemImplToJson(
       'respEmpName': instance.respEmpName,
       'respDeptCode': instance.respDeptCode,
       'targetDate': instance.targetDate,
+    };
+
+_$InvestigationInquiredWithItemImpl
+    _$$InvestigationInquiredWithItemImplFromJson(Map<String, dynamic> json) =>
+        _$InvestigationInquiredWithItemImpl(
+          id: (json['id'] as num?)?.toInt() ?? 0,
+          seq: (json['seq'] as num?)?.toInt() ?? 0,
+          empUnqId: json['empUnqId'] as String? ?? "",
+          empName: json['empName'] as String? ?? "",
+          deptCode: json['deptCode'] as String? ?? "",
+          statName: json['statName'] as String? ?? "",
+          gradeName: json['gradeName'] as String? ?? "",
+          desgName: json['desgName'] as String? ?? "",
+        );
+
+Map<String, dynamic> _$$InvestigationInquiredWithItemImplToJson(
+        _$InvestigationInquiredWithItemImpl instance) =>
+    <String, dynamic>{
+      'id': instance.id,
+      'seq': instance.seq,
+      'empUnqId': instance.empUnqId,
+      'empName': instance.empName,
+      'deptCode': instance.deptCode,
+      'statName': instance.statName,
+      'gradeName': instance.gradeName,
+      'desgName': instance.desgName,
     };

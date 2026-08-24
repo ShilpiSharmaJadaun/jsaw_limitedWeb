@@ -14,6 +14,7 @@ import '../service/graph.dart';
 import '../state/graph2_state.dart';
 import '../utils/app_color.dart';
 import '../model/graph2_model.dart';
+import 'package:jsaw_limited/utils/compact_date_range_picker.dart';
 
 class SafetyObservationByIncharge extends StatefulWidget {
   @override
@@ -23,6 +24,10 @@ class SafetyObservationByIncharge extends StatefulWidget {
 
 class _SafetyObservationByInchargeState
     extends State<SafetyObservationByIncharge> {
+  // Attached to both the Scrollbar and its scroll view (web/desktop scroll
+  // views don't attach to the PrimaryScrollController).
+  final ScrollController _tableScroll = ScrollController();
+
   late StationWiseGraphExportBloc stationWiseGraphExportBloc;
 
   final FocusNode _focusNode = FocusNode();
@@ -57,6 +62,7 @@ class _SafetyObservationByInchargeState
 
   @override
   void dispose() {
+    _tableScroll.dispose();
     _focusNode.dispose();
     _scrollController.dispose();
     super.dispose();
@@ -265,7 +271,9 @@ class _SafetyObservationByInchargeState
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             child: Scrollbar(
+              controller: _tableScroll,
               child: SingleChildScrollView(
+                controller: _tableScroll,
                 scrollDirection: Axis.horizontal,
                 child: DataTable(
                   columnSpacing: 24.0,
@@ -339,8 +347,12 @@ class _SafetyObservationByInchargeState
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  _buildDateRangeContainer("Start Date", startDateInput),
-                  _buildDateRangeContainer("End Date", endDateInput),
+                  CompactDateRangeField(
+                    startController: startDateInput,
+                    endController: endDateInput,
+                    width: 300,
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  ),
                 ],
               ),
             ),
@@ -396,8 +408,12 @@ class _SafetyObservationByInchargeState
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          _buildDateRangeContainer("Start Date", startDateInput),
-          _buildDateRangeContainer("End Date", endDateInput),
+          CompactDateRangeField(
+            startController: startDateInput,
+            endController: endDateInput,
+            width: 300,
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          ),
           ElevatedButton(
               onPressed: () {
                 context.read<Graph2Bloc>().initState(
@@ -418,74 +434,6 @@ class _SafetyObservationByInchargeState
 
   //date
 
-  _buildDateRangeContainer(String hintText, TextEditingController controller) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      child: SizedBox(
-        width: 300,
-        height: 44,
-        child: TextFormField(
-          controller: controller,
-          style: const TextStyle(fontSize: 14, color: kcValueDark),
-          decoration: InputDecoration(
-            contentPadding:
-                const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-            hintText: hintText,
-            hintStyle: const TextStyle(color: kcLightGrey, fontSize: 14),
-            fillColor: kcWhite,
-            prefixIcon: const Icon(
-              Icons.calendar_month_outlined,
-              size: 18,
-              color: kcLightGrey,
-            ),
-            filled: true,
-            enabledBorder: _border(),
-            focusedBorder: _focusedBorder(),
-          ),
-          readOnly: true,
-          onTap: () async {
-            DateTimeRange? pickedDateRange = await showDateRangePicker(
-              context: context,
-              firstDate: DateTime(2000),
-              lastDate: DateTime.now(),
-              builder: (ctx, child) => Theme(
-                data: Theme.of(ctx).copyWith(
-                  colorScheme: Theme.of(ctx).colorScheme.copyWith(
-                        primary: kcvoilet,
-                        onPrimary: kcWhite,
-                      ),
-                ),
-                child: child!,
-              ),
-              initialDateRange: startDateInput.text.isNotEmpty &&
-                      endDateInput.text.isNotEmpty
-                  ? DateTimeRange(
-                      start: DateTime.parse(startDateInput.text),
-                      end: DateTime.parse(endDateInput.text),
-                    )
-                  : DateTimeRange(
-                      start:
-                          DateTime.now().subtract(const Duration(days: 7)),
-                      end: DateTime.now(),
-                    ),
-            );
-
-            if (pickedDateRange != null) {
-              String formattedStartDate =
-                  DateFormat('yyyy-MM-dd').format(pickedDateRange.start);
-              String formattedEndDate =
-                  DateFormat('yyyy-MM-dd').format(pickedDateRange.end);
-
-              setState(() {
-                startDateInput.text = formattedStartDate;
-                endDateInput.text = formattedEndDate;
-              });
-            }
-          },
-        ),
-      ),
-    );
-  }
 
   _border() => OutlineInputBorder(
       borderRadius: BorderRadius.circular(8),

@@ -92,13 +92,15 @@ class ComplianceAssigneeReview {
 class ComplianceReview {
   final String incidentUniqueId;
   final String overallStatus;
-  final bool canClose;
+  final bool canClose;      // HOD may "Complete Review"
+  final bool canFinalClose; // Safety/HSE may "Close" (overall REVIEW_COMPLETED)
   final List<ComplianceAssigneeReview> assignees;
 
   const ComplianceReview({
     required this.incidentUniqueId,
     required this.overallStatus,
     required this.canClose,
+    this.canFinalClose = false,
     required this.assignees,
   });
 
@@ -113,6 +115,7 @@ class ComplianceReview {
       incidentUniqueId: _s(m['incidentUniqueId']),
       overallStatus: _s(m['overallStatus']).isEmpty ? 'PENDING' : _s(m['overallStatus']),
       canClose: _b(m['canClose']),
+      canFinalClose: _b(m['canFinalClose']),
       assignees: list,
     );
   }
@@ -132,6 +135,8 @@ ComplianceIncident complianceIncidentFromDetail(Map<String, dynamic> m,
       : <String, dynamic>{};
   final teamJson = (m['team'] is List) ? (m['team'] as List) : const [];
   final rootJson = (m['rootCauses'] is List) ? (m['rootCauses'] as List) : const [];
+  final inquiredJson =
+      (m['inquiredWith'] is List) ? (m['inquiredWith'] as List) : const [];
   final capaJson = (m['capa'] is List) ? (m['capa'] as List) : const [];
 
   final safety = SafetyRemarkBundle(
@@ -215,6 +220,18 @@ ComplianceIncident complianceIncidentFromDetail(Map<String, dynamic> m,
     team: team,
     reportDate: _s(inv['reportDate']),
     rootCauses: rootCauses,
+    machineryDetails: _s(inv['machineryDetails']),
+    activityBeforeIncident: _s(inv['activityBeforeIncident']),
+    inquiredWith: inquiredJson.whereType<Map>().map((e) {
+      final i = e.cast<String, dynamic>();
+      return InquiredWithRef(
+        empCode: _s(i['empUnqId']),
+        empName: _s(i['empName']),
+        statName: _s(i['statName']),
+        gradeName: _s(i['gradeName']),
+        desgName: _s(i['desgName']),
+      );
+    }).toList(),
     correctiveActions: corrective,
     suppressiveActions: const [],
     preventiveActions: const [],
@@ -232,6 +249,7 @@ ComplianceIncident complianceIncidentFromDetail(Map<String, dynamic> m,
       status: _s(ms['status']),
       reviewRemark: _s(ms['reviewRemark']),
       submittedDate: _s(ms['submittedDate']),
+      reopenSource: _s(ms['reopenSource']),
     );
   }
 

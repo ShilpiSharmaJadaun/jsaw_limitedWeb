@@ -32,6 +32,7 @@ import 'package:web/web.dart' show window;
 import 'package:flutter/foundation.dart' show Uint8List, kIsWeb;
 
 import 'package:flutter/services.dart';
+import 'package:jsaw_limited/utils/employee_picker.dart';
 
 class IncidentReportingPage extends StatefulWidget {
   const IncidentReportingPage({super.key});
@@ -58,11 +59,19 @@ class _IncidentReportingPageState extends State<IncidentReportingPage> {
 
   TextEditingController dateTimeController = TextEditingController();
 
+  // Back-date allowance: 1 month till 30-Nov-2026 (backlog entry grace period),
+  // then 3 days permanently (customer change request point 1).
+  static final DateTime _oneMonthAllowanceEnd = DateTime(2026, 11, 30, 23, 59, 59);
+
+  Duration get _backDateLimit => DateTime.now().isAfter(_oneMonthAllowanceEnd)
+      ? const Duration(days: 3)
+      : const Duration(days: 30);
+
   Future<void> _selectDateTime(BuildContext context) async {
     DateTime? selectedDate = await showDatePicker(
       context: context,
       initialDate: DateTime.now(),
-      firstDate: DateTime.now().subtract(const Duration(days: 2)),
+      firstDate: DateTime.now().subtract(_backDateLimit),
       lastDate: DateTime.now(),
     );
 
@@ -121,10 +130,9 @@ class _IncidentReportingPageState extends State<IncidentReportingPage> {
   ValueNotifier<String> employeeShiftDetail = ValueNotifier("");
   ValueNotifier<String> employeeShiftDisplay = ValueNotifier("");
 
-  String _formatShift(EmployeeShiftModel s) {
-    if (s.shiftStart.isEmpty || s.shiftEnd.isEmpty) return s.shiftDesc;
-    return '${s.shiftDesc} (${s.shiftStart} - ${s.shiftEnd})';
-  }
+  /// Tracker point 2 (24-Aug-2026): show and save only the Shift Code
+  /// (e.g. "AA"), not the description / time range.
+  String _formatShift(EmployeeShiftModel s) => s.shiftCode;
 
   ValueNotifier<String> wrkGrp = ValueNotifier("");
   ValueNotifier<String> gender = ValueNotifier("");
@@ -778,97 +786,26 @@ class _IncidentReportingPageState extends State<IncidentReportingPage> {
     );
   }
 
-  Future<void> _buildEmployeeDetailDialog(List<EmployeeBasicDetailModel> employeeDetail) {
-    final employeeDetailListNotifier = EmployeeDetailListNotifier(employeeDetail);
-    return showDialog(
-        context: context,
-        builder: (context) {
-          return AlertDialog(
-            shape: const RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(5))),
-            title: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  "Select or search Employee",
-                  style:
-                  TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-                ),
-                TextFormField(
-                  onChanged: employeeDetailListNotifier.filterBasedOn,
-                  decoration: const InputDecoration(
-                      hintText: "search here...",
-                      prefixIcon: Icon(
-                        Icons.search,
-                        color: kcLightGrey,
-                      )),
-                )
-              ],
-            ),
-            content: SizedBox(
-                width: 210,
-                height: 800,
-                child:ValueListenableBuilder<List<EmployeeBasicDetailModel>>(
-                    valueListenable: employeeDetailListNotifier,
-                    builder: (context, list, widget){
-                      return ListView.builder(
-                          itemCount: list.length,
-                          shrinkWrap: true,
-                          itemBuilder: (context, index) {
-                            return Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                InkWell(
-                                  onTap: () {
-                                    employeeName.value = list[index].empName;
-                                    employeeCode.value = list[index].empCode;
-                                    age.value = list[index].age.toString();
-                                    contractorName.value = list[index].contName;
-                                    contractorID.value = list[index].contCode;
-                                    plant.value = list[index].statName;
-                                    plantCode.value = list[index].statCode;
-                                    department.value = list[index].deptName;
-                                    departmentId.value = list[index].deptCode;
-                                    wrkGrp.value = list[index].wrkGrp;
-                                    locationBloc.initState(departmentId.value);
-
-                                    Navigator.pop(context);
-                                  },
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(2.0),
-                                    child: Text(list[index].empName +" ("+ list[index].empCode +")"),
-                                  ),
-                                ),
-                                const Padding(
-                                  padding: EdgeInsets.all(8.0),
-                                  child: Divider(
-                                    height: 0.8,
-                                    thickness: 1,
-                                    color: kcDarkGreyColor,
-                                  ),
-                                )
-                              ],
-                            );
-                          });
-                    }
-                )
-            ),
-            actions: [
-              Align(
-                alignment: Alignment.centerRight,
-                child: TextButton(
-                  onPressed: () {
-                    Navigator.pop(context);
-                  },
-                  child: const Text(
-                    "close",
-                    style: TextStyle(color: kcDarkGreyColor, fontSize: 18),
-                  ),
-                ),
-              )
-            ],
-          );
-        }
+  Future<void> _buildEmployeeDetailDialog(List<EmployeeBasicDetailModel> employeeDetail) async {
+    final picked = await showEmployeePicker<EmployeeBasicDetailModel>(
+      context,
+      items: employeeDetail,
+      name: (e) => e.empName,
+      code: (e) => e.empCode,
+      title: 'Select Employee',
     );
+    if (picked == null || !mounted) return;
+    employeeName.value = picked.empName;
+    employeeCode.value = picked.empCode;
+    age.value = picked.age.toString();
+    contractorName.value = picked.contName;
+    contractorID.value = picked.contCode;
+    plant.value = picked.statName;
+    plantCode.value = picked.statCode;
+    department.value = picked.deptName;
+    departmentId.value = picked.deptCode;
+    wrkGrp.value = picked.wrkGrp;
+    locationBloc.initState(departmentId.value);
   }
 
 
@@ -973,17 +910,18 @@ class _IncidentReportingPageState extends State<IncidentReportingPage> {
                           shrinkWrap: true,
                           itemBuilder: (context, index) {
                             return Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
                               children: [
                                 InkWell(
                                   onTap: () {
-                                    employeeShiftDetail.value = list[index].shiftDesc;
+                                    employeeShiftDetail.value = list[index].shiftCode;
                                     employeeShiftDisplay.value = _formatShift(list[index]);
                                     Navigator.pop(context);
                                   },
                                   child: Padding(
                                     padding: const EdgeInsets.all(2.0),
                                     child: Text(_formatShift(list[index]),
+                                      textAlign: TextAlign.center,
                                     ),
                                   ),
                                 ),
@@ -1379,88 +1317,17 @@ class _IncidentReportingPageState extends State<IncidentReportingPage> {
 
   }
 
-  Future<void> _buildResponsibilityBYHODDialog(List<EmployeeResponsibilityModel> responsibleHodModel) {
-    final responsibilityListNotifier = responsibleHODySearchableListNotifier(responsibleHodModel);
-    return showDialog(
-        context: context,
-        builder: (context) {
-          return AlertDialog(
-            shape: const RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(5))),
-            title: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  "Select or search Responsible HOD",
-                  style:
-                  TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-                ),
-                TextFormField(
-                  onChanged: responsibilityListNotifier.filterBasedOn,
-                  decoration: const InputDecoration(
-                      hintText: "search here...",
-                      prefixIcon: Icon(
-                        Icons.search,
-                        color: kcLightGrey,
-                      )),
-                )
-              ],
-            ),
-            content: SizedBox(
-                width: 210,
-                height: 800,
-                child:ValueListenableBuilder<List<EmployeeResponsibilityModel>>(
-                    valueListenable: responsibilityListNotifier,
-                    builder: (context, responsibleList, widget){
-                      return ListView.builder(
-                          itemCount: responsibleList.length,
-                          shrinkWrap: true,
-                          itemBuilder: (context, index) {
-                            return Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                InkWell(
-                                  onTap: () {
-                                    responsibleHOD.value = responsibleList[index].empName;
-                                    responsibleHODCode = responsibleList[index].empUnqId;
-                                    Navigator.pop(context);
-                                  },
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(2.0),
-                                    child: Text(responsibleList[index].empName,
-                                    ),
-                                  ),
-                                ),
-                                const Padding(
-                                  padding: EdgeInsets.all(8.0),
-                                  child: Divider(
-                                    height: 0.8,
-                                    thickness: 1,
-                                    color: kcDarkGreyColor,
-                                  ),
-                                )
-                              ],
-                            );
-                          });
-                    }
-                )
-            ),
-            actions: [
-              Align(
-                alignment: Alignment.centerRight,
-                child: TextButton(
-                  onPressed: () {
-                    Navigator.pop(context);
-                  },
-                  child: const Text(
-                    "close",
-                    style: TextStyle(color: kcDarkGreyColor, fontSize: 18),
-                  ),
-                ),
-              )
-            ],
-          );
-        }
+  Future<void> _buildResponsibilityBYHODDialog(List<EmployeeResponsibilityModel> responsibleHodModel) async {
+    final picked = await showEmployeePicker<EmployeeResponsibilityModel>(
+      context,
+      items: responsibleHodModel,
+      name: (e) => e.empName,
+      code: (e) => e.empUnqId,
+      title: 'Select Responsible HOD',
     );
+    if (picked == null || !mounted) return;
+    responsibleHOD.value = picked.empName;
+    responsibleHODCode = picked.empUnqId;
   }
 
   /// Nature Of Injury
@@ -1868,7 +1735,10 @@ class EmployeeShiftListNotifier extends ValueNotifier<List<EmployeeShiftModel>> 
     if (query.isEmpty) {
       value = initialValue;
     } else {
-      value = initialValue.where((e) => e.shiftDesc.toLowerCase().contains(query.toLowerCase())).toList();
+      final q = query.toLowerCase();
+      value = initialValue
+          .where((e) => e.shiftCode.toLowerCase().contains(q) || e.shiftDesc.toLowerCase().contains(q))
+          .toList();
     }
     notifyListeners();
   }

@@ -155,7 +155,7 @@ class _SafetyRemarkPageState extends State<SafetyRemarkPage> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     const Text(
-                      "Safety Remark Form",
+                      "Safety Observation",
                       style: TextStyle(
                         fontSize: 22,
                         fontWeight: FontWeight.w700,

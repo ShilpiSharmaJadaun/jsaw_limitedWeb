@@ -53,6 +53,8 @@ mixin _$CompleteMedicalResponseModel {
   String get raisedDate => throw _privateConstructorUsedError;
   String get lowQualityImageUrl => throw _privateConstructorUsedError;
   String get highQualityImageUrl => throw _privateConstructorUsedError;
+  String get medicalOfficerCode => throw _privateConstructorUsedError;
+  String get medicalOfficerName => throw _privateConstructorUsedError;
 
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
   @JsonKey(ignore: true)
@@ -100,7 +102,9 @@ abstract class $CompleteMedicalResponseModelCopyWith<$Res> {
       String medicalOfficerRemarks,
       String raisedDate,
       String lowQualityImageUrl,
-      String highQualityImageUrl});
+      String highQualityImageUrl,
+      String medicalOfficerCode,
+      String medicalOfficerName});
 }
 
 /// @nodoc
@@ -149,6 +153,8 @@ class _$CompleteMedicalResponseModelCopyWithImpl<$Res,
     Object? raisedDate = null,
     Object? lowQualityImageUrl = null,
     Object? highQualityImageUrl = null,
+    Object? medicalOfficerCode = null,
+    Object? medicalOfficerName = null,
   }) {
     return _then(_value.copyWith(
       id: null == id
@@ -279,6 +285,14 @@ class _$CompleteMedicalResponseModelCopyWithImpl<$Res,
           ? _value.highQualityImageUrl
           : highQualityImageUrl // ignore: cast_nullable_to_non_nullable
               as String,
+      medicalOfficerCode: null == medicalOfficerCode
+          ? _value.medicalOfficerCode
+          : medicalOfficerCode // ignore: cast_nullable_to_non_nullable
+              as String,
+      medicalOfficerName: null == medicalOfficerName
+          ? _value.medicalOfficerName
+          : medicalOfficerName // ignore: cast_nullable_to_non_nullable
+              as String,
     ) as $Val);
   }
 }
@@ -324,7 +338,9 @@ abstract class _$$CompleteMedicalResponseModelImplCopyWith<$Res>
       String medicalOfficerRemarks,
       String raisedDate,
       String lowQualityImageUrl,
-      String highQualityImageUrl});
+      String highQualityImageUrl,
+      String medicalOfficerCode,
+      String medicalOfficerName});
 }
 
 /// @nodoc
@@ -372,6 +388,8 @@ class __$$CompleteMedicalResponseModelImplCopyWithImpl<$Res>
     Object? raisedDate = null,
     Object? lowQualityImageUrl = null,
     Object? highQualityImageUrl = null,
+    Object? medicalOfficerCode = null,
+    Object? medicalOfficerName = null,
   }) {
     return _then(_$CompleteMedicalResponseModelImpl(
       id: null == id
@@ -502,6 +520,14 @@ class __$$CompleteMedicalResponseModelImplCopyWithImpl<$Res>
           ? _value.highQualityImageUrl
           : highQualityImageUrl // ignore: cast_nullable_to_non_nullable
               as String,
+      medicalOfficerCode: null == medicalOfficerCode
+          ? _value.medicalOfficerCode
+          : medicalOfficerCode // ignore: cast_nullable_to_non_nullable
+              as String,
+      medicalOfficerName: null == medicalOfficerName
+          ? _value.medicalOfficerName
+          : medicalOfficerName // ignore: cast_nullable_to_non_nullable
+              as String,
     ));
   }
 }
@@ -542,7 +568,9 @@ class _$CompleteMedicalResponseModelImpl
       this.medicalOfficerRemarks = "",
       this.raisedDate = "",
       this.lowQualityImageUrl = "",
-      this.highQualityImageUrl = ""});
+      this.highQualityImageUrl = "",
+      this.medicalOfficerCode = "",
+      this.medicalOfficerName = ""});
 
   factory _$CompleteMedicalResponseModelImpl.fromJson(
           Map<String, dynamic> json) =>
@@ -644,10 +672,16 @@ class _$CompleteMedicalResponseModelImpl
   @override
   @JsonKey()
   final String highQualityImageUrl;
+  @override
+  @JsonKey()
+  final String medicalOfficerCode;
+  @override
+  @JsonKey()
+  final String medicalOfficerName;
 
   @override
   String toString() {
-    return 'CompleteMedicalResponseModel(id: $id, incidentReportId: $incidentReportId, incidentUniqueId: $incidentUniqueId, incidentDateTime: $incidentDateTime, shift: $shift, employeeCode: $employeeCode, employeeName: $employeeName, age: $age, contractorName: $contractorName, contCode: $contCode, plant: $plant, plantCode: $plantCode, deptName: $deptName, deptCode: $deptCode, location: $location, responsibleShiftEngg: $responsibleShiftEngg, responsibleHod: $responsibleHod, contactNumber: $contactNumber, incidentType: $incidentType, workInjury: $workInjury, descpOfIncident: $descpOfIncident, firDateTime: $firDateTime, imageUrl: $imageUrl, typeOfInjury: $typeOfInjury, bodyPart: $bodyPart, natureOfInjury: $natureOfInjury, restUpto: $restUpto, fitForDutyFrom: $fitForDutyFrom, medicalOfficerRemarks: $medicalOfficerRemarks, raisedDate: $raisedDate, lowQualityImageUrl: $lowQualityImageUrl, highQualityImageUrl: $highQualityImageUrl)';
+    return 'CompleteMedicalResponseModel(id: $id, incidentReportId: $incidentReportId, incidentUniqueId: $incidentUniqueId, incidentDateTime: $incidentDateTime, shift: $shift, employeeCode: $employeeCode, employeeName: $employeeName, age: $age, contractorName: $contractorName, contCode: $contCode, plant: $plant, plantCode: $plantCode, deptName: $deptName, deptCode: $deptCode, location: $location, responsibleShiftEngg: $responsibleShiftEngg, responsibleHod: $responsibleHod, contactNumber: $contactNumber, incidentType: $incidentType, workInjury: $workInjury, descpOfIncident: $descpOfIncident, firDateTime: $firDateTime, imageUrl: $imageUrl, typeOfInjury: $typeOfInjury, bodyPart: $bodyPart, natureOfInjury: $natureOfInjury, restUpto: $restUpto, fitForDutyFrom: $fitForDutyFrom, medicalOfficerRemarks: $medicalOfficerRemarks, raisedDate: $raisedDate, lowQualityImageUrl: $lowQualityImageUrl, highQualityImageUrl: $highQualityImageUrl, medicalOfficerCode: $medicalOfficerCode, medicalOfficerName: $medicalOfficerName)';
   }
 
   @override
@@ -714,7 +748,11 @@ class _$CompleteMedicalResponseModelImpl
             (identical(other.lowQualityImageUrl, lowQualityImageUrl) ||
                 other.lowQualityImageUrl == lowQualityImageUrl) &&
             (identical(other.highQualityImageUrl, highQualityImageUrl) ||
-                other.highQualityImageUrl == highQualityImageUrl));
+                other.highQualityImageUrl == highQualityImageUrl) &&
+            (identical(other.medicalOfficerCode, medicalOfficerCode) ||
+                other.medicalOfficerCode == medicalOfficerCode) &&
+            (identical(other.medicalOfficerName, medicalOfficerName) ||
+                other.medicalOfficerName == medicalOfficerName));
   }
 
   @JsonKey(ignore: true)
@@ -752,7 +790,9 @@ class _$CompleteMedicalResponseModelImpl
         medicalOfficerRemarks,
         raisedDate,
         lowQualityImageUrl,
-        highQualityImageUrl
+        highQualityImageUrl,
+        medicalOfficerCode,
+        medicalOfficerName
       ]);
 
   @JsonKey(ignore: true)
@@ -805,7 +845,9 @@ abstract class _CompleteMedicalResponseModel
       final String medicalOfficerRemarks,
       final String raisedDate,
       final String lowQualityImageUrl,
-      final String highQualityImageUrl}) = _$CompleteMedicalResponseModelImpl;
+      final String highQualityImageUrl,
+      final String medicalOfficerCode,
+      final String medicalOfficerName}) = _$CompleteMedicalResponseModelImpl;
 
   factory _CompleteMedicalResponseModel.fromJson(Map<String, dynamic> json) =
       _$CompleteMedicalResponseModelImpl.fromJson;
@@ -874,6 +916,10 @@ abstract class _CompleteMedicalResponseModel
   String get lowQualityImageUrl;
   @override
   String get highQualityImageUrl;
+  @override
+  String get medicalOfficerCode;
+  @override
+  String get medicalOfficerName;
   @override
   @JsonKey(ignore: true)
   _$$CompleteMedicalResponseModelImplCopyWith<

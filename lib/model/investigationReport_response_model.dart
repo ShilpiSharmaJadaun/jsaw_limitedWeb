@@ -13,11 +13,16 @@ class InvestigationReportResponse with _$InvestigationReportResponse {
     @Default("") String associatedRiskImageUrl,
     @Default("") String lowQualityImageUrl,
     @Default("") String highQualityImageUrl,
+    // Facts Leading to the Incident or Dangerous Occurrence (points 4 & 5)
+    @Default("") String machineryDetails,
+    @Default("") String activityBeforeIncident,
     @Default("") String raisedDate,
     @Default("") String updatedDate,
     @Default([]) List<InvestigationTeamItem> team,
     @Default([]) List<InvestigationRootCauseItem> rootCauses,
     @Default([]) List<InvestigationCapaItem> capa,
+    // Root Cause – Inquired With (point 6)
+    @Default([]) List<InvestigationInquiredWithItem> inquiredWith,
   }) = _InvestigationReportResponse;
 
   factory InvestigationReportResponse.fromJson(Map<String, dynamic> json) =>
@@ -63,4 +68,23 @@ class InvestigationCapaItem with _$InvestigationCapaItem {
 
   factory InvestigationCapaItem.fromJson(Map<String, dynamic> json) =>
       _$InvestigationCapaItemFromJson(json);
+}
+
+/// Root Cause – Inquired With (point 6): an employee who was inquired /
+/// interviewed while establishing the root cause. Names are snapshots.
+@freezed
+class InvestigationInquiredWithItem with _$InvestigationInquiredWithItem {
+  const factory InvestigationInquiredWithItem({
+    @Default(0) int id,
+    @Default(0) int seq,
+    @Default("") String empUnqId,
+    @Default("") String empName,
+    @Default("") String deptCode,
+    @Default("") String statName,
+    @Default("") String gradeName,
+    @Default("") String desgName,
+  }) = _InvestigationInquiredWithItem;
+
+  factory InvestigationInquiredWithItem.fromJson(Map<String, dynamic> json) =>
+      _$InvestigationInquiredWithItemFromJson(json);
 }

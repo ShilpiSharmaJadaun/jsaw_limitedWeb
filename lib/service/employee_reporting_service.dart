@@ -1,3 +1,4 @@
+import '../model/activeEmployeeLookup_model.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
@@ -61,6 +62,28 @@ class EmployeeReportingService{
       _handleError(e);
     }
     return[];
+  }
+
+  /// ACTIVE employees with station / grade / designation names resolved by
+  /// the backend (`employees/getActiveEmployeeLookup`). Used by the
+  /// Investigation "Root Cause – Inquired With" picker (point 6).
+  Future<List<ActiveEmployeeLookupModel>> getActiveEmployeeLookup() async {
+    const url = "${root}employees/getActiveEmployeeLookup";
+    final response = await authHttp.get(Uri.parse(url), headers: getHeaders());
+    try {
+      final responseBody = json.decode(response.body);
+      if (responseBody["status"] == true) {
+        final itemList = responseBody["model"] as List;
+        return itemList
+            .map((e) => ActiveEmployeeLookupModel.fromJson(e))
+            .toList();
+      } else {
+        throw ApiError.fromResponse(responseBody["msg"]);
+      }
+    } catch (e) {
+      _handleError(e);
+    }
+    return [];
   }
 
   Future<List<AllEmployeeModel>> getAllCompOutSourcAuthUser() async {

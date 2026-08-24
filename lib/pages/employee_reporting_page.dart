@@ -19,6 +19,7 @@ import 'package:jsaw_limited/state/insertHODEmployee_state.dart';
 import 'package:jsaw_limited/state/updateHod_state.dart';
 import 'package:provider/provider.dart';
 import '../utils/app_color.dart';
+import 'package:jsaw_limited/utils/employee_picker.dart';
 
 class EmployeeReportingPage extends StatefulWidget {
   const EmployeeReportingPage({super.key});
@@ -531,90 +532,18 @@ class _EmployeeReportingPageState extends State<EmployeeReportingPage> {
     );
   }
 
-  Future<void> _buildResponsibilityDialog(List<EmployeeFromAppReportingModel> responsibilityModel) {
-    final responsibilityListNotifier = allEmployeeAppReportingListNotifier(responsibilityModel);
-    return showDialog(
-        context: context,
-        builder: (context) {
-          return AlertDialog(
-            shape: const RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(5))),
-            title: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  "Select or search Responsibility",
-                  style:
-                  TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-                ),
-                TextFormField(
-                  onChanged: responsibilityListNotifier.filterBasedOn,
-                  decoration: const InputDecoration(
-                      hintText: "search here...",
-                      prefixIcon: Icon(
-                        Icons.search,
-                        color: kcLightGrey,
-                      )),
-                )
-              ],
-            ),
-            content: SizedBox(
-                width: 210,
-                height: 800,
-                child:ValueListenableBuilder<List<EmployeeFromAppReportingModel>>(
-                    valueListenable: responsibilityListNotifier,
-                    builder: (context, list, widget){
-                      return ListView.builder(
-                          itemCount: list.length,
-                          shrinkWrap: true,
-                          itemBuilder: (context, index) {
-                            return Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                InkWell(
-                                  onTap: () {
-                                    reportingEmployeeName.value = list[index].empName;
-                                    reportEmployeeCode = list[index].empUnqId;
-                                    allHodBloc.initState(reportEmployeeCode);
-
-                                    Navigator.pop(context);
-                                  },
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(2.0),
-                                    child: Text(list[index].empName +"( "+ list[index].empUnqId+ ")" ,
-                                    ),
-                                  ),
-                                ),
-                                const Padding(
-                                  padding: EdgeInsets.all(8.0),
-                                  child: Divider(
-                                    height: 0.8,
-                                    thickness: 1,
-                                    color: kcDarkGreyColor,
-                                  ),
-                                )
-                              ],
-                            );
-                          });
-                    }
-                )
-            ),
-            actions: [
-              Align(
-                alignment: Alignment.centerRight,
-                child: TextButton(
-                  onPressed: () {
-                    Navigator.pop(context);
-                  },
-                  child: const Text(
-                    "close",
-                    style: TextStyle(color: kcDarkGreyColor, fontSize: 18),
-                  ),
-                ),
-              )
-            ],
-          );
-        }
+  Future<void> _buildResponsibilityDialog(List<EmployeeFromAppReportingModel> responsibilityModel) async {
+    final picked = await showEmployeePicker<EmployeeFromAppReportingModel>(
+      context,
+      items: responsibilityModel,
+      name: (e) => e.empName,
+      code: (e) => e.empUnqId,
+      title: 'Select Responsible Engineer',
     );
+    if (picked == null || !mounted) return;
+    reportingEmployeeName.value = picked.empName;
+    reportEmployeeCode = picked.empUnqId;
+    allHodBloc.initState(reportEmployeeCode);
   }
 
   ///Delete Reporting Employee
@@ -676,90 +605,18 @@ class _EmployeeReportingPageState extends State<EmployeeReportingPage> {
     );
   }
 
-  Future<void> _buildDeleteResponsibilityDialog(List<EmployeeFromAppReportingModel> responsibilityModel) {
-    final responsibilityListNotifier = allEmployeeAppReportingListNotifier(responsibilityModel);
-    return showDialog(
-        context: context,
-        builder: (context) {
-          return AlertDialog(
-            shape: const RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(5))),
-            title: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  "Select or search Responsibility",
-                  style:
-                  TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-                ),
-                TextFormField(
-                  onChanged: responsibilityListNotifier.filterBasedOn,
-                  decoration: const InputDecoration(
-                      hintText: "search here...",
-                      prefixIcon: Icon(
-                        Icons.search,
-                        color: kcLightGrey,
-                      )),
-                )
-              ],
-            ),
-            content: SizedBox(
-                width: 210,
-                height: 800,
-                child:ValueListenableBuilder<List<EmployeeFromAppReportingModel>>(
-                    valueListenable: responsibilityListNotifier,
-                    builder: (context, list, widget){
-                      return ListView.builder(
-                          itemCount: list.length,
-                          shrinkWrap: true,
-                          itemBuilder: (context, index) {
-                            return Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                InkWell(
-                                  onTap: () {
-                                    deleteReportingEmployeeName.value = list[index].empName;
-                                    reportEmployeeCode = list[index].empUnqId;
-                                    allHodBloc.initState(reportEmployeeCode);
-
-                                    Navigator.pop(context);
-                                  },
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(2.0),
-                                    child: Text(list[index].empName +"( "+ list[index].empUnqId+ ")" ,
-                                    ),
-                                  ),
-                                ),
-                                const Padding(
-                                  padding: EdgeInsets.all(8.0),
-                                  child: Divider(
-                                    height: 0.8,
-                                    thickness: 1,
-                                    color: kcDarkGreyColor,
-                                  ),
-                                )
-                              ],
-                            );
-                          });
-                    }
-                )
-            ),
-            actions: [
-              Align(
-                alignment: Alignment.centerRight,
-                child: TextButton(
-                  onPressed: () {
-                    Navigator.pop(context);
-                  },
-                  child: const Text(
-                    "close",
-                    style: TextStyle(color: kcDarkGreyColor, fontSize: 18),
-                  ),
-                ),
-              )
-            ],
-          );
-        }
+  Future<void> _buildDeleteResponsibilityDialog(List<EmployeeFromAppReportingModel> responsibilityModel) async {
+    final picked = await showEmployeePicker<EmployeeFromAppReportingModel>(
+      context,
+      items: responsibilityModel,
+      name: (e) => e.empName,
+      code: (e) => e.empUnqId,
+      title: 'Select Reporting Employee to Remove',
     );
+    if (picked == null || !mounted) return;
+    deleteReportingEmployeeName.value = picked.empName;
+    reportEmployeeCode = picked.empUnqId;
+    allHodBloc.initState(reportEmployeeCode);
   }
 
   //All HOD
@@ -822,89 +679,17 @@ class _EmployeeReportingPageState extends State<EmployeeReportingPage> {
     );
   }
 
-  Future<void> _buildHodDialog(List<AllHodModel> allHod) {
-    final responsibilityListNotifier = allHodListNotifier(allHod);
-    return showDialog(
-        context: context,
-        builder: (context) {
-          return AlertDialog(
-            shape: const RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(5))),
-            title: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  "Select or search Responsibility",
-                  style:
-                  TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-                ),
-                TextFormField(
-                  onChanged: responsibilityListNotifier.filterBasedOn,
-                  decoration: const InputDecoration(
-                      hintText: "search here...",
-                      prefixIcon: Icon(
-                        Icons.search,
-                        color: kcLightGrey,
-                      )),
-                )
-              ],
-            ),
-            content: SizedBox(
-                width: 210,
-                height: 800,
-                child:ValueListenableBuilder<List<AllHodModel>>(
-                    valueListenable: responsibilityListNotifier,
-                    builder: (context, list, widget){
-                      return ListView.builder(
-                          itemCount: list.length,
-                          shrinkWrap: true,
-                          itemBuilder: (context, index) {
-                            return Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                InkWell(
-                                  onTap: () {
-                                    hodName.value = list[index].empName;
-                                    hodCode = list[index].empUnqId;
-                                    // allEmployeeBloc.initState();
-                                    Navigator.pop(context);
-                                  },
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(2.0),
-                                    child: Text(list[index].empName +"( "+ list[index].empUnqId+ ")",
-                                    ),
-                                  ),
-                                ),
-                                const Padding(
-                                  padding: EdgeInsets.all(8.0),
-                                  child: Divider(
-                                    height: 0.8,
-                                    thickness: 1,
-                                    color: kcDarkGreyColor,
-                                  ),
-                                )
-                              ],
-                            );
-                          });
-                    }
-                )
-            ),
-            actions: [
-              Align(
-                alignment: Alignment.centerRight,
-                child: TextButton(
-                  onPressed: () {
-                    Navigator.pop(context);
-                  },
-                  child: const Text(
-                    "close",
-                    style: TextStyle(color: kcDarkGreyColor, fontSize: 18),
-                  ),
-                ),
-              )
-            ],
-          );
-        }
+  Future<void> _buildHodDialog(List<AllHodModel> allHod) async {
+    final picked = await showEmployeePicker<AllHodModel>(
+      context,
+      items: allHod,
+      name: (e) => e.empName,
+      code: (e) => e.empUnqId,
+      title: 'Select HOD',
     );
+    if (picked == null || !mounted) return;
+    hodName.value = picked.empName;
+    hodCode = picked.empUnqId;
   }
 
   /// Delete ALl HOD
@@ -967,88 +752,17 @@ class _EmployeeReportingPageState extends State<EmployeeReportingPage> {
     );
   }
 
-  Future<void> _buildDeleteHodDialog(List<AllHodModel> allHod) {
-    final responsibilityListNotifier = allHodListNotifier(allHod);
-    return showDialog(
-        context: context,
-        builder: (context) {
-          return AlertDialog(
-            shape: const RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(5))),
-            title: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  "Select or search Responsibility",
-                  style:
-                  TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-                ),
-                TextFormField(
-                  onChanged: responsibilityListNotifier.filterBasedOn,
-                  decoration: const InputDecoration(
-                      hintText: "search here...",
-                      prefixIcon: Icon(
-                        Icons.search,
-                        color: kcLightGrey,
-                      )),
-                )
-              ],
-            ),
-            content: SizedBox(
-                width: 210,
-                height: 800,
-                child:ValueListenableBuilder<List<AllHodModel>>(
-                    valueListenable: responsibilityListNotifier,
-                    builder: (context, list, widget){
-                      return ListView.builder(
-                          itemCount: list.length,
-                          shrinkWrap: true,
-                          itemBuilder: (context, index) {
-                            return Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                InkWell(
-                                  onTap: () {
-                                    deleteHodName.value = list[index].empName;
-                                    hodCode = list[index].empUnqId;
-                                    Navigator.pop(context);
-                                  },
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(2.0),
-                                    child: Text(list[index].empName +"( "+ list[index].empUnqId+ ")",
-                                    ),
-                                  ),
-                                ),
-                                const Padding(
-                                  padding: EdgeInsets.all(8.0),
-                                  child: Divider(
-                                    height: 0.8,
-                                    thickness: 1,
-                                    color: kcDarkGreyColor,
-                                  ),
-                                )
-                              ],
-                            );
-                          });
-                    }
-                )
-            ),
-            actions: [
-              Align(
-                alignment: Alignment.centerRight,
-                child: TextButton(
-                  onPressed: () {
-                    Navigator.pop(context);
-                  },
-                  child: const Text(
-                    "close",
-                    style: TextStyle(color: kcDarkGreyColor, fontSize: 18),
-                  ),
-                ),
-              )
-            ],
-          );
-        }
+  Future<void> _buildDeleteHodDialog(List<AllHodModel> allHod) async {
+    final picked = await showEmployeePicker<AllHodModel>(
+      context,
+      items: allHod,
+      name: (e) => e.empName,
+      code: (e) => e.empUnqId,
+      title: 'Select HOD to Remove',
     );
+    if (picked == null || !mounted) return;
+    deleteHodName.value = picked.empName;
+    hodCode = picked.empUnqId;
   }
 
   // ALl Employee
@@ -1111,89 +825,17 @@ class _EmployeeReportingPageState extends State<EmployeeReportingPage> {
     );
   }
 
-  Future<void> _buildAllEmployeeDialog(List<AllEmployeeModel> allEmployee) {
-    final responsibilityListNotifier = allEmployeeListNotifier(allEmployee);
-    return showDialog(
-        context: context,
-        builder: (context) {
-          return AlertDialog(
-            shape: const RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(5))),
-            title: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  "Select or search Responsibility",
-                  style:
-                  TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-                ),
-                TextFormField(
-                  onChanged: responsibilityListNotifier.filterBasedOn,
-                  decoration: const InputDecoration(
-                      hintText: "search here...",
-                      prefixIcon: Icon(
-                        Icons.search,
-                        color: kcLightGrey,
-                      )),
-                )
-              ],
-            ),
-            content: SizedBox(
-                width: 210,
-                height: 800,
-                child:ValueListenableBuilder<List<AllEmployeeModel>>(
-                    valueListenable: responsibilityListNotifier,
-                    builder: (context, list, widget){
-                      return ListView.builder(
-                          itemCount: list.length,
-                          shrinkWrap: true,
-                          itemBuilder: (context, index) {
-                            return Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                InkWell(
-                                  onTap: () {
-                                    employeeName.value = list[index].empName;
-                                    employeeCode = list[index].empUnqId;
-                                   // allHodBloc.initState(employeeCode);
-                                    Navigator.pop(context);
-                                  },
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(2.0),
-                                    child: Text(list[index].empName+"( "+ list[index].empUnqId+ ")",
-                                    ),
-                                  ),
-                                ),
-                                const Padding(
-                                  padding: EdgeInsets.all(8.0),
-                                  child: Divider(
-                                    height: 0.8,
-                                    thickness: 1,
-                                    color: kcDarkGreyColor,
-                                  ),
-                                )
-                              ],
-                            );
-                          });
-                    }
-                )
-            ),
-            actions: [
-              Align(
-                alignment: Alignment.centerRight,
-                child: TextButton(
-                  onPressed: () {
-                    Navigator.pop(context);
-                  },
-                  child: const Text(
-                    "close",
-                    style: TextStyle(color: kcDarkGreyColor, fontSize: 18),
-                  ),
-                ),
-              )
-            ],
-          );
-        }
+  Future<void> _buildAllEmployeeDialog(List<AllEmployeeModel> allEmployee) async {
+    final picked = await showEmployeePicker<AllEmployeeModel>(
+      context,
+      items: allEmployee,
+      name: (e) => e.empName,
+      code: (e) => e.empUnqId,
+      title: 'Select Employee',
     );
+    if (picked == null || !mounted) return;
+    employeeName.value = picked.empName;
+    employeeCode = picked.empUnqId;
   }
 
   ///INSERT EMPLOYEE
@@ -1255,89 +897,18 @@ class _EmployeeReportingPageState extends State<EmployeeReportingPage> {
     );
   }
 
-  Future<void> _buildInsertAllEmployeeDialog(List<AllEmployeeModel> allEmployee) {
-    final responsibilityListNotifier = allEmployeeListNotifier(allEmployee);
-    return showDialog(
-        context: context,
-        builder: (context) {
-          return AlertDialog(
-            shape: const RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(5))),
-            title: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  "Select or search Responsibility",
-                  style:
-                  TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-                ),
-                TextFormField(
-                  onChanged: responsibilityListNotifier.filterBasedOn,
-                  decoration: const InputDecoration(
-                      hintText: "search here...",
-                      prefixIcon: Icon(
-                        Icons.search,
-                        color: kcLightGrey,
-                      )),
-                )
-              ],
-            ),
-            content: SizedBox(
-                width: 210,
-                height: 800,
-                child:ValueListenableBuilder<List<AllEmployeeModel>>(
-                    valueListenable: responsibilityListNotifier,
-                    builder: (context, list, widget){
-                      return ListView.builder(
-                          itemCount: list.length,
-                          shrinkWrap: true,
-                          itemBuilder: (context, index) {
-                            return Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                InkWell(
-                                  onTap: () {
-                                    insertEmployeeName.value = list[index].empName;
-                                    employeeCode = list[index].empUnqId;
-                                    allHodBloc.initState(employeeCode);
-                                    Navigator.pop(context);
-                                  },
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(2.0),
-                                    child: Text(list[index].empName+"( "+ list[index].empUnqId+ ")",
-                                    ),
-                                  ),
-                                ),
-                                const Padding(
-                                  padding: EdgeInsets.all(8.0),
-                                  child: Divider(
-                                    height: 0.8,
-                                    thickness: 1,
-                                    color: kcDarkGreyColor,
-                                  ),
-                                )
-                              ],
-                            );
-                          });
-                    }
-                )
-            ),
-            actions: [
-              Align(
-                alignment: Alignment.centerRight,
-                child: TextButton(
-                  onPressed: () {
-                    Navigator.pop(context);
-                  },
-                  child: const Text(
-                    "close",
-                    style: TextStyle(color: kcDarkGreyColor, fontSize: 18),
-                  ),
-                ),
-              )
-            ],
-          );
-        }
+  Future<void> _buildInsertAllEmployeeDialog(List<AllEmployeeModel> allEmployee) async {
+    final picked = await showEmployeePicker<AllEmployeeModel>(
+      context,
+      items: allEmployee,
+      name: (e) => e.empName,
+      code: (e) => e.empUnqId,
+      title: 'Select Employee',
     );
+    if (picked == null || !mounted) return;
+    insertEmployeeName.value = picked.empName;
+    employeeCode = picked.empUnqId;
+    allHodBloc.initState(employeeCode);
   }
 
 
@@ -1403,88 +974,17 @@ class _EmployeeReportingPageState extends State<EmployeeReportingPage> {
     );
   }
 
-  Future<void> _buildNewHODEmployeeDialog(List<AllEmployeeModel> allEmployee) {
-    final responsibilityListNotifier = NewHODEmployeeListNotifier(allEmployee);
-    return showDialog(
-        context: context,
-        builder: (context) {
-          return AlertDialog(
-            shape: const RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(5))),
-            title: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  "Select or search Responsibility",
-                  style:
-                  TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-                ),
-                TextFormField(
-                  onChanged: responsibilityListNotifier.filterBasedOn,
-                  decoration: const InputDecoration(
-                      hintText: "search here...",
-                      prefixIcon: Icon(
-                        Icons.search,
-                        color: kcLightGrey,
-                      )),
-                )
-              ],
-            ),
-            content: SizedBox(
-                width: 210,
-                height: 800,
-                child:ValueListenableBuilder<List<AllEmployeeModel>>(
-                    valueListenable: responsibilityListNotifier,
-                    builder: (context, list, widget){
-                      return ListView.builder(
-                          itemCount: list.length,
-                          shrinkWrap: true,
-                          itemBuilder: (context, index) {
-                            return Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                InkWell(
-                                  onTap: () {
-                                    NewHodName.value = list[index].empName;
-                                    newHodCode = list[index].empUnqId;
-                                    Navigator.pop(context);
-                                  },
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(2.0),
-                                    child: Text(list[index].empName+"( "+ list[index].empUnqId+ ")",
-                                    ),
-                                  ),
-                                ),
-                                const Padding(
-                                  padding: EdgeInsets.all(8.0),
-                                  child: Divider(
-                                    height: 0.8,
-                                    thickness: 1,
-                                    color: kcDarkGreyColor,
-                                  ),
-                                )
-                              ],
-                            );
-                          });
-                    }
-                )
-            ),
-            actions: [
-              Align(
-                alignment: Alignment.centerRight,
-                child: TextButton(
-                  onPressed: () {
-                    Navigator.pop(context);
-                  },
-                  child: const Text(
-                    "close",
-                    style: TextStyle(color: kcDarkGreyColor, fontSize: 18),
-                  ),
-                ),
-              )
-            ],
-          );
-        }
+  Future<void> _buildNewHODEmployeeDialog(List<AllEmployeeModel> allEmployee) async {
+    final picked = await showEmployeePicker<AllEmployeeModel>(
+      context,
+      items: allEmployee,
+      name: (e) => e.empName,
+      code: (e) => e.empUnqId,
+      title: 'Select New HOD',
     );
+    if (picked == null || !mounted) return;
+    NewHodName.value = picked.empName;
+    newHodCode = picked.empUnqId;
   }
 }
 

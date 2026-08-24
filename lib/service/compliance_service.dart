@@ -169,11 +169,28 @@ class ComplianceService {
         (body is Map ? body['msg']?.toString() : null) ?? 'Failed to load compliance review');
   }
 
-  /// HOD reopens (rejects) one employee's compliance.
+  /// Compliance Closure list (Safety/HSE team): every incident with an
+  /// investigation, no scoping. They close REVIEW_COMPLETED ones.
+  Future<List<ComplianceSummary>> getAllForClosure() async {
+    final url = "${root}compliance/getAllForClosure";
+    final response = await authHttp.get(Uri.parse(url), headers: getHeaders());
+    final body = json.decode(response.body);
+    if (body is Map && body['status'] == true && body['model'] is List) {
+      return (body['model'] as List)
+          .whereType<Map>()
+          .map((e) => ComplianceSummary.fromJson(e.cast<String, dynamic>()))
+          .toList();
+    }
+    return <ComplianceSummary>[];
+  }
+
+  /// HOD (source 'HOD') or Safety team (source 'SAFETY') reopens one
+  /// employee's compliance.
   Future<String?> rejectCompliance({
     required String incidentUniqueId,
     required String empUnqId,
     required String reviewRemark,
+    String source = 'HOD',
   }) async {
     final url = "${root}compliance/rejectCompliance";
     final response = await authHttp.post(
@@ -183,6 +200,7 @@ class ComplianceService {
         "empUnqId": empUnqId,
         "hodEmpUnqId": _empUnqId,
         "reviewRemark": reviewRemark,
+        "source": source,
       }),
       headers: getHeaders(),
     );
@@ -193,7 +211,23 @@ class ComplianceService {
     throw Exception((body is Map ? body['msg']?.toString() : null) ?? 'Reopen failed');
   }
 
-  /// HOD closes the whole incident compliance (allowed only when all complete).
+  /// Safety/HSE team final close (allowed only when overall REVIEW_COMPLETED).
+  Future<String?> finalCloseCompliance(String incidentUniqueId) async {
+    final url = "${root}compliance/finalCloseCompliance";
+    final response = await authHttp.post(
+      Uri.parse(url),
+      body: json.encode({"incidentUniqueId": incidentUniqueId, "hodEmpUnqId": _empUnqId}),
+      headers: getHeaders(),
+    );
+    final body = json.decode(response.body);
+    if (body is Map && body['status'] == true) {
+      return body['msg']?.toString();
+    }
+    throw Exception((body is Map ? body['msg']?.toString() : null) ?? 'Close failed');
+  }
+
+  /// HOD completes the Compliance Review (allowed only when all complete);
+  /// overall becomes REVIEW_COMPLETED and goes to the Safety team.
   Future<String?> closeCompliance(String incidentUniqueId) async {
     final url = "${root}compliance/closeCompliance";
     final response = await authHttp.post(

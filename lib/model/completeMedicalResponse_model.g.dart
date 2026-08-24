@@ -41,6 +41,8 @@ _$CompleteMedicalResponseModelImpl _$$CompleteMedicalResponseModelImplFromJson(
       raisedDate: json['raisedDate'] as String? ?? "",
       lowQualityImageUrl: json['lowQualityImageUrl'] as String? ?? "",
       highQualityImageUrl: json['highQualityImageUrl'] as String? ?? "",
+      medicalOfficerCode: json['medicalOfficerCode'] as String? ?? "",
+      medicalOfficerName: json['medicalOfficerName'] as String? ?? "",
     );
 
 Map<String, dynamic> _$$CompleteMedicalResponseModelImplToJson(
@@ -78,4 +80,6 @@ Map<String, dynamic> _$$CompleteMedicalResponseModelImplToJson(
       'raisedDate': instance.raisedDate,
       'lowQualityImageUrl': instance.lowQualityImageUrl,
       'highQualityImageUrl': instance.highQualityImageUrl,
+      'medicalOfficerCode': instance.medicalOfficerCode,
+      'medicalOfficerName': instance.medicalOfficerName,
     };

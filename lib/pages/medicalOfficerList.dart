@@ -6,6 +6,7 @@ import 'package:jsaw_limited/bloc/completeMedicalResponse_bloc.dart';
 import 'package:jsaw_limited/model/allMedicalOfficerList_model.dart';
 import 'package:jsaw_limited/model/completeMedicalResponse_model.dart';
 import 'package:jsaw_limited/pages/medical_Officer_page.dart';
+import 'package:jsaw_limited/pages/medical_response_detail_page.dart';
 import 'package:jsaw_limited/state/allMedicalOfficerList_state.dart';
 import 'package:jsaw_limited/state/completeMedicalResponse_state.dart';
 import 'package:lottie/lottie.dart';
@@ -38,9 +39,18 @@ class _MedicalOfficerListState extends State<MedicalOfficerList> {
   int currentPage = 0;
   late String raisedSessionID = window.localStorage.getItem('kRaisedSessionID') ?? "";
 
+  // Tracker point 3: "Check Details" — when set, the read-only detail view of
+  // the selected completed response is shown INLINE (inside the app shell).
+  CompleteMedicalResponseModel? _selected;
 
   @override
   Widget build(BuildContext context) {
+    if (_selected != null) {
+      return MedicalResponseDetailPage(
+        response: _selected!,
+        onBack: () => setState(() => _selected = null),
+      );
+    }
     return  Scaffold(
       backgroundColor: kcDashboardBg1,
       body: _buildAllIncidentList(),
@@ -340,6 +350,16 @@ class _MedicalOfficerListState extends State<MedicalOfficerList> {
                             ),
                           ],
                         ),
+                        const SizedBox(height: 10),
+
+                        // Check Details (tracker point 3) — opens the read-only
+                        // view of the submitted medical assessment.
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: _buildCheckDetailsButton(
+                            () => setState(() => _selected = model[index]),
+                          ),
+                        ),
 
                         // // Plant
                         // Row(
@@ -382,6 +402,25 @@ class _MedicalOfficerListState extends State<MedicalOfficerList> {
   }
 
   // ---------- Reusable building blocks ----------
+
+  /// Pill-style "Check Details" button (bottom-right of each completed card).
+  Widget _buildCheckDetailsButton(VoidCallback onTap) {
+    return ElevatedButton.icon(
+      onPressed: onTap,
+      style: ElevatedButton.styleFrom(
+        backgroundColor: kcStatBlue,
+        foregroundColor: kcWhite,
+        elevation: 2,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      ),
+      icon: const Icon(Icons.fact_check_outlined, size: 18),
+      label: const Text(
+        'Check Details',
+        style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+      ),
+    );
+  }
 
   /// Builds an info group: colored icon + label + colored-accent value card.
   Widget _buildInfoSection({

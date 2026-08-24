@@ -38,6 +38,8 @@ class CompleteMedicalResponseModel with _$CompleteMedicalResponseModel{
     @Default("") String raisedDate,
     @Default("") String lowQualityImageUrl,
     @Default("") String highQualityImageUrl,
+    @Default("") String medicalOfficerCode,
+    @Default("") String medicalOfficerName,
   }) = _CompleteMedicalResponseModel;
 
   factory CompleteMedicalResponseModel.fromJson(Map<String, dynamic> json) => _$CompleteMedicalResponseModelFromJson(json);

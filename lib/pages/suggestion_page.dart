@@ -835,6 +835,9 @@ class ComplaintCard extends StatefulWidget {
 }
 
 class _ComplaintCardState extends State<ComplaintCard> {
+  /// Only the developer account (20071991, kDevPortal='1') may delete.
+  static bool get _canDelete =>
+      html.window.localStorage.getItem('kDevPortal') == '1';
   late List<ComplaintReplyModel> _replies;
   final TextEditingController _replyController = TextEditingController();
   final TextEditingController _resolutionController = TextEditingController();
@@ -1075,7 +1078,7 @@ class _ComplaintCardState extends State<ComplaintCard> {
                           ],
                         ),
                       ),
-                      if (widget.viewerType == 'admin') ...[
+                      if (widget.viewerType == 'admin' && _canDelete) ...[
                         const Spacer(),
                         _deleting
                             ? const SizedBox(

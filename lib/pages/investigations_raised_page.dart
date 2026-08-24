@@ -19,7 +19,7 @@ class InvestigationsRaisedPage extends StatefulWidget {
   const InvestigationsRaisedPage({
     super.key,
     this.hodView = false,
-    this.title = 'Investigations Raised',
+    this.title = 'Investigation Initiated',
   });
 
   @override
@@ -770,6 +770,15 @@ class _InvestigationsRaisedPageState extends State<InvestigationsRaisedPage> {
                   .toList(),
             ),
           const SizedBox(height: 14),
+          _subLabel('Facts Leading to the Incident or Dangerous Occurrence'),
+          const SizedBox(height: 6),
+          _factsLine(
+              'If caused by machinery — machine/equipment and parts involved',
+              inv.machineryDetails),
+          _factsLine(
+              'What the injured person was doing just before and at the time of the occurrence',
+              inv.activityBeforeIncident),
+          const SizedBox(height: 14),
           _subLabel('Root Causes'),
           const SizedBox(height: 6),
           if (inv.rootCauses.isEmpty)
@@ -781,6 +790,26 @@ class _InvestigationsRaisedPageState extends State<InvestigationsRaisedPage> {
                       style: const TextStyle(
                           fontSize: 13.5, color: kcValueDark, height: 1.35)),
                 )),
+          const SizedBox(height: 14),
+          _subLabel('Root Cause – Inquired With'),
+          const SizedBox(height: 6),
+          if (inv.inquiredWith.isEmpty)
+            const Text('—', style: TextStyle(color: kcLabelGrey))
+          else
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: inv.inquiredWith.map((p) {
+                final details = [
+                  if (p.statName.trim().isNotEmpty) p.statName,
+                  if (p.gradeName.trim().isNotEmpty) p.gradeName,
+                  if (p.desgName.trim().isNotEmpty) p.desgName,
+                ].join(' · ');
+                return _chip(details.isEmpty
+                    ? '${p.empCode} — ${p.empName}'
+                    : '${p.empCode} — ${p.empName}  ($details)');
+              }).toList(),
+            ),
         ],
       ),
     );
@@ -937,6 +966,26 @@ class _InvestigationsRaisedPageState extends State<InvestigationsRaisedPage> {
                   fontSize: 13.5, color: kcValueDark, height: 1.4),
             ),
           ),
+        ],
+      ),
+    );
+  }
+
+  /// One labelled free-text line for the "Facts Leading to the Incident"
+  /// block (points 4 & 5); shows an em dash when the value is blank.
+  Widget _factsLine(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(label,
+              style: const TextStyle(
+                  fontSize: 12, color: kcLabelGrey, fontWeight: FontWeight.w600)),
+          const SizedBox(height: 2),
+          Text(value.trim().isEmpty ? '—' : value,
+              style: const TextStyle(
+                  fontSize: 13.5, color: kcValueDark, height: 1.35)),
         ],
       ),
     );

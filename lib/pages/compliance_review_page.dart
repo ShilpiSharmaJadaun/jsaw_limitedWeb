@@ -5,7 +5,11 @@ import '../model/compliance_incident_model.dart';
 import '../service/compliance_service.dart';
 import '../utils/app_color.dart';
 import 'compliance_incident_detail_page.dart'
-    show complianceStatusColor, ComplianceIncidentDetailPage;
+    show
+        complianceStatusColor,
+        complianceStageColor,
+        complianceStageLabel,
+        ComplianceIncidentDetailPage;
 
 /// HOD review screen for one incident's compliance.
 ///
@@ -20,10 +24,15 @@ class ComplianceReviewPage extends StatefulWidget {
   /// null, it falls back to a stand-alone Scaffold (legacy pushed-route usage).
   final VoidCallback? onBack;
 
+  /// false = HOD "Compliance Review" (reopen individuals, Complete Review).
+  /// true  = Safety/HSE "Compliance Closure" (reopen individuals, final Close).
+  final bool closureMode;
+
   const ComplianceReviewPage({
     super.key,
     required this.incidentUniqueId,
     this.onBack,
+    this.closureMode = false,
   });
 
   @override
@@ -32,6 +41,9 @@ class ComplianceReviewPage extends StatefulWidget {
 
 class _ComplianceReviewPageState extends State<ComplianceReviewPage> {
   final ComplianceService _service = ComplianceService();
+
+  String get _modeTitle =>
+      widget.closureMode ? 'Compliance Closure' : 'Compliance Review';
   ComplianceReview? _review;
   ComplianceIncident? _detail; // full incident context (same as detail page)
   bool _loading = true;
@@ -97,7 +109,7 @@ class _ComplianceReviewPageState extends State<ComplianceReviewPage> {
       appBar: AppBar(
         backgroundColor: kcvoilet,
         foregroundColor: kcWhite,
-        title: Text('HOD Review · ${widget.incidentUniqueId}',
+        title: Text('$_modeTitle · ${widget.incidentUniqueId}',
             style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
         actions: [
           IconButton(
@@ -133,7 +145,7 @@ class _ComplianceReviewPageState extends State<ComplianceReviewPage> {
           const SizedBox(width: 4),
           Expanded(
             child: Text(
-              'HOD Review · ${widget.incidentUniqueId}',
+              '$_modeTitle · ${widget.incidentUniqueId}',
               overflow: TextOverflow.ellipsis,
               style: const TextStyle(
                 color: kcWhite,
@@ -179,7 +191,7 @@ class _ComplianceReviewPageState extends State<ComplianceReviewPage> {
 
     final review = _review!;
     final assignees = review.assignees;
-    final overallColor = complianceStatusColor(review.overallStatus);
+    final overallColor = complianceStageColor(review.overallStatus);
     return Stack(
       children: [
         Column(
@@ -279,7 +291,8 @@ class _ComplianceReviewPageState extends State<ComplianceReviewPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Overall: ${review.overallStatus}',
+                Text(
+                    'Status: ${complianceStageLabel(review.overallStatus, closureMode: widget.closureMode)}',
                     style: const TextStyle(
                         color: kcWhite,
                         fontSize: 16,
@@ -299,7 +312,7 @@ class _ComplianceReviewPageState extends State<ComplianceReviewPage> {
               border: Border.all(color: Colors.white.withOpacity(0.45)),
             ),
             child: Text(
-              review.canClose ? 'Ready to close' : 'Awaiting submissions',
+              _pillText(review),
               style: const TextStyle(
                   color: kcWhite, fontSize: 11.5, fontWeight: FontWeight.w700),
             ),
@@ -568,8 +581,36 @@ class _ComplianceReviewPageState extends State<ComplianceReviewPage> {
     );
   }
 
+  String _pillText(ComplianceReview review) {
+    final s = review.overallStatus.toUpperCase();
+    if (s == 'CLOSED') return 'Closed';
+    if (s == 'REVIEW_COMPLETED') {
+      return widget.closureMode
+          ? 'Ready to close'
+          : 'Review completed · with Safety team';
+    }
+    if (widget.closureMode) return 'Awaiting HOD review';
+    return review.canClose ? 'Ready to complete review' : 'Awaiting submissions';
+  }
+
   Widget _closeBar(ComplianceReview review) {
-    final canClose = review.canClose;
+    final canClose =
+        widget.closureMode ? review.canFinalClose : review.canClose;
+    final s = review.overallStatus.toUpperCase();
+    final String hint;
+    if (s == 'CLOSED') {
+      hint = 'This incident is closed.';
+    } else if (widget.closureMode) {
+      hint = canClose
+          ? 'HOD review is complete — you can close this incident, or reopen an employee above.'
+          : 'Close is disabled until the HOD completes the Compliance Review.';
+    } else if (s == 'REVIEW_COMPLETED') {
+      hint = 'Review completed — forwarded to the Safety team for closure.';
+    } else {
+      hint = canClose
+          ? 'All employees submitted — you can complete the review and forward to the Safety team.'
+          : 'Complete Review is disabled until every employee submits (and none are reopened).';
+    }
     return Container(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
       decoration: BoxDecoration(
@@ -589,17 +630,21 @@ class _ComplianceReviewPageState extends State<ComplianceReviewPage> {
             children: [
               Expanded(
                 child: Text(
-                  canClose
-                      ? 'All employees submitted — you can close this compliance.'
-                      : 'Close is disabled until every employee submits (and none are reopened).',
+                  hint,
                   style: const TextStyle(fontSize: 12.5, color: kcLabelGrey),
                 ),
               ),
               const SizedBox(width: 12),
               ElevatedButton.icon(
                 onPressed: (canClose && !_busy) ? _close : null,
-                icon: const Icon(Icons.lock_outline, size: 18),
-                label: const Text('Close Compliance'),
+                icon: Icon(
+                    widget.closureMode
+                        ? Icons.lock_outline
+                        : Icons.task_alt_outlined,
+                    size: 18),
+                label: Text(widget.closureMode
+                    ? 'Close Incident'
+                    : 'Complete Review'),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF16A34A),
                   foregroundColor: kcWhite,
@@ -656,6 +701,7 @@ class _ComplianceReviewPageState extends State<ComplianceReviewPage> {
         incidentUniqueId: widget.incidentUniqueId,
         empUnqId: a.empUnqId,
         reviewRemark: reason,
+        source: widget.closureMode ? 'SAFETY' : 'HOD',
       );
       if (!mounted) return;
       _snack(msg ?? 'Compliance reopened.');
@@ -673,9 +719,10 @@ class _ComplianceReviewPageState extends State<ComplianceReviewPage> {
       context: context,
       builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        title: const Text('Close Compliance'),
-        content: const Text(
-            'Close this compliance for all employees? This marks the incident CLOSED.'),
+        title: Text(widget.closureMode ? 'Close Incident' : 'Complete Review'),
+        content: Text(widget.closureMode
+            ? 'Close this incident? This marks the compliance CLOSED for all employees (final).'
+            : 'Complete the review? The incident will be marked REVIEW COMPLETED and forwarded to the Safety team for closure.'),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
@@ -686,7 +733,7 @@ class _ComplianceReviewPageState extends State<ComplianceReviewPage> {
             style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF16A34A),
                 foregroundColor: kcWhite),
-            child: const Text('Close'),
+            child: Text(widget.closureMode ? 'Close' : 'Complete'),
           ),
         ],
       ),
@@ -695,9 +742,11 @@ class _ComplianceReviewPageState extends State<ComplianceReviewPage> {
 
     setState(() => _busy = true);
     try {
-      final msg = await _service.closeCompliance(widget.incidentUniqueId);
+      final msg = widget.closureMode
+          ? await _service.finalCloseCompliance(widget.incidentUniqueId)
+          : await _service.closeCompliance(widget.incidentUniqueId);
       if (!mounted) return;
-      _snack(msg ?? 'Compliance closed.');
+      _snack(msg ?? (widget.closureMode ? 'Incident closed.' : 'Review completed.'));
       if (widget.onBack != null) {
         widget.onBack!();
       } else {

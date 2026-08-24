@@ -3,7 +3,8 @@ import 'package:flutter/material.dart';
 import '../model/compliance_api_models.dart';
 import '../service/compliance_service.dart';
 import '../utils/app_color.dart';
-import 'compliance_incident_detail_page.dart' show complianceStatusColor;
+import 'compliance_incident_detail_page.dart'
+    show complianceStageColor, complianceStageLabel;
 import 'compliance_review_page.dart';
 
 /// HOD Review — lists ALL compliance incidents; tap one to open its review
@@ -13,7 +14,10 @@ import 'compliance_review_page.dart';
 /// sees the full incident context (image, raised by, reporting date, overall
 /// status, how many employees are assigned) before opening a review.
 class ComplianceHodPage extends StatefulWidget {
-  const ComplianceHodPage({super.key});
+  /// false = "Compliance Review" (HOD: reopen individuals / Complete Review).
+  /// true  = "Compliance Closure" (Safety/HSE team: reopen individuals / Close).
+  final bool closureMode;
+  const ComplianceHodPage({super.key, this.closureMode = false});
 
   @override
   State<ComplianceHodPage> createState() => _ComplianceHodPageState();
@@ -27,7 +31,7 @@ class _ComplianceHodPageState extends State<ComplianceHodPage> {
   bool _loading = true;
   String? _error;
   String _query = '';
-  String _statusFilter = 'all'; // all | pending | closed
+  String _statusFilter = 'all'; // all | pending | review | closed
 
   // When set, the review screen is shown INLINE inside the app shell instead
   // of as a separate pushed route.
@@ -51,7 +55,9 @@ class _ComplianceHodPageState extends State<ComplianceHodPage> {
       _error = null;
     });
     try {
-      final list = await _service.getAllComplianceIncidents();
+      final list = widget.closureMode
+          ? await _service.getAllForClosure()
+          : await _service.getAllComplianceIncidents();
       if (!mounted) return;
       setState(() {
         _all = list;
@@ -73,7 +79,10 @@ class _ComplianceHodPageState extends State<ComplianceHodPage> {
     final s = c.status.toLowerCase();
     switch (_statusFilter) {
       case 'pending':
-        return s != 'closed'; // pending + submitted-but-not-yet-closed
+        // pending + submitted-but-not-yet-reviewed (HOD still has to act)
+        return s != 'closed' && s != 'review_completed';
+      case 'review':
+        return s == 'review_completed'; // HOD done, awaiting Safety closure
       case 'closed':
         return s == 'closed';
       default:
@@ -109,6 +118,7 @@ class _ComplianceHodPageState extends State<ComplianceHodPage> {
       return ComplianceReviewPage(
         incidentUniqueId: _reviewIncidentId!,
         onBack: _closeReview,
+        closureMode: widget.closureMode,
       );
     }
     return Container(
@@ -221,7 +231,12 @@ class _ComplianceHodPageState extends State<ComplianceHodPage> {
     final total = _all.length;
     // Pending = everything not yet closed by the HOD (includes incidents whose
     // assignees have all submitted — they wait here until the HOD closes them).
-    final pending = _countBy((c) => c.status.toLowerCase() != 'closed');
+    final pending = _countBy((c) {
+      final s = c.status.toLowerCase();
+      return s != 'closed' && s != 'review_completed';
+    });
+    final reviewed =
+        _countBy((c) => c.status.toLowerCase() == 'review_completed');
     final closed = _countBy((c) => c.status.toLowerCase() == 'closed');
     return Row(
       children: [
@@ -232,6 +247,14 @@ class _ComplianceHodPageState extends State<ComplianceHodPage> {
         Expanded(
             child: _statCard(Icons.pending_actions_outlined, 'Pending',
                 pending, kcStatAmber, 'pending')),
+        const SizedBox(width: 12),
+        Expanded(
+            child: _statCard(
+                Icons.fact_check_outlined,
+                widget.closureMode ? 'Awaiting Closure' : 'Review Completed',
+                reviewed,
+                kcStatPurple,
+                'review')),
         const SizedBox(width: 12),
         Expanded(
             child: _statCard(
@@ -311,7 +334,7 @@ class _ComplianceHodPageState extends State<ComplianceHodPage> {
 
   // -------------------------------------------------------------------- card
   Widget _card(ComplianceSummary c) {
-    final statusColor = complianceStatusColor(c.status); // overall status
+    final statusColor = complianceStageColor(c.status); // reviewer's stage
     return Container(
       margin: const EdgeInsets.only(bottom: 14),
       decoration: BoxDecoration(
@@ -344,7 +367,10 @@ class _ComplianceHodPageState extends State<ComplianceHodPage> {
                     Positioned(
                         left: 8,
                         top: 8,
-                        child: _statusBadge(c.status, statusColor)),
+                        child: _statusBadge(
+                            complianceStageLabel(c.status,
+                                closureMode: widget.closureMode),
+                            statusColor)),
                     Positioned(
                       right: 8,
                       bottom: 8,

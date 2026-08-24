@@ -20,6 +20,7 @@ import 'package:jsaw_limited/state/filterObservation_state.dart';
 import 'package:jsaw_limited/state/generateExcel_state.dart';
 import 'package:jsaw_limited/state/uniqueId_state.dart';
 import 'package:jsaw_limited/utils/app_color.dart';
+import 'package:jsaw_limited/utils/compact_date_range_picker.dart';
 import 'package:jsaw_limited/utils/progressive_image.dart';
 import 'package:lottie/lottie.dart';
 import 'package:provider/provider.dart';
@@ -97,7 +98,11 @@ class _ObservationPageState extends State<ObservationPage>
     final observationService =
     Provider.of<ObservationService>(context, listen: false);
     filterObservationBloc = FilterObservationBloc(observationService);
-    tabController = TabController(length: 4, vsync: this);
+    // The 4th tab (Edit Observation) exists only for HSE-team users; a
+    // hard-coded length of 4 threw "Controller's length (4) does not match
+    // the number of tabs (3)" for everyone else.
+    final isHse = html.window.localStorage.getItem('khseCode') == '1';
+    tabController = TabController(length: isHse ? 4 : 3, vsync: this);
     tabController.addListener(() => setState(() {}));
   }
 
@@ -670,65 +675,6 @@ class _AllObservationPageState extends State<AllObservationPage>
     status = '';
   }
 
-  // ─────────────────────────────────────────────────────────────────────────
-  // Date range field
-  // ─────────────────────────────────────────────────────────────────────────
-  Widget _buildDateRangeContainer(
-      String hintText, TextEditingController controller) {
-    return SizedBox(
-      height: 44,
-      child: TextFormField(
-        controller: controller,
-        style: const TextStyle(fontSize: 14, color: kcValueDark),
-        decoration: InputDecoration(
-          contentPadding:
-          const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-          hintText: hintText,
-          hintStyle: const TextStyle(color: kcLightGrey, fontSize: 14),
-          fillColor: kcWhite,
-          filled: true,
-          prefixIcon: const Icon(Icons.calendar_month_outlined,
-              size: 18, color: kcLightGrey),
-          enabledBorder: _inputBorder(),
-          focusedBorder: _focusedInputBorder(),
-        ),
-        readOnly: true,
-        onTap: () async {
-          final picked = await showDateRangePicker(
-            context: context,
-            firstDate: DateTime(2000),
-            lastDate: DateTime.now(),
-            builder: (ctx, child) => Theme(
-              data: Theme.of(ctx).copyWith(
-                colorScheme: Theme.of(ctx)
-                    .colorScheme
-                    .copyWith(primary: kcvoilet, onPrimary: kcWhite),
-              ),
-              child: child!,
-            ),
-            initialDateRange: startDateInput.text.isNotEmpty &&
-                endDateInput.text.isNotEmpty
-                ? DateTimeRange(
-                start: DateTime.parse(startDateInput.text),
-                end: DateTime.parse(endDateInput.text))
-                : DateTimeRange(
-                start:
-                DateTime.now().subtract(const Duration(days: 7)),
-                end: DateTime.now()),
-          );
-          if (picked != null) {
-            final fmt = DateFormat('yyyy-MM-dd');
-            setState(() {
-              startDateInput.text = fmt.format(picked.start);
-              fromDateInput.text = fmt.format(picked.start);
-              endDateInput.text = fmt.format(picked.end);
-            });
-          }
-        },
-      ),
-    );
-  }
-
   OutlineInputBorder _inputBorder() => OutlineInputBorder(
       borderRadius: BorderRadius.circular(8),
       borderSide: const BorderSide(width: 1, color: kcVeryLightGrey));
@@ -1214,11 +1160,11 @@ class _FilterDialog extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     _filterSection('Date Range', [
-                      _buildDateField(
-                          context, 'Start Date', startDateInput),
-                      const SizedBox(height: 8),
-                      _buildDateField(
-                          context, 'End Date', endDateInput),
+                      CompactDateRangeField(
+                        startController: startDateInput,
+                        endController: endDateInput,
+                        fromController: fromDateInput,
+                      ),
                     ]),
                     _filterSection('Location', [plantWidget, const SizedBox(height: 8), departWidget, const SizedBox(height: 8), locationWidget]),
                     _filterSection('Classification', [statusWidget, const SizedBox(height: 8), hazardWidget]),
@@ -1303,66 +1249,6 @@ class _FilterDialog extends StatelessWidget {
     );
   }
 
-  Widget _buildDateField(BuildContext context,
-      String hint, TextEditingController controller) {
-    return SizedBox(
-      height: 44,
-      child: TextFormField(
-        controller: controller,
-        style: const TextStyle(fontSize: 14, color: kcValueDark),
-        decoration: InputDecoration(
-          hintText: hint,
-          hintStyle:
-          const TextStyle(color: kcLightGrey, fontSize: 14),
-          prefixIcon: const Icon(Icons.calendar_month_outlined,
-              size: 18, color: kcLightGrey),
-          contentPadding:
-          const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-          filled: true,
-          fillColor: kcWhite,
-          enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
-              borderSide:
-              const BorderSide(width: 1, color: kcVeryLightGrey)),
-          focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
-              borderSide:
-              const BorderSide(width: 1.5, color: kcvoilet)),
-        ),
-        readOnly: true,
-        onTap: () async {
-          final picked = await showDateRangePicker(
-            context: context,
-            firstDate: DateTime(2000),
-            lastDate: DateTime.now(),
-            builder: (ctx, child) => Theme(
-              data: Theme.of(ctx).copyWith(
-                colorScheme: Theme.of(ctx)
-                    .colorScheme
-                    .copyWith(primary: kcvoilet, onPrimary: kcWhite),
-              ),
-              child: child!,
-            ),
-            initialDateRange: startDateInput.text.isNotEmpty &&
-                    endDateInput.text.isNotEmpty
-                ? DateTimeRange(
-                    start: DateTime.parse(startDateInput.text),
-                    end: DateTime.parse(endDateInput.text))
-                : DateTimeRange(
-                    start:
-                        DateTime.now().subtract(const Duration(days: 7)),
-                    end: DateTime.now()),
-          );
-          if (picked != null) {
-            final fmt = DateFormat('yyyy-MM-dd');
-            startDateInput.text = fmt.format(picked.start);
-            fromDateInput.text = fmt.format(picked.start);
-            endDateInput.text = fmt.format(picked.end);
-          }
-        },
-      ),
-    );
-  }
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

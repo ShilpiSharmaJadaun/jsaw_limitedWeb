@@ -131,7 +131,8 @@
       "PowerShell($c = Get-NetTCPConnection -LocalPort 5000 -State Listen -ErrorAction SilentlyContinue; if \\($c\\) { $procId = $c[0].OwningProcess; Get-Process -Id $procId | Select-Object Id,ProcessName,StartTime | Format-List; Stop-Process -Id $procId -Force -Confirm:$false; \"killed orphan $procId\" } else { \"port 5000 free\" })",
       "Bash([ -s \"$f\" ])",
       "PowerShell($c = Get-NetTCPConnection -LocalPort 5000 -State Listen -ErrorAction SilentlyContinue; if \\($c\\) { Stop-Process -Id $c[0].OwningProcess -Force -Confirm:$false; \"killed orphan\" } else { \"port free\" })",
-      "PowerShell($c = Get-NetTCPConnection -LocalPort 5000 -State Listen -ErrorAction SilentlyContinue; if \\($c\\) { Stop-Process -Id $c[0].OwningProcess -Force -Confirm:$false; \"killed orphan dev server\" } else { \"port free\" })"
+      "PowerShell($c = Get-NetTCPConnection -LocalPort 5000 -State Listen -ErrorAction SilentlyContinue; if \\($c\\) { Stop-Process -Id $c[0].OwningProcess -Force -Confirm:$false; \"killed orphan dev server\" } else { \"port free\" })",
+      "PowerShell($conns = Get-NetTCPConnection -LocalPort 5000 -State Listen -ErrorAction SilentlyContinue; $conns | ForEach-Object { $p = Get-Process -Id $_.OwningProcess -ErrorAction SilentlyContinue; \"$\\($_.OwningProcess\\) $\\($p.ProcessName\\)\"; Stop-Process -Id $_.OwningProcess -Force -Confirm:$false }; \"freed\")"
     ]
   },
   "disabledMcpjsonServers": [

@@ -14,6 +14,7 @@ import 'package:jsaw_limited/state/userwise_tablegraph_state.dart';
 import 'package:jsaw_limited/utils/app_color.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:jsaw_limited/utils/compact_date_range_picker.dart';
 
 class UserwiseGraphTable extends StatefulWidget {
   const UserwiseGraphTable({super.key});
@@ -23,6 +24,15 @@ class UserwiseGraphTable extends StatefulWidget {
 }
 
 class _UserwiseGraphTableState extends State<UserwiseGraphTable> {
+  // Attached to both the Scrollbar and its scroll view (web/desktop scroll
+  // views don't attach to the PrimaryScrollController).
+  final ScrollController _listScroll = ScrollController();
+
+  // Shared with the horizontal SingleChildScrollView below; a Scrollbar with
+  // thumbVisibility:true needs an attached controller (horizontal scroll views
+  // don't attach to the PrimaryScrollController) or it asserts every frame.
+  final ScrollController _hScroll = ScrollController();
+
 
   late UserWiseTableGraphBloc userWiseTableGraphBloc;
   late UserWiseTableExportBloc userWiseTableExportBloc;
@@ -36,6 +46,13 @@ class _UserwiseGraphTableState extends State<UserwiseGraphTable> {
   ValueNotifier<String> stat = ValueNotifier("");
 
   late String statCode = "";
+
+  @override
+  void dispose() {
+    _listScroll.dispose();
+    _hScroll.dispose();
+    super.dispose();
+  }
 
   @override
   void initState() {
@@ -154,7 +171,9 @@ class _UserwiseGraphTableState extends State<UserwiseGraphTable> {
         Expanded(
           child: Scrollbar(
             thumbVisibility: true,
+            controller: _hScroll,
             child: SingleChildScrollView(
+              controller: _hScroll,
               scrollDirection: Axis.horizontal,
               child: SizedBox(
                 width: 1090,
@@ -316,64 +335,6 @@ class _UserwiseGraphTableState extends State<UserwiseGraphTable> {
 
   //date
 
-  _buildDateRangeContainer(String hintText, TextEditingController controller) {
-    return Padding(
-      padding: const EdgeInsets.all(8.0),
-      child: SizedBox(
-        width: 300,
-        height: 40,
-        child: TextFormField(
-          controller: controller,
-          decoration: InputDecoration(
-            contentPadding: const EdgeInsets.all(8),
-            hintText: hintText,
-            fillColor: kcWhite,
-            suffixIcon: const Icon(
-              Icons.calendar_month,
-              size: 20.0,
-            ),
-            filled: true,
-            enabledBorder: _border(),
-            focusedBorder: _border(),
-          ),
-          readOnly: true,
-          onTap: hintText == "Start Date"
-              ? () async {
-            // Open a date range picker only for Start Date
-            DateTimeRange? pickedDateRange = await showDateRangePicker(
-              context: context,
-              firstDate: DateTime(2000),
-              lastDate: DateTime.now(),
-              initialDateRange: startDateInput.text.isNotEmpty &&
-                  endDateInput.text.isNotEmpty
-                  ? DateTimeRange(
-                start: DateTime.parse(startDateInput.text +" " +"00:00:00"),
-                end: DateTime.parse(endDateInput.text+" " + "23:59:59"),
-              )
-                  : DateTimeRange(
-                start: DateTime.now()
-                    .subtract(const Duration(days: 7)),
-                end: DateTime.now(),
-              ),
-            );
-
-            if (pickedDateRange != null) {
-              String formattedStartDate =
-              DateFormat('yyyy-MM-dd').format(pickedDateRange.start);
-              String formattedEndDate =
-              DateFormat('yyyy-MM-dd').format(pickedDateRange.end);
-
-              setState(() {
-                startDateInput.text = formattedStartDate;
-                endDateInput.text = formattedEndDate;
-              });
-            }
-          }
-              : null, // Do nothing for "End Date"
-        ),
-      ),
-    );
-  }
 
   Future<void> openFilterDialog() async {
 
@@ -398,8 +359,12 @@ class _UserwiseGraphTableState extends State<UserwiseGraphTable> {
                     "SELECT FILTERS",
                     style: TextStyle(fontWeight: FontWeight.bold),
                   ),
-                  _buildDateRangeContainer("Start Date", startDateInput),
-                  _buildDateRangeContainer("End Date", endDateInput),
+                  CompactDateRangeField(
+                    startController: startDateInput,
+                    endController: endDateInput,
+                    width: 300,
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  ),
                   _buildDepartment()
                 ],
               ),
@@ -616,7 +581,9 @@ class _UserwiseGraphTableState extends State<UserwiseGraphTable> {
                             );
                           }
                           return Scrollbar(
+                            controller: _listScroll,
                             child: ListView.separated(
+                              controller: _listScroll,
                               itemCount: list.length,
                               separatorBuilder: (_, __) => const Divider(
                                 height: 1,

@@ -11,6 +11,8 @@ import '../service/observation_service.dart';
 import '../utils/app_color.dart';
 import 'edit_investigation_page.dart';
 import 'employee_picker_dialog.dart';
+import 'inquired_with_picker_dialog.dart';
+import '../model/activeEmployeeLookup_model.dart';
 import 'image_picker.dart';
 
 class InvestigationTeamPage extends StatefulWidget {
@@ -118,6 +120,12 @@ class _InvestigationTeamPageState extends State<InvestigationTeamPage>
   // ---------- CAPA table state ----------
   List<_CapaRow> _capaRows = [];
   List<AllEmployeeModel> _allEmployees = [];
+
+  // ---------- Root Cause – Inquired With (point 6) ----------
+  List<ActiveEmployeeLookupModel> _activeLookup = [];
+  bool _loadingActiveLookup = false;
+  String? _activeLookupError;
+  List<ActiveEmployeeLookupModel> _inquiredWith = [];
   bool _loadingEmployees = false;
   String? _employeesError;
 
@@ -125,6 +133,13 @@ class _InvestigationTeamPageState extends State<InvestigationTeamPage>
   // (station table filtered by employee's DeptCode/StatCode/WrkGrp)
   final Map<String, String> _stationNameCache = {};
   final Set<String> _stationFetchInFlight = {};
+
+  // ---------- Facts Leading to the Incident (points 4 & 5) ----------
+  static const int _maxFactsChars = 1000;
+  final TextEditingController _machineryDetailsController =
+      TextEditingController();
+  final TextEditingController _activityBeforeIncidentController =
+      TextEditingController();
 
   // ---------- Root Cause inputs ----------
   static const int _maxRootCauses = 2;
@@ -141,6 +156,10 @@ class _InvestigationTeamPageState extends State<InvestigationTeamPage>
   // ---------- Associated Risk image ----------
   dynamic _associatedRiskImage;
   Uint8List? _associatedRiskBytes;
+  // Point 8: lets _resetForm() clear the picker's own preview after submit
+  // (same pattern as Incident Reporting / Register Observation).
+  final GlobalKey<ImagePickerPageState> _riskPhotoKey =
+      GlobalKey<ImagePickerPageState>();
 
   // ---------- Submit state ----------
   bool _submitting = false;
@@ -168,7 +187,7 @@ class _InvestigationTeamPageState extends State<InvestigationTeamPage>
           "${today.month.toString().padLeft(2, '0')}/"
           "${today.year}",
     );
-    _loadEmployees();
+    _loadEmployees(); // active-only lookup: CAPA engineer + Inquired With
     _loadAuthUsers();
     _loadUniqueIds();
   }
@@ -251,26 +270,64 @@ class _InvestigationTeamPageState extends State<InvestigationTeamPage>
     }
   }
 
+  /// Active employees (with station / grade / designation names) for the
+  /// "Root Cause – Inquired With" picker (point 6).
+  /// Single fetch of `employees/getActiveEmployeeLookup` feeding BOTH the
+  /// CAPA engineer picker (point 7: active only) and the "Inquired With"
+  /// picker (point 6).
   Future<void> _loadEmployees() async {
     setState(() {
       _loadingEmployees = true;
+      _loadingActiveLookup = true;
       _employeesError = null;
+      _activeLookupError = null;
     });
     try {
       final service =
           Provider.of<EmployeeReportingService>(context, listen: false);
-      final list = await service.getAllEmployee();
+      final list = await service.getActiveEmployeeLookup();
       if (!mounted) return;
       setState(() {
-        _allEmployees = list;
+        _activeLookup = list;
+        _allEmployees = list.map(_lookupToEmployee).toList();
+        _seedStationCache(list);
         _loadingEmployees = false;
+        _loadingActiveLookup = false;
       });
     } catch (e) {
       if (!mounted) return;
       setState(() {
         _loadingEmployees = false;
+        _loadingActiveLookup = false;
         _employeesError = e.toString();
+        _activeLookupError = e.toString().replaceFirst('Exception: ', '');
       });
+    }
+  }
+
+  /// Point 7: the CAPA engineer picker must list ACTIVE employees only.
+  /// The active lookup already carries dept/station/grade/designation, so we
+  /// map it onto the [AllEmployeeModel] shape the CAPA row expects and seed
+  /// the station-name cache from it (no per-pick stations/ call needed).
+  AllEmployeeModel _lookupToEmployee(ActiveEmployeeLookupModel e) =>
+      AllEmployeeModel(
+        empUnqId: e.empUnqId,
+        empName: e.empName,
+        active: 1,
+        desgCode: e.desgCode,
+        deptCode: e.deptCode,
+        wrkGrp: e.wrkGrp,
+        statCode: e.statCode,
+        gradeCode: e.gradeCode,
+      );
+
+  void _seedStationCache(List<ActiveEmployeeLookupModel> list) {
+    for (final e in list) {
+      if (e.deptCode.isEmpty || e.statCode.isEmpty || e.statName.isEmpty) {
+        continue;
+      }
+      _stationNameCache.putIfAbsent(
+          '${e.deptCode}|${e.statCode}', () => e.statName);
     }
   }
 
@@ -284,6 +341,8 @@ class _InvestigationTeamPageState extends State<InvestigationTeamPage>
     for (final c in _rootCauseControllers) {
       c.dispose();
     }
+    _machineryDetailsController.dispose();
+    _activityBeforeIncidentController.dispose();
     super.dispose();
   }
 
@@ -511,6 +570,15 @@ class _InvestigationTeamPageState extends State<InvestigationTeamPage>
       return;
     }
 
+    final machineryDetails = _machineryDetailsController.text.trim();
+    final activityBeforeIncident =
+        _activityBeforeIncidentController.text.trim();
+    if (activityBeforeIncident.isEmpty) {
+      _showSnack(
+          'Please describe what the injured person was doing just before and at the time of the occurrence');
+      return;
+    }
+
     final rootCauses = _rootCauseControllers
         .map((c) => c.text.trim())
         .where((s) => s.isNotEmpty)
@@ -519,6 +587,17 @@ class _InvestigationTeamPageState extends State<InvestigationTeamPage>
       _showSnack('Please enter at least one Root Cause');
       return;
     }
+
+    final inquiredWith = _inquiredWith
+        .map((e) => {
+              'empUnqId': e.empUnqId,
+              'empName': e.empName,
+              'deptCode': e.deptCode,
+              'statName': e.statName,
+              'gradeName': e.gradeName,
+              'desgName': e.desgName,
+            })
+        .toList();
 
     final capa = _capaRows.where(_isCapaRowValid).map((r) {
       return {
@@ -544,6 +623,9 @@ class _InvestigationTeamPageState extends State<InvestigationTeamPage>
         team: team,
         rootCauses: rootCauses,
         capa: capa,
+        machineryDetails: machineryDetails,
+        activityBeforeIncident: activityBeforeIncident,
+        inquiredWith: inquiredWith,
       );
       if (!mounted) return;
       Navigator.of(context, rootNavigator: true).pop(); // close processing dialog
@@ -568,6 +650,10 @@ class _InvestigationTeamPageState extends State<InvestigationTeamPage>
       }
       _rootCauseControllers = [TextEditingController()];
 
+      _machineryDetailsController.clear();
+      _activityBeforeIncidentController.clear();
+      _inquiredWith = [];
+
       for (final r in _capaRows) {
         r.dispose();
       }
@@ -578,6 +664,9 @@ class _InvestigationTeamPageState extends State<InvestigationTeamPage>
       _associatedRiskImage = null;
       _associatedRiskBytes = null;
     });
+    // Point 8: the ImagePickerPage keeps its own preview state — clear it too,
+    // otherwise the Hazard Register photo lingers after a successful submit.
+    _riskPhotoKey.currentState?.clearImage();
   }
 
   Future<void> _pickTargetDate(_CapaRow row) async {
@@ -687,7 +776,11 @@ class _InvestigationTeamPageState extends State<InvestigationTeamPage>
               child: _buildReportDateField(),
             ),
             const SizedBox(height: 20),
+            _buildFactsLeadingSection(),
+            const SizedBox(height: 20),
             _buildRootCauseInputs(),
+            const SizedBox(height: 20),
+            _buildInquiredWithSection(),
             const SizedBox(height: 20),
             _buildCapaTable(),
             const SizedBox(height: 20),
@@ -1574,6 +1667,7 @@ class _InvestigationTeamPageState extends State<InvestigationTeamPage>
           Padding(
             padding: const EdgeInsets.all(12),
             child: ImagePickerPage(
+              key: _riskPhotoKey,
               onImagePicked: (image, [bytes]) {
                 setState(() {
                   _associatedRiskImage = image;
@@ -1764,6 +1858,108 @@ class _InvestigationTeamPageState extends State<InvestigationTeamPage>
     );
   }
 
+  // ============== Facts Leading to the Incident (points 4 & 5) ==============
+
+  Widget _buildFactsLeadingSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: kcvoilet.withOpacity(0.12),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Icon(Icons.fact_check_outlined,
+                  color: kcvoilet, size: 18),
+            ),
+            const SizedBox(width: 10),
+            const Expanded(
+              child: Text(
+                'Facts Leading to the Incident or Dangerous Occurrence',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                  color: kcValueDark,
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        _factsField(
+          controller: _machineryDetailsController,
+          label:
+              'If caused by machinery, mention the name of the machine/equipment and the parts that caused the incident',
+          hint:
+              'Machine / equipment name and the parts involved (leave blank if not machinery related)',
+          required: false,
+        ),
+        const SizedBox(height: 12),
+        _factsField(
+          controller: _activityBeforeIncidentController,
+          label:
+              'What the Injured Person Was Doing Just Before and at the Time of the Occurrence',
+          hint:
+              'Describe the activity just before and at the time of the occurrence',
+          required: true,
+        ),
+      ],
+    );
+  }
+
+  Widget _factsField({
+    required TextEditingController controller,
+    required String label,
+    required String hint,
+    required bool required,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (required)
+              const Padding(
+                padding: EdgeInsets.only(right: 4),
+                child: Text('*',
+                    style: TextStyle(color: Colors.red, fontSize: 16)),
+              ),
+            Expanded(
+              child: Text(
+                label,
+                style: const TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: kcLabelGrey),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 6),
+        TextField(
+          controller: controller,
+          maxLines: 3,
+          minLines: 2,
+          maxLength: _maxFactsChars,
+          decoration: InputDecoration(
+            isDense: true,
+            hintText: hint,
+            hintStyle: const TextStyle(fontSize: 13, color: kcLightGrey),
+            counterStyle: const TextStyle(fontSize: 11, color: kcLabelGrey),
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+            border:
+                OutlineInputBorder(borderRadius: BorderRadius.circular(6)),
+          ),
+        ),
+      ],
+    );
+  }
+
   // ============== Root Cause Inputs ==============
 
   Widget _buildRootCauseInputs() {
@@ -1841,6 +2037,198 @@ class _InvestigationTeamPageState extends State<InvestigationTeamPage>
           ),
       ],
     );
+  }
+
+  // ============== Root Cause – Inquired With (point 6) ==============
+
+  Widget _buildInquiredWithSection() {
+    return Container(
+      decoration: BoxDecoration(
+        color: kcWhite,
+        border: Border.all(color: kcobservationgreen.withOpacity(0.35)),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Container(
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                colors: [kcobservationgreen, kcStatBlue],
+                begin: Alignment.centerLeft,
+                end: Alignment.centerRight,
+              ),
+              borderRadius: BorderRadius.only(
+                topLeft: Radius.circular(10),
+                topRight: Radius.circular(10),
+              ),
+            ),
+            padding:
+                const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            child: Row(
+              children: [
+                const Icon(Icons.person_search_outlined,
+                    color: kcWhite, size: 18),
+                const SizedBox(width: 8),
+                const Text(
+                  'Root Cause – Inquired With',
+                  style: TextStyle(
+                      color: kcWhite,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700),
+                ),
+                const SizedBox(width: 8),
+                const Text('(optional — add as many as needed)',
+                    style: TextStyle(color: cream, fontSize: 11)),
+                const Spacer(),
+                Text(
+                  '${_inquiredWith.length} selected',
+                  style: const TextStyle(
+                      color: kcWhite,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600),
+                ),
+              ],
+            ),
+          ),
+          if (_inquiredWith.isEmpty)
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+              child: Text(
+                'No employee added. Use "Add employee" to select who was inquired '
+                'while establishing the root cause (active employees only).',
+                style: TextStyle(fontSize: 12.5, color: kcLabelGrey),
+              ),
+            )
+          else
+            for (int i = 0; i < _inquiredWith.length; i++)
+              _buildInquiredWithRow(i),
+          Container(
+            padding:
+                const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            decoration: BoxDecoration(
+              color: kcDashboardBg2,
+              borderRadius: const BorderRadius.only(
+                bottomLeft: Radius.circular(10),
+                bottomRight: Radius.circular(10),
+              ),
+              border: Border(top: BorderSide(color: Colors.grey.shade300)),
+            ),
+            child: Align(
+              alignment: Alignment.centerRight,
+              child: ElevatedButton.icon(
+                onPressed: _addInquiredWith,
+                icon: const Icon(Icons.person_add_alt_1, size: 18),
+                label: const Text('Add employee'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: kcobservationgreen,
+                  foregroundColor: kcWhite,
+                  elevation: 0,
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 14, vertical: 8),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildInquiredWithRow(int index) {
+    final e = _inquiredWith[index];
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: index.isOdd ? kcDashboardBg1 : kcWhite,
+        border: Border(top: BorderSide(color: Colors.grey.shade200)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 28,
+            child: Text(
+              '${index + 1}.',
+              style: const TextStyle(
+                  fontWeight: FontWeight.w600, color: kcLabelGrey),
+            ),
+          ),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '${e.empUnqId} — ${e.empName}',
+                  style: const TextStyle(
+                      fontSize: 13.5,
+                      fontWeight: FontWeight.w700,
+                      color: kcValueDark),
+                ),
+                const SizedBox(height: 4),
+                Wrap(
+                  spacing: 16,
+                  runSpacing: 4,
+                  children: [
+                    _inquiredDetail('Station', e.statName),
+                    _inquiredDetail('Grade', e.gradeName),
+                    _inquiredDetail('Designation', e.desgName),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          _removeIconButton(
+            enabled: true,
+            tooltip: 'Remove',
+            onPressed: () => setState(() => _inquiredWith.removeAt(index)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// "Label: value" chip used for the auto-populated employee details.
+  Widget _inquiredDetail(String label, String value) {
+    return RichText(
+      text: TextSpan(
+        style: const TextStyle(fontSize: 12.5, color: kcValueDark),
+        children: [
+          TextSpan(
+              text: '$label: ',
+              style: const TextStyle(
+                  color: kcLabelGrey, fontWeight: FontWeight.w600)),
+          TextSpan(
+              text: value.trim().isEmpty ? '—' : value,
+              style: const TextStyle(fontWeight: FontWeight.w600)),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _addInquiredWith() async {
+    if (_loadingActiveLookup) {
+      _showSnack('Loading active employees, please wait…');
+      return;
+    }
+    if (_activeLookup.isEmpty) {
+      _showSnack(_activeLookupError == null
+          ? 'Active employee list is empty.'
+          : 'Could not load active employees: $_activeLookupError');
+      return;
+    }
+    final picked = await showDialog<ActiveEmployeeLookupModel>(
+      context: context,
+      builder: (_) => InquiredWithPickerDialog(
+        employees: _activeLookup,
+        alreadySelected: _inquiredWith.map((e) => e.empUnqId).toSet(),
+      ),
+    );
+    if (picked == null || !mounted) return;
+    setState(() => _inquiredWith.add(picked));
   }
 
   // ============== CAPA Table ==============

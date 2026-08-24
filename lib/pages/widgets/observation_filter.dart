@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:jsaw_limited/utils/app_color.dart';
+import 'package:jsaw_limited/utils/compact_date_range_picker.dart';
 
 /// Shared filter UI for the observation tabs (Received / Raised / All) so every
 /// tab uses one identical design theme. Extracted from the All Observation tab.
@@ -290,9 +291,11 @@ class ObservationFilterDialog extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     _filterSection('Date Range', [
-                      _buildDateField(context, 'Start Date', startDateInput),
-                      const SizedBox(height: 8),
-                      _buildDateField(context, 'End Date', endDateInput),
+                      CompactDateRangeField(
+                        startController: startDateInput,
+                        endController: endDateInput,
+                        fromController: fromDateInput,
+                      ),
                     ]),
                     _filterSection('Location', [
                       plantWidget,
@@ -379,60 +382,4 @@ class ObservationFilterDialog extends StatelessWidget {
     );
   }
 
-  Widget _buildDateField(
-      BuildContext context, String hint, TextEditingController controller) {
-    return SizedBox(
-      height: 44,
-      child: TextFormField(
-        controller: controller,
-        style: const TextStyle(fontSize: 14, color: kcValueDark),
-        decoration: InputDecoration(
-          hintText: hint,
-          hintStyle: const TextStyle(color: kcLightGrey, fontSize: 14),
-          prefixIcon: const Icon(Icons.calendar_month_outlined,
-              size: 18, color: kcLightGrey),
-          contentPadding:
-              const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-          filled: true,
-          fillColor: kcWhite,
-          enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
-              borderSide: const BorderSide(width: 1, color: kcVeryLightGrey)),
-          focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
-              borderSide: const BorderSide(width: 1.5, color: kcvoilet)),
-        ),
-        readOnly: true,
-        onTap: () async {
-          final picked = await showDateRangePicker(
-            context: context,
-            firstDate: DateTime(2000),
-            lastDate: DateTime.now(),
-            builder: (ctx, child) => Theme(
-              data: Theme.of(ctx).copyWith(
-                colorScheme: Theme.of(ctx)
-                    .colorScheme
-                    .copyWith(primary: kcvoilet, onPrimary: kcWhite),
-              ),
-              child: child!,
-            ),
-            initialDateRange: startDateInput.text.isNotEmpty &&
-                    endDateInput.text.isNotEmpty
-                ? DateTimeRange(
-                    start: DateTime.parse(startDateInput.text),
-                    end: DateTime.parse(endDateInput.text))
-                : DateTimeRange(
-                    start: DateTime.now().subtract(const Duration(days: 7)),
-                    end: DateTime.now()),
-          );
-          if (picked != null) {
-            final fmt = DateFormat('yyyy-MM-dd');
-            startDateInput.text = fmt.format(picked.start);
-            fromDateInput.text = fmt.format(picked.start);
-            endDateInput.text = fmt.format(picked.end);
-          }
-        },
-      ),
-    );
-  }
 }

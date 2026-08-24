@@ -417,7 +417,7 @@ class _ComplianceIncidentPageState extends State<ComplianceIncidentPage> {
                                 color: kcLabelGrey,
                                 letterSpacing: 0.2)),
                         const Spacer(),
-                        _overallChip(c.status),
+                        _overallChip(complianceStatusLabel(c.status)),
                       ],
                     ),
                     const SizedBox(height: 6),

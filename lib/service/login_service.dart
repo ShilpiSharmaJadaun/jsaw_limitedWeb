@@ -24,23 +24,27 @@ class LoginService {
       final response = await http.post(Uri.parse(url), body: json.encode(data), headers: headers);
       final responseBody = json.decode(response.body);
       if (responseBody["status"] == true) {
-        window.localStorage.setItem('kEmployeename', responseBody['model']['empName']);
-        window.localStorage.setItem('kEmployeeCode', responseBody['model']['empUnqId']);
-        window.localStorage.setItem('kEmployeePassStatus', responseBody['model']['empPassStatus'].toString());
-        window.localStorage.setItem('kUserEmail', responseBody['model']['email'].toString());
-        //window.localStorage.setItem('kstatCode', responseBody['model']['desgCode'].toString());
-        window.localStorage.setItem('kstatCode', responseBody['model']['statCode'].toString());
-        window.localStorage.setItem('kdeptCode', responseBody['model']['deptCode'].toString());
-        window.localStorage.setItem('kDesgnCode', responseBody['model']['desgCode'].toString());
-        window.localStorage.setItem('kDesignationName', responseBody['model']['designationName']?.toString() ?? '');
-        window.localStorage.setItem('kGradeCode', responseBody['model']['gradeCode'].toString());
-        window.localStorage.setItem('khseCode', responseBody['model']['hseteamAuthorization'].toString());
-        window.localStorage.setItem('kempAuthPlantHead', responseBody['model']['employeeAuthorizationForPlantUnitHead'].toString());
-        window.localStorage.setItem('kreporting', responseBody['model']['reporting'].toString());
-        window.localStorage.setItem('kResetPasswordAuth', responseBody['model']['resetPasswordAuth'].toString());
-        window.localStorage.setItem('kAuthToken', responseBody['model']['token']?.toString() ?? '');
+        // Null-safe: several Employees columns (EmpName, Email, StatCode, …)
+        // can be NULL for real accounts; a bare `as String` here threw
+        // "type 'Null' is not a subtype of type 'String'" at login.
+        final model = (responseBody['model'] as Map?) ?? const {};
+        String str(String key) => model[key]?.toString() ?? '';
+        window.localStorage.setItem('kEmployeename', str('empName'));
+        window.localStorage.setItem('kEmployeeCode', str('empUnqId'));
+        window.localStorage.setItem('kEmployeePassStatus', str('empPassStatus'));
+        window.localStorage.setItem('kUserEmail', str('email'));
+        window.localStorage.setItem('kstatCode', str('statCode'));
+        window.localStorage.setItem('kdeptCode', str('deptCode'));
+        window.localStorage.setItem('kDesgnCode', str('desgCode'));
+        window.localStorage.setItem('kDesignationName', str('designationName'));
+        window.localStorage.setItem('kGradeCode', str('gradeCode'));
+        window.localStorage.setItem('khseCode', str('hseteamAuthorization'));
+        window.localStorage.setItem('kempAuthPlantHead', str('employeeAuthorizationForPlantUnitHead'));
+        window.localStorage.setItem('kreporting', str('reporting'));
+        window.localStorage.setItem('kResetPasswordAuth', str('resetPasswordAuth'));
+        window.localStorage.setItem('kAuthToken', str('token'));
         // 'M' = medical officer (Employees.OfficerType) — gates the Medical Officer Response page.
-        window.localStorage.setItem('kOfficerType', responseBody['model']['officerType']?.toString() ?? '');
+        window.localStorage.setItem('kOfficerType', str('officerType'));
 
         // Cache the user's investigation roles so the drawer shows the right pages.
         try {

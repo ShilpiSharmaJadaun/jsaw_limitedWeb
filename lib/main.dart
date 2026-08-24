@@ -153,19 +153,19 @@ class MyApp extends StatelessWidget {
                 child: RegisterObservationPage(),
               ),
               '/incident-tracking': (context) => const CommonNavigationPage(
-                title: 'Incident Tracking',
+                title: 'Incident Reporting',
                 child: IncidentReportingPage(),
               ),
               '/medical-officer-response': (context) => const CommonNavigationPage(
-                title: 'Medical Officer Response',
+                title: 'Medical Assessment',
                 child: MedicalOfficerResponsePage(),
               ),
               '/safety-remark-form': (context) => const CommonNavigationPage(
-                title: 'Safety Remark Form',
+                title: 'Safety Observation',
                 child: SafetyRemarkResponsePage(),
               ),
               '/investigation-form': (context) => const CommonNavigationPage(
-                title: 'Investigation Form',
+                title: 'Investigation Details',
                 child: InvestigationTeamPage(),
               ),
               '/approval-queue': (context) => const CommonNavigationPage(

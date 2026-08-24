@@ -12,6 +12,8 @@ import '../service/incident_service.dart';
 import '../service/observation_service.dart';
 import '../utils/app_color.dart';
 import 'employee_picker_dialog.dart';
+import 'inquired_with_picker_dialog.dart';
+import '../model/activeEmployeeLookup_model.dart';
 
 /// Edit screen for an existing investigation report.
 /// Wired to investigationReport/updateInvestigationReport (multipart).
@@ -43,6 +45,11 @@ class _EditInvestigationPageState extends State<EditInvestigationPage> {
   // ---------- Root Causes ----------
   List<TextEditingController> _rootCauseControllers = [];
 
+  // ---------- Facts Leading to the Incident (points 4 & 5) ----------
+  static const int _maxFactsChars = 1000;
+  late final TextEditingController _machineryDetailsController;
+  late final TextEditingController _activityBeforeIncidentController;
+
   // ---------- CAPA ----------
   List<_CapaDraft> _capa = [];
 
@@ -56,6 +63,12 @@ class _EditInvestigationPageState extends State<EditInvestigationPage> {
   // ---------- Lookup state (employees + departments) ----------
   List<AllEmployeeModel> _allEmployees = [];
   bool _loadingEmployees = false;
+
+  // ---------- Root Cause – Inquired With (point 6) ----------
+  List<ActiveEmployeeLookupModel> _activeLookup = [];
+  bool _loadingActiveLookup = false;
+  String? _activeLookupError;
+  List<_InquiredDraft> _inquiredWith = [];
 
   // "deptCode|statCode" -> statName, for CAPA "Resp. Station" lookup
   // (station table filtered by employee's DeptCode/StatCode/WrkGrp)
@@ -88,6 +101,22 @@ class _EditInvestigationPageState extends State<EditInvestigationPage> {
       _rootCauseControllers = [TextEditingController()];
     }
 
+    _machineryDetailsController =
+        TextEditingController(text: r.machineryDetails);
+    _activityBeforeIncidentController =
+        TextEditingController(text: r.activityBeforeIncident);
+
+    _inquiredWith = r.inquiredWith
+        .map((i) => _InquiredDraft(
+              empUnqId: i.empUnqId,
+              empName: i.empName,
+              deptCode: i.deptCode,
+              statName: i.statName,
+              gradeName: i.gradeName,
+              desgName: i.desgName,
+            ))
+        .toList();
+
     _capa = r.capa
         .map((c) => _CapaDraft(
               id: c.id,
@@ -102,7 +131,7 @@ class _EditInvestigationPageState extends State<EditInvestigationPage> {
         .toList();
     if (_capa.isEmpty) _capa.add(_CapaDraft.empty());
 
-    _loadEmployees();
+    _loadEmployees(); // active-only lookup: CAPA engineer + Inquired With
   }
 
   String _normaliseDate(String input) {
@@ -116,32 +145,95 @@ class _EditInvestigationPageState extends State<EditInvestigationPage> {
     return input;
   }
 
+  /// Active employees (with station / grade / designation names) for the
+  /// "Root Cause – Inquired With" picker (point 6).
+  /// Single fetch of `employees/getActiveEmployeeLookup` feeding BOTH the
+  /// CAPA engineer picker (point 7: active only) and the "Inquired With"
+  /// picker (point 6).
   Future<void> _loadEmployees() async {
-    setState(() => _loadingEmployees = true);
+    setState(() {
+      _loadingEmployees = true;
+      _loadingActiveLookup = true;
+      _activeLookupError = null;
+    });
     try {
       final service =
           Provider.of<EmployeeReportingService>(context, listen: false);
-      final list = await service.getAllEmployee();
+      final list = await service.getActiveEmployeeLookup();
       if (!mounted) return;
       setState(() {
-        _allEmployees = list;
+        _activeLookup = list;
+        _allEmployees = list.map(_lookupToEmployee).toList();
+        _seedStationCache(list);
         _loadingEmployees = false;
+        _loadingActiveLookup = false;
       });
       // Existing CAPA rows only carry respDeptCode from the backend; resolve
       // each row's StatCode/WrkGrp from the employee record so the station
-      // name can be looked up, same as a freshly-picked employee.
-      for (final row in _capa) {
-        if (row.empCode.isEmpty || row.statCode.isNotEmpty) continue;
-        final match = _allEmployees.where((e) => e.empUnqId == row.empCode);
-        if (match.isEmpty) continue;
-        final emp = match.first;
-        row.statCode = emp.statCode;
-        row.wrkGrp = emp.wrkGrp;
-        _ensureStationName(emp);
+      // name can be shown, same as a freshly-picked employee.
+      final unresolved = _backfillCapaRows(_allEmployees);
+      // An engineer picked on an older report may have gone INACTIVE since;
+      // they are not in the active lookup, so fall back to the full employee
+      // list once, purely to display their station (they cannot be picked
+      // again — the picker stays active-only).
+      if (unresolved.isNotEmpty) {
+        final all = await service.getAllEmployee();
+        if (!mounted) return;
+        _backfillCapaRows(all);
       }
-    } catch (_) {
+    } catch (e) {
       if (!mounted) return;
-      setState(() => _loadingEmployees = false);
+      setState(() {
+        _loadingEmployees = false;
+        _loadingActiveLookup = false;
+        _activeLookupError = e.toString().replaceFirst('Exception: ', '');
+      });
+    }
+  }
+
+  /// Fills statCode/wrkGrp on CAPA rows from [source]; returns the rows that
+  /// could not be matched.
+  List<_CapaDraft> _backfillCapaRows(List<AllEmployeeModel> source) {
+    final unresolved = <_CapaDraft>[];
+    for (final row in _capa) {
+      if (row.empCode.isEmpty || row.statCode.isNotEmpty) continue;
+      final match = source.where((e) => e.empUnqId == row.empCode);
+      if (match.isEmpty) {
+        unresolved.add(row);
+        continue;
+      }
+      final emp = match.first;
+      row.statCode = emp.statCode;
+      row.wrkGrp = emp.wrkGrp;
+      _ensureStationName(emp);
+    }
+    if (mounted) setState(() {});
+    return unresolved;
+  }
+
+  /// Point 7: the CAPA engineer picker must list ACTIVE employees only.
+  /// The active lookup already carries dept/station/grade/designation, so we
+  /// map it onto the [AllEmployeeModel] shape the CAPA row expects and seed
+  /// the station-name cache from it (no per-pick stations/ call needed).
+  AllEmployeeModel _lookupToEmployee(ActiveEmployeeLookupModel e) =>
+      AllEmployeeModel(
+        empUnqId: e.empUnqId,
+        empName: e.empName,
+        active: 1,
+        desgCode: e.desgCode,
+        deptCode: e.deptCode,
+        wrkGrp: e.wrkGrp,
+        statCode: e.statCode,
+        gradeCode: e.gradeCode,
+      );
+
+  void _seedStationCache(List<ActiveEmployeeLookupModel> list) {
+    for (final e in list) {
+      if (e.deptCode.isEmpty || e.statCode.isEmpty || e.statName.isEmpty) {
+        continue;
+      }
+      _stationNameCache.putIfAbsent(
+          '${e.deptCode}|${e.statCode}', () => e.statName);
     }
   }
 
@@ -234,6 +326,8 @@ class _EditInvestigationPageState extends State<EditInvestigationPage> {
     for (final c in _rootCauseControllers) {
       c.dispose();
     }
+    _machineryDetailsController.dispose();
+    _activityBeforeIncidentController.dispose();
     for (final c in _capa) {
       c.dispose();
     }
@@ -356,6 +450,28 @@ class _EditInvestigationPageState extends State<EditInvestigationPage> {
       return;
     }
 
+    // Validate Facts Leading to the Incident (point 5 is mandatory)
+    final machineryDetails = _machineryDetailsController.text.trim();
+    final activityBeforeIncident =
+        _activityBeforeIncidentController.text.trim();
+    if (activityBeforeIncident.isEmpty) {
+      _showSnack(
+          'Describe what the injured person was doing just before and at the time of the occurrence.');
+      return;
+    }
+
+    // Root Cause – Inquired With (optional)
+    final inquiredPayload = _inquiredWith
+        .map((e) => {
+              'empUnqId': e.empUnqId,
+              'empName': e.empName,
+              'deptCode': e.deptCode,
+              'statName': e.statName,
+              'gradeName': e.gradeName,
+              'desgName': e.desgName,
+            })
+        .toList();
+
     // Validate CAPA
     final capaPayload = <Map<String, dynamic>>[];
     for (final c in _capa) {
@@ -421,6 +537,9 @@ class _EditInvestigationPageState extends State<EditInvestigationPage> {
         team: teamPayload,
         rootCauses: rootPayload,
         capa: capaPayload,
+        machineryDetails: machineryDetails,
+        activityBeforeIncident: activityBeforeIncident,
+        inquiredWith: inquiredPayload,
         newImageBytes: newImage,
         clearImage: clearImage,
       );
@@ -531,7 +650,11 @@ class _EditInvestigationPageState extends State<EditInvestigationPage> {
                       const SizedBox(height: 20),
                       _teamCard(),
                       const SizedBox(height: 20),
+                      _factsCard(),
+                      const SizedBox(height: 20),
                       _rootCauseCard(),
+                      const SizedBox(height: 20),
+                      _inquiredWithCard(),
                       const SizedBox(height: 20),
                       _capaCard(),
                       const SizedBox(height: 28),
@@ -927,6 +1050,76 @@ class _EditInvestigationPageState extends State<EditInvestigationPage> {
     );
   }
 
+  // ---------- Facts Leading to the Incident (points 4 & 5) ----------
+  Widget _factsCard() {
+    return _sectionContainer(
+      title: 'Facts Leading to the Incident or Dangerous Occurrence',
+      icon: Icons.fact_check_outlined,
+      accent: kcvoilet,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _factsField(
+            controller: _machineryDetailsController,
+            label:
+                'If caused by machinery, mention the name of the machine/equipment and the parts that caused the incident',
+            hint:
+                'Machine / equipment name and the parts involved (leave blank if not machinery related)',
+            required: false,
+          ),
+          const SizedBox(height: 12),
+          _factsField(
+            controller: _activityBeforeIncidentController,
+            label:
+                'What the Injured Person Was Doing Just Before and at the Time of the Occurrence',
+            hint:
+                'Describe the activity just before and at the time of the occurrence',
+            required: true,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _factsField({
+    required TextEditingController controller,
+    required String label,
+    required String hint,
+    required bool required,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (required)
+              const Padding(
+                padding: EdgeInsets.only(right: 4),
+                child: Text('*',
+                    style: TextStyle(color: Colors.red, fontSize: 16)),
+              ),
+            Expanded(
+              child: Text(label,
+                  style: const TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: kcLabelGrey)),
+            ),
+          ],
+        ),
+        const SizedBox(height: 6),
+        TextField(
+          controller: controller,
+          maxLines: 3,
+          minLines: 2,
+          maxLength: _maxFactsChars,
+          decoration: _inputDecoration(hint),
+        ),
+      ],
+    );
+  }
+
   // ---------- Root Causes ----------
   Widget _rootCauseCard() {
     final canAdd = _rootCauseControllers.length < _maxRootCauses &&
@@ -985,6 +1178,147 @@ class _EditInvestigationPageState extends State<EditInvestigationPage> {
         ],
       ),
     );
+  }
+
+  // ---------- Root Cause – Inquired With (point 6) ----------
+  Widget _inquiredWithCard() {
+    return _sectionContainer(
+      title: 'Root Cause – Inquired With',
+      icon: Icons.person_search_outlined,
+      accent: kcobservationgreen,
+      trailing: Text(
+        '${_inquiredWith.length} selected · optional',
+        style: const TextStyle(
+            fontSize: 12, color: kcLabelGrey, fontWeight: FontWeight.w600),
+      ),
+      action: ElevatedButton.icon(
+        onPressed: _addInquiredWith,
+        icon: const Icon(Icons.person_add_alt_1, size: 18),
+        label: const Text('Add employee'),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: kcobservationgreen,
+          foregroundColor: kcWhite,
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        ),
+      ),
+      child: _inquiredWith.isEmpty
+          ? const Text(
+              'No employee added. Use "Add employee" to select who was inquired '
+              'while establishing the root cause (active employees only).',
+              style: TextStyle(fontSize: 12.5, color: kcLabelGrey),
+            )
+          : Column(
+              children: [
+                for (int i = 0; i < _inquiredWith.length; i++)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 10),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        SizedBox(
+                          width: 28,
+                          child: Text('${i + 1}.',
+                              style: const TextStyle(
+                                  fontWeight: FontWeight.w700,
+                                  color: kcLabelGrey)),
+                        ),
+                        Expanded(
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 12, vertical: 10),
+                            decoration: BoxDecoration(
+                              color: kcWhite,
+                              border:
+                                  Border.all(color: Colors.grey.shade300),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  '${_inquiredWith[i].empUnqId} — ${_inquiredWith[i].empName}',
+                                  style: const TextStyle(
+                                      fontSize: 13.5,
+                                      fontWeight: FontWeight.w700,
+                                      color: kcValueDark),
+                                ),
+                                const SizedBox(height: 4),
+                                Wrap(
+                                  spacing: 16,
+                                  runSpacing: 4,
+                                  children: [
+                                    _inquiredDetail(
+                                        'Station', _inquiredWith[i].statName),
+                                    _inquiredDetail(
+                                        'Grade', _inquiredWith[i].gradeName),
+                                    _inquiredDetail('Designation',
+                                        _inquiredWith[i].desgName),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        _removeButton(
+                          enabled: true,
+                          tooltip: 'Remove',
+                          onPressed: () =>
+                              setState(() => _inquiredWith.removeAt(i)),
+                        ),
+                      ],
+                    ),
+                  ),
+              ],
+            ),
+    );
+  }
+
+  Widget _inquiredDetail(String label, String value) {
+    return RichText(
+      text: TextSpan(
+        style: const TextStyle(fontSize: 12.5, color: kcValueDark),
+        children: [
+          TextSpan(
+              text: '$label: ',
+              style: const TextStyle(
+                  color: kcLabelGrey, fontWeight: FontWeight.w600)),
+          TextSpan(
+              text: value.trim().isEmpty ? '—' : value,
+              style: const TextStyle(fontWeight: FontWeight.w600)),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _addInquiredWith() async {
+    if (_loadingActiveLookup) {
+      _showSnack('Loading active employees, please wait…');
+      return;
+    }
+    if (_activeLookup.isEmpty) {
+      _showSnack(_activeLookupError == null
+          ? 'Active employee list is empty.'
+          : 'Could not load active employees: $_activeLookupError');
+      return;
+    }
+    final picked = await showDialog<ActiveEmployeeLookupModel>(
+      context: context,
+      builder: (_) => InquiredWithPickerDialog(
+        employees: _activeLookup,
+        alreadySelected: _inquiredWith.map((e) => e.empUnqId).toSet(),
+      ),
+    );
+    if (picked == null || !mounted) return;
+    setState(() => _inquiredWith.add(_InquiredDraft(
+          empUnqId: picked.empUnqId,
+          empName: picked.empName,
+          deptCode: picked.deptCode,
+          statName: picked.statName,
+          gradeName: picked.gradeName,
+          desgName: picked.desgName,
+        )));
   }
 
   // ---------- CAPA ----------
@@ -1388,6 +1722,24 @@ class _HeaderCell extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Draft row for "Root Cause – Inquired With" (point 6).
+class _InquiredDraft {
+  final String empUnqId;
+  final String empName;
+  final String deptCode;
+  final String statName;
+  final String gradeName;
+  final String desgName;
+  const _InquiredDraft({
+    required this.empUnqId,
+    required this.empName,
+    this.deptCode = '',
+    this.statName = '',
+    this.gradeName = '',
+    this.desgName = '',
+  });
 }
 
 class _TeamDraft {

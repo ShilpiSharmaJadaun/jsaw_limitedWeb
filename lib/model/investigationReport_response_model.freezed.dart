@@ -27,13 +27,19 @@ mixin _$InvestigationReportResponse {
   String get reportDate => throw _privateConstructorUsedError;
   String get associatedRiskImageUrl => throw _privateConstructorUsedError;
   String get lowQualityImageUrl => throw _privateConstructorUsedError;
-  String get highQualityImageUrl => throw _privateConstructorUsedError;
+  String get highQualityImageUrl =>
+      throw _privateConstructorUsedError; // Facts Leading to the Incident or Dangerous Occurrence (points 4 & 5)
+  String get machineryDetails => throw _privateConstructorUsedError;
+  String get activityBeforeIncident => throw _privateConstructorUsedError;
   String get raisedDate => throw _privateConstructorUsedError;
   String get updatedDate => throw _privateConstructorUsedError;
   List<InvestigationTeamItem> get team => throw _privateConstructorUsedError;
   List<InvestigationRootCauseItem> get rootCauses =>
       throw _privateConstructorUsedError;
-  List<InvestigationCapaItem> get capa => throw _privateConstructorUsedError;
+  List<InvestigationCapaItem> get capa =>
+      throw _privateConstructorUsedError; // Root Cause – Inquired With (point 6)
+  List<InvestigationInquiredWithItem> get inquiredWith =>
+      throw _privateConstructorUsedError;
 
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
   @JsonKey(ignore: true)
@@ -57,11 +63,14 @@ abstract class $InvestigationReportResponseCopyWith<$Res> {
       String associatedRiskImageUrl,
       String lowQualityImageUrl,
       String highQualityImageUrl,
+      String machineryDetails,
+      String activityBeforeIncident,
       String raisedDate,
       String updatedDate,
       List<InvestigationTeamItem> team,
       List<InvestigationRootCauseItem> rootCauses,
-      List<InvestigationCapaItem> capa});
+      List<InvestigationCapaItem> capa,
+      List<InvestigationInquiredWithItem> inquiredWith});
 }
 
 /// @nodoc
@@ -85,11 +94,14 @@ class _$InvestigationReportResponseCopyWithImpl<$Res,
     Object? associatedRiskImageUrl = null,
     Object? lowQualityImageUrl = null,
     Object? highQualityImageUrl = null,
+    Object? machineryDetails = null,
+    Object? activityBeforeIncident = null,
     Object? raisedDate = null,
     Object? updatedDate = null,
     Object? team = null,
     Object? rootCauses = null,
     Object? capa = null,
+    Object? inquiredWith = null,
   }) {
     return _then(_value.copyWith(
       id: null == id
@@ -120,6 +132,14 @@ class _$InvestigationReportResponseCopyWithImpl<$Res,
           ? _value.highQualityImageUrl
           : highQualityImageUrl // ignore: cast_nullable_to_non_nullable
               as String,
+      machineryDetails: null == machineryDetails
+          ? _value.machineryDetails
+          : machineryDetails // ignore: cast_nullable_to_non_nullable
+              as String,
+      activityBeforeIncident: null == activityBeforeIncident
+          ? _value.activityBeforeIncident
+          : activityBeforeIncident // ignore: cast_nullable_to_non_nullable
+              as String,
       raisedDate: null == raisedDate
           ? _value.raisedDate
           : raisedDate // ignore: cast_nullable_to_non_nullable
@@ -140,6 +160,10 @@ class _$InvestigationReportResponseCopyWithImpl<$Res,
           ? _value.capa
           : capa // ignore: cast_nullable_to_non_nullable
               as List<InvestigationCapaItem>,
+      inquiredWith: null == inquiredWith
+          ? _value.inquiredWith
+          : inquiredWith // ignore: cast_nullable_to_non_nullable
+              as List<InvestigationInquiredWithItem>,
     ) as $Val);
   }
 }
@@ -161,11 +185,14 @@ abstract class _$$InvestigationReportResponseImplCopyWith<$Res>
       String associatedRiskImageUrl,
       String lowQualityImageUrl,
       String highQualityImageUrl,
+      String machineryDetails,
+      String activityBeforeIncident,
       String raisedDate,
       String updatedDate,
       List<InvestigationTeamItem> team,
       List<InvestigationRootCauseItem> rootCauses,
-      List<InvestigationCapaItem> capa});
+      List<InvestigationCapaItem> capa,
+      List<InvestigationInquiredWithItem> inquiredWith});
 }
 
 /// @nodoc
@@ -188,11 +215,14 @@ class __$$InvestigationReportResponseImplCopyWithImpl<$Res>
     Object? associatedRiskImageUrl = null,
     Object? lowQualityImageUrl = null,
     Object? highQualityImageUrl = null,
+    Object? machineryDetails = null,
+    Object? activityBeforeIncident = null,
     Object? raisedDate = null,
     Object? updatedDate = null,
     Object? team = null,
     Object? rootCauses = null,
     Object? capa = null,
+    Object? inquiredWith = null,
   }) {
     return _then(_$InvestigationReportResponseImpl(
       id: null == id
@@ -223,6 +253,14 @@ class __$$InvestigationReportResponseImplCopyWithImpl<$Res>
           ? _value.highQualityImageUrl
           : highQualityImageUrl // ignore: cast_nullable_to_non_nullable
               as String,
+      machineryDetails: null == machineryDetails
+          ? _value.machineryDetails
+          : machineryDetails // ignore: cast_nullable_to_non_nullable
+              as String,
+      activityBeforeIncident: null == activityBeforeIncident
+          ? _value.activityBeforeIncident
+          : activityBeforeIncident // ignore: cast_nullable_to_non_nullable
+              as String,
       raisedDate: null == raisedDate
           ? _value.raisedDate
           : raisedDate // ignore: cast_nullable_to_non_nullable
@@ -243,6 +281,10 @@ class __$$InvestigationReportResponseImplCopyWithImpl<$Res>
           ? _value._capa
           : capa // ignore: cast_nullable_to_non_nullable
               as List<InvestigationCapaItem>,
+      inquiredWith: null == inquiredWith
+          ? _value._inquiredWith
+          : inquiredWith // ignore: cast_nullable_to_non_nullable
+              as List<InvestigationInquiredWithItem>,
     ));
   }
 }
@@ -259,14 +301,18 @@ class _$InvestigationReportResponseImpl
       this.associatedRiskImageUrl = "",
       this.lowQualityImageUrl = "",
       this.highQualityImageUrl = "",
+      this.machineryDetails = "",
+      this.activityBeforeIncident = "",
       this.raisedDate = "",
       this.updatedDate = "",
       final List<InvestigationTeamItem> team = const [],
       final List<InvestigationRootCauseItem> rootCauses = const [],
-      final List<InvestigationCapaItem> capa = const []})
+      final List<InvestigationCapaItem> capa = const [],
+      final List<InvestigationInquiredWithItem> inquiredWith = const []})
       : _team = team,
         _rootCauses = rootCauses,
-        _capa = capa;
+        _capa = capa,
+        _inquiredWith = inquiredWith;
 
   factory _$InvestigationReportResponseImpl.fromJson(
           Map<String, dynamic> json) =>
@@ -293,6 +339,13 @@ class _$InvestigationReportResponseImpl
   @override
   @JsonKey()
   final String highQualityImageUrl;
+// Facts Leading to the Incident or Dangerous Occurrence (points 4 & 5)
+  @override
+  @JsonKey()
+  final String machineryDetails;
+  @override
+  @JsonKey()
+  final String activityBeforeIncident;
   @override
   @JsonKey()
   final String raisedDate;
@@ -326,9 +379,20 @@ class _$InvestigationReportResponseImpl
     return EqualUnmodifiableListView(_capa);
   }
 
+// Root Cause – Inquired With (point 6)
+  final List<InvestigationInquiredWithItem> _inquiredWith;
+// Root Cause – Inquired With (point 6)
+  @override
+  @JsonKey()
+  List<InvestigationInquiredWithItem> get inquiredWith {
+    if (_inquiredWith is EqualUnmodifiableListView) return _inquiredWith;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableListView(_inquiredWith);
+  }
+
   @override
   String toString() {
-    return 'InvestigationReportResponse(id: $id, incidentReportId: $incidentReportId, incidentUniqueId: $incidentUniqueId, reportDate: $reportDate, associatedRiskImageUrl: $associatedRiskImageUrl, lowQualityImageUrl: $lowQualityImageUrl, highQualityImageUrl: $highQualityImageUrl, raisedDate: $raisedDate, updatedDate: $updatedDate, team: $team, rootCauses: $rootCauses, capa: $capa)';
+    return 'InvestigationReportResponse(id: $id, incidentReportId: $incidentReportId, incidentUniqueId: $incidentUniqueId, reportDate: $reportDate, associatedRiskImageUrl: $associatedRiskImageUrl, lowQualityImageUrl: $lowQualityImageUrl, highQualityImageUrl: $highQualityImageUrl, machineryDetails: $machineryDetails, activityBeforeIncident: $activityBeforeIncident, raisedDate: $raisedDate, updatedDate: $updatedDate, team: $team, rootCauses: $rootCauses, capa: $capa, inquiredWith: $inquiredWith)';
   }
 
   @override
@@ -349,6 +413,10 @@ class _$InvestigationReportResponseImpl
                 other.lowQualityImageUrl == lowQualityImageUrl) &&
             (identical(other.highQualityImageUrl, highQualityImageUrl) ||
                 other.highQualityImageUrl == highQualityImageUrl) &&
+            (identical(other.machineryDetails, machineryDetails) ||
+                other.machineryDetails == machineryDetails) &&
+            (identical(other.activityBeforeIncident, activityBeforeIncident) ||
+                other.activityBeforeIncident == activityBeforeIncident) &&
             (identical(other.raisedDate, raisedDate) ||
                 other.raisedDate == raisedDate) &&
             (identical(other.updatedDate, updatedDate) ||
@@ -356,7 +424,9 @@ class _$InvestigationReportResponseImpl
             const DeepCollectionEquality().equals(other._team, _team) &&
             const DeepCollectionEquality()
                 .equals(other._rootCauses, _rootCauses) &&
-            const DeepCollectionEquality().equals(other._capa, _capa));
+            const DeepCollectionEquality().equals(other._capa, _capa) &&
+            const DeepCollectionEquality()
+                .equals(other._inquiredWith, _inquiredWith));
   }
 
   @JsonKey(ignore: true)
@@ -370,11 +440,14 @@ class _$InvestigationReportResponseImpl
       associatedRiskImageUrl,
       lowQualityImageUrl,
       highQualityImageUrl,
+      machineryDetails,
+      activityBeforeIncident,
       raisedDate,
       updatedDate,
       const DeepCollectionEquality().hash(_team),
       const DeepCollectionEquality().hash(_rootCauses),
-      const DeepCollectionEquality().hash(_capa));
+      const DeepCollectionEquality().hash(_capa),
+      const DeepCollectionEquality().hash(_inquiredWith));
 
   @JsonKey(ignore: true)
   @override
@@ -401,11 +474,14 @@ abstract class _InvestigationReportResponse
           final String associatedRiskImageUrl,
           final String lowQualityImageUrl,
           final String highQualityImageUrl,
+          final String machineryDetails,
+          final String activityBeforeIncident,
           final String raisedDate,
           final String updatedDate,
           final List<InvestigationTeamItem> team,
           final List<InvestigationRootCauseItem> rootCauses,
-          final List<InvestigationCapaItem> capa}) =
+          final List<InvestigationCapaItem> capa,
+          final List<InvestigationInquiredWithItem> inquiredWith}) =
       _$InvestigationReportResponseImpl;
 
   factory _InvestigationReportResponse.fromJson(Map<String, dynamic> json) =
@@ -425,6 +501,10 @@ abstract class _InvestigationReportResponse
   String get lowQualityImageUrl;
   @override
   String get highQualityImageUrl;
+  @override // Facts Leading to the Incident or Dangerous Occurrence (points 4 & 5)
+  String get machineryDetails;
+  @override
+  String get activityBeforeIncident;
   @override
   String get raisedDate;
   @override
@@ -435,6 +515,8 @@ abstract class _InvestigationReportResponse
   List<InvestigationRootCauseItem> get rootCauses;
   @override
   List<InvestigationCapaItem> get capa;
+  @override // Root Cause – Inquired With (point 6)
+  List<InvestigationInquiredWithItem> get inquiredWith;
   @override
   @JsonKey(ignore: true)
   _$$InvestigationReportResponseImplCopyWith<_$InvestigationReportResponseImpl>
@@ -1100,5 +1182,312 @@ abstract class _InvestigationCapaItem implements InvestigationCapaItem {
   @override
   @JsonKey(ignore: true)
   _$$InvestigationCapaItemImplCopyWith<_$InvestigationCapaItemImpl>
+      get copyWith => throw _privateConstructorUsedError;
+}
+
+InvestigationInquiredWithItem _$InvestigationInquiredWithItemFromJson(
+    Map<String, dynamic> json) {
+  return _InvestigationInquiredWithItem.fromJson(json);
+}
+
+/// @nodoc
+mixin _$InvestigationInquiredWithItem {
+  int get id => throw _privateConstructorUsedError;
+  int get seq => throw _privateConstructorUsedError;
+  String get empUnqId => throw _privateConstructorUsedError;
+  String get empName => throw _privateConstructorUsedError;
+  String get deptCode => throw _privateConstructorUsedError;
+  String get statName => throw _privateConstructorUsedError;
+  String get gradeName => throw _privateConstructorUsedError;
+  String get desgName => throw _privateConstructorUsedError;
+
+  Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
+  @JsonKey(ignore: true)
+  $InvestigationInquiredWithItemCopyWith<InvestigationInquiredWithItem>
+      get copyWith => throw _privateConstructorUsedError;
+}
+
+/// @nodoc
+abstract class $InvestigationInquiredWithItemCopyWith<$Res> {
+  factory $InvestigationInquiredWithItemCopyWith(
+          InvestigationInquiredWithItem value,
+          $Res Function(InvestigationInquiredWithItem) then) =
+      _$InvestigationInquiredWithItemCopyWithImpl<$Res,
+          InvestigationInquiredWithItem>;
+  @useResult
+  $Res call(
+      {int id,
+      int seq,
+      String empUnqId,
+      String empName,
+      String deptCode,
+      String statName,
+      String gradeName,
+      String desgName});
+}
+
+/// @nodoc
+class _$InvestigationInquiredWithItemCopyWithImpl<$Res,
+        $Val extends InvestigationInquiredWithItem>
+    implements $InvestigationInquiredWithItemCopyWith<$Res> {
+  _$InvestigationInquiredWithItemCopyWithImpl(this._value, this._then);
+
+  // ignore: unused_field
+  final $Val _value;
+  // ignore: unused_field
+  final $Res Function($Val) _then;
+
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? id = null,
+    Object? seq = null,
+    Object? empUnqId = null,
+    Object? empName = null,
+    Object? deptCode = null,
+    Object? statName = null,
+    Object? gradeName = null,
+    Object? desgName = null,
+  }) {
+    return _then(_value.copyWith(
+      id: null == id
+          ? _value.id
+          : id // ignore: cast_nullable_to_non_nullable
+              as int,
+      seq: null == seq
+          ? _value.seq
+          : seq // ignore: cast_nullable_to_non_nullable
+              as int,
+      empUnqId: null == empUnqId
+          ? _value.empUnqId
+          : empUnqId // ignore: cast_nullable_to_non_nullable
+              as String,
+      empName: null == empName
+          ? _value.empName
+          : empName // ignore: cast_nullable_to_non_nullable
+              as String,
+      deptCode: null == deptCode
+          ? _value.deptCode
+          : deptCode // ignore: cast_nullable_to_non_nullable
+              as String,
+      statName: null == statName
+          ? _value.statName
+          : statName // ignore: cast_nullable_to_non_nullable
+              as String,
+      gradeName: null == gradeName
+          ? _value.gradeName
+          : gradeName // ignore: cast_nullable_to_non_nullable
+              as String,
+      desgName: null == desgName
+          ? _value.desgName
+          : desgName // ignore: cast_nullable_to_non_nullable
+              as String,
+    ) as $Val);
+  }
+}
+
+/// @nodoc
+abstract class _$$InvestigationInquiredWithItemImplCopyWith<$Res>
+    implements $InvestigationInquiredWithItemCopyWith<$Res> {
+  factory _$$InvestigationInquiredWithItemImplCopyWith(
+          _$InvestigationInquiredWithItemImpl value,
+          $Res Function(_$InvestigationInquiredWithItemImpl) then) =
+      __$$InvestigationInquiredWithItemImplCopyWithImpl<$Res>;
+  @override
+  @useResult
+  $Res call(
+      {int id,
+      int seq,
+      String empUnqId,
+      String empName,
+      String deptCode,
+      String statName,
+      String gradeName,
+      String desgName});
+}
+
+/// @nodoc
+class __$$InvestigationInquiredWithItemImplCopyWithImpl<$Res>
+    extends _$InvestigationInquiredWithItemCopyWithImpl<$Res,
+        _$InvestigationInquiredWithItemImpl>
+    implements _$$InvestigationInquiredWithItemImplCopyWith<$Res> {
+  __$$InvestigationInquiredWithItemImplCopyWithImpl(
+      _$InvestigationInquiredWithItemImpl _value,
+      $Res Function(_$InvestigationInquiredWithItemImpl) _then)
+      : super(_value, _then);
+
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? id = null,
+    Object? seq = null,
+    Object? empUnqId = null,
+    Object? empName = null,
+    Object? deptCode = null,
+    Object? statName = null,
+    Object? gradeName = null,
+    Object? desgName = null,
+  }) {
+    return _then(_$InvestigationInquiredWithItemImpl(
+      id: null == id
+          ? _value.id
+          : id // ignore: cast_nullable_to_non_nullable
+              as int,
+      seq: null == seq
+          ? _value.seq
+          : seq // ignore: cast_nullable_to_non_nullable
+              as int,
+      empUnqId: null == empUnqId
+          ? _value.empUnqId
+          : empUnqId // ignore: cast_nullable_to_non_nullable
+              as String,
+      empName: null == empName
+          ? _value.empName
+          : empName // ignore: cast_nullable_to_non_nullable
+              as String,
+      deptCode: null == deptCode
+          ? _value.deptCode
+          : deptCode // ignore: cast_nullable_to_non_nullable
+              as String,
+      statName: null == statName
+          ? _value.statName
+          : statName // ignore: cast_nullable_to_non_nullable
+              as String,
+      gradeName: null == gradeName
+          ? _value.gradeName
+          : gradeName // ignore: cast_nullable_to_non_nullable
+              as String,
+      desgName: null == desgName
+          ? _value.desgName
+          : desgName // ignore: cast_nullable_to_non_nullable
+              as String,
+    ));
+  }
+}
+
+/// @nodoc
+@JsonSerializable()
+class _$InvestigationInquiredWithItemImpl
+    implements _InvestigationInquiredWithItem {
+  const _$InvestigationInquiredWithItemImpl(
+      {this.id = 0,
+      this.seq = 0,
+      this.empUnqId = "",
+      this.empName = "",
+      this.deptCode = "",
+      this.statName = "",
+      this.gradeName = "",
+      this.desgName = ""});
+
+  factory _$InvestigationInquiredWithItemImpl.fromJson(
+          Map<String, dynamic> json) =>
+      _$$InvestigationInquiredWithItemImplFromJson(json);
+
+  @override
+  @JsonKey()
+  final int id;
+  @override
+  @JsonKey()
+  final int seq;
+  @override
+  @JsonKey()
+  final String empUnqId;
+  @override
+  @JsonKey()
+  final String empName;
+  @override
+  @JsonKey()
+  final String deptCode;
+  @override
+  @JsonKey()
+  final String statName;
+  @override
+  @JsonKey()
+  final String gradeName;
+  @override
+  @JsonKey()
+  final String desgName;
+
+  @override
+  String toString() {
+    return 'InvestigationInquiredWithItem(id: $id, seq: $seq, empUnqId: $empUnqId, empName: $empName, deptCode: $deptCode, statName: $statName, gradeName: $gradeName, desgName: $desgName)';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType &&
+            other is _$InvestigationInquiredWithItemImpl &&
+            (identical(other.id, id) || other.id == id) &&
+            (identical(other.seq, seq) || other.seq == seq) &&
+            (identical(other.empUnqId, empUnqId) ||
+                other.empUnqId == empUnqId) &&
+            (identical(other.empName, empName) || other.empName == empName) &&
+            (identical(other.deptCode, deptCode) ||
+                other.deptCode == deptCode) &&
+            (identical(other.statName, statName) ||
+                other.statName == statName) &&
+            (identical(other.gradeName, gradeName) ||
+                other.gradeName == gradeName) &&
+            (identical(other.desgName, desgName) ||
+                other.desgName == desgName));
+  }
+
+  @JsonKey(ignore: true)
+  @override
+  int get hashCode => Object.hash(runtimeType, id, seq, empUnqId, empName,
+      deptCode, statName, gradeName, desgName);
+
+  @JsonKey(ignore: true)
+  @override
+  @pragma('vm:prefer-inline')
+  _$$InvestigationInquiredWithItemImplCopyWith<
+          _$InvestigationInquiredWithItemImpl>
+      get copyWith => __$$InvestigationInquiredWithItemImplCopyWithImpl<
+          _$InvestigationInquiredWithItemImpl>(this, _$identity);
+
+  @override
+  Map<String, dynamic> toJson() {
+    return _$$InvestigationInquiredWithItemImplToJson(
+      this,
+    );
+  }
+}
+
+abstract class _InvestigationInquiredWithItem
+    implements InvestigationInquiredWithItem {
+  const factory _InvestigationInquiredWithItem(
+      {final int id,
+      final int seq,
+      final String empUnqId,
+      final String empName,
+      final String deptCode,
+      final String statName,
+      final String gradeName,
+      final String desgName}) = _$InvestigationInquiredWithItemImpl;
+
+  factory _InvestigationInquiredWithItem.fromJson(Map<String, dynamic> json) =
+      _$InvestigationInquiredWithItemImpl.fromJson;
+
+  @override
+  int get id;
+  @override
+  int get seq;
+  @override
+  String get empUnqId;
+  @override
+  String get empName;
+  @override
+  String get deptCode;
+  @override
+  String get statName;
+  @override
+  String get gradeName;
+  @override
+  String get desgName;
+  @override
+  @JsonKey(ignore: true)
+  _$$InvestigationInquiredWithItemImplCopyWith<
+          _$InvestigationInquiredWithItemImpl>
       get copyWith => throw _privateConstructorUsedError;
 }

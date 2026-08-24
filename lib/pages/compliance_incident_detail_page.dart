@@ -162,7 +162,7 @@ class ComplianceIncidentDetailPage extends StatelessWidget {
           ),
           const SizedBox(width: 4),
           const Text(
-            'Compliance Incident',
+            'Compliance Action',
             style: TextStyle(
               color: kcWhite,
               fontSize: 16,
@@ -265,9 +265,28 @@ class ComplianceIncidentDetailPage extends StatelessWidget {
           children: inv.team.map(_personChip).toList(),
         ),
         const SizedBox(height: 14),
+        _subLabel('Facts Leading to the Incident or Dangerous Occurrence'),
+        _longText(
+            'If caused by machinery — machine/equipment and parts involved',
+            inv.machineryDetails),
+        _longText(
+            'What the injured person was doing just before and at the time of the occurrence',
+            inv.activityBeforeIncident),
+        const SizedBox(height: 14),
         _subLabel('Root Cause Analysis'),
         const SizedBox(height: 6),
         ..._numbered(inv.rootCauses),
+        const SizedBox(height: 14),
+        _subLabel('Root Cause – Inquired With'),
+        const SizedBox(height: 6),
+        if (inv.inquiredWith.isEmpty)
+          const Text('—', style: TextStyle(color: kcLabelGrey))
+        else
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: inv.inquiredWith.map(_inquiredChip).toList(),
+          ),
       ],
     );
   }
@@ -354,11 +373,11 @@ class ComplianceIncidentDetailPage extends StatelessWidget {
   Widget _investigationAttachmentBody(
       BuildContext context, InvestigationDetail inv) {
     if (inv.attachmentName.isEmpty && inv.attachmentImageUrl == null) {
-      return _emptyHint('No image was uploaded in the Investigation Form.');
+      return _emptyHint('No image was uploaded in the Investigation Details form.');
     }
     return _imageTile(
       context,
-      label: 'Uploaded while submitting the Investigation Form',
+      label: 'Uploaded while submitting the Investigation Details form',
       url: inv.attachmentImageUrl,
       fileName:
           inv.attachmentName.isEmpty ? 'investigation.jpg' : inv.attachmentName,
@@ -569,6 +588,40 @@ class ComplianceIncidentDetailPage extends StatelessWidget {
     ];
   }
 
+  /// Chip for a "Root Cause – Inquired With" employee: code — name on the
+  /// first line, station · grade · designation beneath.
+  Widget _inquiredChip(InquiredWithRef p) {
+    final details = [
+      if (p.statName.trim().isNotEmpty) p.statName,
+      if (p.gradeName.trim().isNotEmpty) p.gradeName,
+      if (p.desgName.trim().isNotEmpty) p.desgName,
+    ].join(' · ');
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+      decoration: BoxDecoration(
+        color: kcDashboardBg2,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.grey.shade200),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            '${p.empCode} — ${p.empName}',
+            style: const TextStyle(
+                fontSize: 12.5,
+                fontWeight: FontWeight.w700,
+                color: kcValueDark),
+          ),
+          if (details.isNotEmpty)
+            Text(details,
+                style: const TextStyle(fontSize: 11.5, color: kcLabelGrey)),
+        ],
+      ),
+    );
+  }
+
   Widget _personChip(PersonRef p) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
@@ -670,12 +723,69 @@ Color complianceStatusColor(String status) {
       return kcStatGreen;
     case 'reopen':
       return kcInfoFir;
+    case 'review_completed':
+    case 'review completed':
     case 'in progress':
       return kcStatPurple;
     case 'pending':
       return kcStatAmber;
     default:
       return kcLabelGrey;
+  }
+}
+
+/// Human label for a compliance / investigation status code.
+/// REVIEW_COMPLETED = HOD finished the Compliance Review, awaiting the
+/// Safety/HSE team's final closure (customer workflow, Aug-2026).
+/// Stage label for the HOD / Safety-team LISTS and review banner. The raw
+/// overall status COMPLETE only means "every employee has submitted" — from
+/// the reviewer's point of view that incident is still PENDING their action,
+/// so it must not read as "Complete" in those screens.
+String complianceStageLabel(String status, {bool closureMode = false}) {
+  switch (status.trim().toUpperCase()) {
+    case 'PENDING':
+      return 'Pending · awaiting submissions';
+    case 'COMPLETE':
+      return closureMode ? 'Pending · awaiting HOD review' : 'Pending Review';
+    case 'REVIEW_COMPLETED':
+      return closureMode ? 'Awaiting Closure' : 'Review Completed';
+    case 'CLOSED':
+      return 'Closed';
+    default:
+      return complianceStatusLabel(status);
+  }
+}
+
+/// Colour matching [complianceStageLabel] (everything not yet reviewed is
+/// amber, reviewed-but-open is purple, closed is green).
+Color complianceStageColor(String status) {
+  switch (status.trim().toUpperCase()) {
+    case 'PENDING':
+    case 'COMPLETE':
+      return kcStatAmber;
+    case 'REVIEW_COMPLETED':
+      return kcStatPurple;
+    case 'CLOSED':
+      return kcStatGreen;
+    default:
+      return complianceStatusColor(status);
+  }
+}
+
+String complianceStatusLabel(String status) {
+  switch (status.trim().toUpperCase()) {
+    case 'REVIEW_COMPLETED':
+      return 'Review Completed';
+    case 'PENDING':
+      return 'Pending';
+    case 'COMPLETE':
+      return 'Complete';
+    case 'CLOSED':
+      return 'Closed';
+    case 'REOPEN':
+      return 'Reopen';
+    default:
+      return status;
   }
 }
 
@@ -1131,8 +1241,13 @@ class _ComplianceSubmitSectionState extends State<_ComplianceSubmitSection> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('Reopened by HOD',
-                    style: TextStyle(
+                Text(
+                    (widget.incident.mySubmission?.reopenSource ?? '')
+                                .toUpperCase() ==
+                            'SAFETY'
+                        ? 'Reopened by Safety Team'
+                        : 'Reopened by HOD',
+                    style: const TextStyle(
                         fontWeight: FontWeight.w800,
                         color: kcInfoFir,
                         fontSize: 13)),

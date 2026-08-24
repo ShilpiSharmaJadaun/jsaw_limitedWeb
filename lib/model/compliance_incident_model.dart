@@ -29,6 +29,22 @@ class PersonRef {
   });
 }
 
+/// Root Cause – Inquired With (point 6): employee + auto-populated details.
+class InquiredWithRef {
+  final String empCode;
+  final String empName;
+  final String statName;
+  final String gradeName;
+  final String desgName;
+  const InquiredWithRef({
+    required this.empCode,
+    required this.empName,
+    this.statName = '',
+    this.gradeName = '',
+    this.desgName = '',
+  });
+}
+
 /// A single CAPA action row (corrective / suppressive / preventive).
 class CapaAction {
   final String action;
@@ -127,6 +143,13 @@ class InvestigationDetail {
   final String reportDate;
   final List<String> rootCauses;
 
+  /// Facts Leading to the Incident or Dangerous Occurrence (points 4 & 5).
+  final String machineryDetails;
+  final String activityBeforeIncident;
+
+  /// Root Cause – Inquired With (point 6). Optional, any number.
+  final List<InquiredWithRef> inquiredWith;
+
   // CAPA — three categories per the compliance spec.
   final List<CapaAction> correctiveActions;
   final List<CapaAction> suppressiveActions;
@@ -145,6 +168,9 @@ class InvestigationDetail {
     required this.team,
     required this.reportDate,
     required this.rootCauses,
+    this.machineryDetails = '',
+    this.activityBeforeIncident = '',
+    this.inquiredWith = const [],
     required this.correctiveActions,
     required this.suppressiveActions,
     required this.preventiveActions,
@@ -193,14 +219,16 @@ class MyComplianceSubmission {
   final String remark;
   final String imageUrl;
   final String status;       // COMPLETE / REOPEN / CLOSED
-  final String reviewRemark; // HOD reject reason, if reopened
+  final String reviewRemark; // reopen reason, if reopened
   final String submittedDate;
+  final String reopenSource; // who reopened: HOD | SAFETY
   const MyComplianceSubmission({
     this.remark = '',
     this.imageUrl = '',
     this.status = '',
     this.reviewRemark = '',
     this.submittedDate = '',
+    this.reopenSource = '',
   });
 }
 

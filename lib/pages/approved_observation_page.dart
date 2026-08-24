@@ -44,6 +44,8 @@ import '../utils/app_color.dart';
 import 'package:web/web.dart' as html;
 import 'approve_observation_Detail_page.dart';
 import 'package:web/web.dart' show window;
+import 'package:jsaw_limited/utils/compact_date_range_picker.dart';
+import 'package:jsaw_limited/utils/employee_picker.dart';
 
 
 class ApprovedObservationPage extends StatefulWidget {
@@ -893,56 +895,7 @@ class _ApprovedObservationPageState extends State<ApprovedObservationPage> {
 
   //date
 
-  _buildDateRangeContainer(String hintText, TextEditingController controller,) {
-    return SizedBox(
-      width: 300,
-      height: 40,
-      child: TextFormField(
-        controller: controller,  // Use the existing startController
-        decoration: InputDecoration(
-          contentPadding: const EdgeInsets.all(8),
-          hintText: hintText, // Hint text to show before selection
-          fillColor: kcWhite,
-          suffixIcon: const Icon(
-            Icons.calendar_month, size: 20.0,
-          ),
-          filled: true,
-          enabledBorder: _border(),
-          focusedBorder: _border(),
-        ),
-        readOnly: true,
-        onTap: () async {
-          // Open a date range picker for selecting the start and end dates
-          DateTimeRange? pickedDateRange = await showDateRangePicker(
-            context: context,
-            firstDate: DateTime(2000),
-            lastDate: DateTime.now(),
-            initialDateRange: startDateInput.text.isNotEmpty && endDateInput.text.isNotEmpty
-                ? DateTimeRange(
-              start: DateTime.parse(startDateInput.text),
-              end: DateTime.parse(endDateInput.text),
-            )
-                : DateTimeRange(
-              start: DateTime.now().subtract(const Duration(days: 7)),
-              end: DateTime.now(),
-            ),
-          );
-
-          if (pickedDateRange != null) {
-            String formattedStartDate = DateFormat('yyyy-MM-dd').format(pickedDateRange.start);
-            String formattedEndDate = DateFormat('yyyy-MM-dd').format(pickedDateRange.end);
-
-            setState(() {
-              // Set the start and end date inputs
-              startDateInput.text = formattedStartDate;
-              fromDateInput.text = formattedStartDate;// Display as "start to end"
-              endDateInput.text = formattedEndDate; // Optionally, save end date separately if needed
-            });
-          }
-        },
-      ),
-    );
-  } _border() => OutlineInputBorder(
+  _border() => OutlineInputBorder(
       borderRadius: BorderRadius.circular(8),
       borderSide: const BorderSide(width: 2, color: kcWhite));
 
@@ -1788,91 +1741,19 @@ class _ApprovedObservationPageState extends State<ApprovedObservationPage> {
 
   }
 
-  Future<void> _buildResponsibilityDialog(List<EmployeeResponsibilityModel> responsibilityModel) {
-    final responsibilityListNotifier = responsibilitySearchableListNotifier(responsibilityModel);
-    return showDialog(
-        context: context,
-        builder: (context) {
-          return AlertDialog(
-            shape: const RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(5))),
-            title: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  "Select or search Responsibility",
-                  style:
-                  TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-                ),
-                TextFormField(
-                  onChanged: responsibilityListNotifier.filterBasedOn,
-                  decoration: const InputDecoration(
-                      hintText: "search here...",
-                      prefixIcon: Icon(
-                        Icons.search,
-                        color: kcLightGrey,
-                      )),
-                )
-              ],
-            ),
-            content: SizedBox(
-                width: 210,
-                height: 800,
-                child:ValueListenableBuilder<List<EmployeeResponsibilityModel>>(
-                    valueListenable: responsibilityListNotifier,
-                    builder: (context, list, widget){
-                      return ListView.builder(
-                          itemCount: list.length,
-                          shrinkWrap: true,
-                          itemBuilder: (context, index) {
-                            return Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                InkWell(
-                                  onTap: () {
-                                    responsibility.value = list[index].empName;
-                                    responsibleCode = list[index].empUnqId;
-                                    workGroup.value = list[index].wrkGrp;
-                                    responsibleHODBloc.initState(departCode, statCode, responsibleEnggDesignationCode, responsibleCode);
-                                    //filterObservationBloc.initState(currentPage,"", "", "", "", "", "", "", responsibleCode, "");
-                                    Navigator.pop(context);
-                                  },
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(2.0),
-                                    child: Text(list[index].empName,
-                                    ),
-                                  ),
-                                ),
-                                const Padding(
-                                  padding: EdgeInsets.all(8.0),
-                                  child: Divider(
-                                    height: 0.8,
-                                    thickness: 1,
-                                    color: kcDarkGreyColor,
-                                  ),
-                                )
-                              ],
-                            );
-                          });
-                    }
-                )
-            ),
-            actions: [
-              Align(
-                alignment: Alignment.centerRight,
-                child: TextButton(
-                  onPressed: () {
-                    Navigator.pop(context);
-                  },
-                  child: const Text(
-                    "close",
-                    style: TextStyle(color: kcDarkGreyColor, fontSize: 18),
-                  ),
-                ),
-              )
-            ],
-          );
-        }
+  Future<void> _buildResponsibilityDialog(List<EmployeeResponsibilityModel> responsibilityModel) async {
+    final picked = await showEmployeePicker<EmployeeResponsibilityModel>(
+      context,
+      items: responsibilityModel,
+      name: (e) => e.empName,
+      code: (e) => e.empUnqId,
+      title: 'Select Responsible Engineer',
     );
+    if (picked == null || !mounted) return;
+    responsibility.value = picked.empName;
+    responsibleCode = picked.empUnqId;
+    workGroup.value = picked.wrkGrp;
+    responsibleHODBloc.initState(departCode, statCode, responsibleEnggDesignationCode, responsibleCode);
   }
 
   //Responsible HOD
@@ -1936,89 +1817,17 @@ class _ApprovedObservationPageState extends State<ApprovedObservationPage> {
 
   }
 
-  Future<void> _buildResponsibilityBYHODDialog(List<EmployeeResponsibilityModel> responsibleHodModel) {
-    final responsibilityListNotifier = responsibleHODySearchableListNotifier(responsibleHodModel);
-    return showDialog(
-        context: context,
-        builder: (context) {
-          return AlertDialog(
-            shape: const RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(5))),
-            title: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  "Select or search Responsible HOD",
-                  style:
-                  TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-                ),
-                TextFormField(
-                  onChanged: responsibilityListNotifier.filterBasedOn,
-                  decoration: const InputDecoration(
-                      hintText: "search here...",
-                      prefixIcon: Icon(
-                        Icons.search,
-                        color: kcLightGrey,
-                      )),
-                )
-              ],
-            ),
-            content: SizedBox(
-                width: 210,
-                height: 800,
-                child:ValueListenableBuilder<List<EmployeeResponsibilityModel>>(
-                    valueListenable: responsibilityListNotifier,
-                    builder: (context, responsibleList, widget){
-                      return ListView.builder(
-                          itemCount: responsibleList.length,
-                          shrinkWrap: true,
-                          itemBuilder: (context, index) {
-                            return Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                InkWell(
-                                  onTap: () {
-                                    responsibleHOD.value = responsibleList[index].empName;
-                                    responsibleHODCode = responsibleList[index].empUnqId;
-                                    //filterObservationBloc.initState(currentPage,"", "", "", "", "", "", "", responsibleHODCode, "");
-                                    Navigator.pop(context);
-                                  },
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(2.0),
-                                    child: Text(responsibleList[index].empName,
-                                    ),
-                                  ),
-                                ),
-                                const Padding(
-                                  padding: EdgeInsets.all(8.0),
-                                  child: Divider(
-                                    height: 0.8,
-                                    thickness: 1,
-                                    color: kcDarkGreyColor,
-                                  ),
-                                )
-                              ],
-                            );
-                          });
-                    }
-                )
-            ),
-            actions: [
-              Align(
-                alignment: Alignment.centerRight,
-                child: TextButton(
-                  onPressed: () {
-                    Navigator.pop(context);
-                  },
-                  child: const Text(
-                    "close",
-                    style: TextStyle(color: kcDarkGreyColor, fontSize: 18),
-                  ),
-                ),
-              )
-            ],
-          );
-        }
+  Future<void> _buildResponsibilityBYHODDialog(List<EmployeeResponsibilityModel> responsibleHodModel) async {
+    final picked = await showEmployeePicker<EmployeeResponsibilityModel>(
+      context,
+      items: responsibleHodModel,
+      name: (e) => e.empName,
+      code: (e) => e.empUnqId,
+      title: 'Select Responsible HOD',
     );
+    if (picked == null || !mounted) return;
+    responsibleHOD.value = picked.empName;
+    responsibleHODCode = picked.empUnqId;
   }
 
   //Priority

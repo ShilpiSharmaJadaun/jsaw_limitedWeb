@@ -37,6 +37,9 @@ class _CommonNavigationPageState extends State<CommonNavigationPage> {
     super.initState();
     title = widget.title;
     content = widget.initialChild ?? widget.child;
+    // Fresh shell (e.g. right after login): point the drawer at this page,
+    // not at whatever the previous session last selected.
+    AppDrawer.resetSelection(title);
     CommonNavigationPage.showPage = (newTitle, newContent) {
       if (!mounted) return;
       _updateContent(newTitle, newContent, _getRouteFromTitle(newTitle));
@@ -136,13 +139,13 @@ class _CommonNavigationPageState extends State<CommonNavigationPage> {
       // Reporting
       case 'Raise Observation':
         return '/raise-observation';
-      case 'Incident Tracking':
+      case 'Incident Reporting':
         return '/incident-tracking';
-      case 'Medical Officer Response':
+      case 'Medical Assessment':
         return '/medical-officer-response';
-      case 'Safety Remark Form':
+      case 'Safety Observation':
         return '/safety-remark-form';
-      case 'Investigation Form':
+      case 'Investigation Details':
         return '/investigation-form';
       // Admin
       case 'Approval Queue':
