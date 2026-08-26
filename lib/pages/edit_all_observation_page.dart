@@ -176,7 +176,7 @@ class _EditAllObservationPageState extends State<EditAllObservationPage> {
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
         color: kcWhite,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(14),
         border: Border.all(color: kcVeryLightGrey, width: 1),
         boxShadow: [
           BoxShadow(
@@ -187,7 +187,7 @@ class _EditAllObservationPageState extends State<EditAllObservationPage> {
         ],
       ),
       child: Padding(
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.all(10),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -259,7 +259,7 @@ class _EditAllObservationPageState extends State<EditAllObservationPage> {
                     ],
                   ),
                   Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 10),
+                    padding: const EdgeInsets.symmetric(vertical: 6),
                     child: Container(
                       height: 1,
                       decoration: BoxDecoration(
@@ -341,10 +341,10 @@ class _EditAllObservationPageState extends State<EditAllObservationPage> {
 
   _buildObservation() {
     return Container(
-      margin: const EdgeInsets.only(bottom: 16),
+      margin: const EdgeInsets.only(bottom: 10),
       decoration: BoxDecoration(
         color: kcWhite,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(14),
         border: Border.all(color: kcVeryLightGrey, width: 1),
         boxShadow: [
           BoxShadow(
@@ -355,15 +355,15 @@ class _EditAllObservationPageState extends State<EditAllObservationPage> {
         ],
       ),
       child: Padding(
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.all(10),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             ClipRRect(
               borderRadius: BorderRadius.circular(12),
               child: SizedBox(
-                width: 220,
-                height: 200,
+                width: 170,
+                height: 150,
                 child: ProgressiveImage(
                   highUrl: widget.image,
                 ),
@@ -466,7 +466,7 @@ class _EditAllObservationPageState extends State<EditAllObservationPage> {
                     ],
                   ),
                   Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 10),
+                    padding: const EdgeInsets.symmetric(vertical: 6),
                     child: Container(
                       height: 1,
                       decoration: BoxDecoration(
@@ -568,7 +568,7 @@ class _EditAllObservationPageState extends State<EditAllObservationPage> {
                           padding: const EdgeInsets.symmetric(vertical: 4),
                           child: Text(
                             widget.observation.isEmpty ? '—' : widget.observation,
-                            maxLines: 3,
+                            maxLines: 2,
                             overflow: TextOverflow.ellipsis,
                             style: const TextStyle(
                               fontWeight: FontWeight.w600,
@@ -644,7 +644,7 @@ class _EditAllObservationPageState extends State<EditAllObservationPage> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.only(bottom: 4, top: 4),
+          padding: const EdgeInsets.only(bottom: 2, top: 2),
           child: Row(
             children: [
               _buildIconBadge(icon, iconColor),
@@ -660,12 +660,12 @@ class _EditAllObservationPageState extends State<EditAllObservationPage> {
 
   Widget _buildIconBadge(IconData icon, Color color) {
     return Container(
-      padding: const EdgeInsets.all(6),
+      padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(8),
       ),
-      child: Icon(icon, color: color, size: 16),
+      child: Icon(icon, color: color, size: 15),
     );
   }
 
@@ -687,7 +687,7 @@ class _EditAllObservationPageState extends State<EditAllObservationPage> {
         ],
       ),
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
         child: Text(
           text,
           style: const TextStyle(
@@ -718,7 +718,7 @@ class _EditAllObservationPageState extends State<EditAllObservationPage> {
       padding: const EdgeInsets.symmetric(vertical: 2),
       child: Container(
         width: double.infinity,
-        constraints: const BoxConstraints(minHeight: 36),
+        constraints: const BoxConstraints(minHeight: 30),
         decoration: BoxDecoration(
           color: kcWhite,
           borderRadius: BorderRadius.circular(10),

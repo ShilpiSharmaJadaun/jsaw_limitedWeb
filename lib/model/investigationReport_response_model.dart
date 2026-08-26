@@ -23,6 +23,9 @@ class InvestigationReportResponse with _$InvestigationReportResponse {
     @Default([]) List<InvestigationCapaItem> capa,
     // Root Cause – Inquired With (point 6)
     @Default([]) List<InvestigationInquiredWithItem> inquiredWith,
+    // Phase-2 point 6 (All Investigation tabs)
+    @Default("") String createdByEmpCode,
+    @Default([]) List<String> receivedAs,
   }) = _InvestigationReportResponse;
 
   factory InvestigationReportResponse.fromJson(Map<String, dynamic> json) =>

@@ -39,7 +39,9 @@ mixin _$InvestigationReportResponse {
   List<InvestigationCapaItem> get capa =>
       throw _privateConstructorUsedError; // Root Cause – Inquired With (point 6)
   List<InvestigationInquiredWithItem> get inquiredWith =>
-      throw _privateConstructorUsedError;
+      throw _privateConstructorUsedError; // Phase-2 point 6 (All Investigation tabs)
+  String get createdByEmpCode => throw _privateConstructorUsedError;
+  List<String> get receivedAs => throw _privateConstructorUsedError;
 
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
   @JsonKey(ignore: true)
@@ -70,7 +72,9 @@ abstract class $InvestigationReportResponseCopyWith<$Res> {
       List<InvestigationTeamItem> team,
       List<InvestigationRootCauseItem> rootCauses,
       List<InvestigationCapaItem> capa,
-      List<InvestigationInquiredWithItem> inquiredWith});
+      List<InvestigationInquiredWithItem> inquiredWith,
+      String createdByEmpCode,
+      List<String> receivedAs});
 }
 
 /// @nodoc
@@ -102,6 +106,8 @@ class _$InvestigationReportResponseCopyWithImpl<$Res,
     Object? rootCauses = null,
     Object? capa = null,
     Object? inquiredWith = null,
+    Object? createdByEmpCode = null,
+    Object? receivedAs = null,
   }) {
     return _then(_value.copyWith(
       id: null == id
@@ -164,6 +170,14 @@ class _$InvestigationReportResponseCopyWithImpl<$Res,
           ? _value.inquiredWith
           : inquiredWith // ignore: cast_nullable_to_non_nullable
               as List<InvestigationInquiredWithItem>,
+      createdByEmpCode: null == createdByEmpCode
+          ? _value.createdByEmpCode
+          : createdByEmpCode // ignore: cast_nullable_to_non_nullable
+              as String,
+      receivedAs: null == receivedAs
+          ? _value.receivedAs
+          : receivedAs // ignore: cast_nullable_to_non_nullable
+              as List<String>,
     ) as $Val);
   }
 }
@@ -192,7 +206,9 @@ abstract class _$$InvestigationReportResponseImplCopyWith<$Res>
       List<InvestigationTeamItem> team,
       List<InvestigationRootCauseItem> rootCauses,
       List<InvestigationCapaItem> capa,
-      List<InvestigationInquiredWithItem> inquiredWith});
+      List<InvestigationInquiredWithItem> inquiredWith,
+      String createdByEmpCode,
+      List<String> receivedAs});
 }
 
 /// @nodoc
@@ -223,6 +239,8 @@ class __$$InvestigationReportResponseImplCopyWithImpl<$Res>
     Object? rootCauses = null,
     Object? capa = null,
     Object? inquiredWith = null,
+    Object? createdByEmpCode = null,
+    Object? receivedAs = null,
   }) {
     return _then(_$InvestigationReportResponseImpl(
       id: null == id
@@ -285,6 +303,14 @@ class __$$InvestigationReportResponseImplCopyWithImpl<$Res>
           ? _value._inquiredWith
           : inquiredWith // ignore: cast_nullable_to_non_nullable
               as List<InvestigationInquiredWithItem>,
+      createdByEmpCode: null == createdByEmpCode
+          ? _value.createdByEmpCode
+          : createdByEmpCode // ignore: cast_nullable_to_non_nullable
+              as String,
+      receivedAs: null == receivedAs
+          ? _value._receivedAs
+          : receivedAs // ignore: cast_nullable_to_non_nullable
+              as List<String>,
     ));
   }
 }
@@ -308,11 +334,14 @@ class _$InvestigationReportResponseImpl
       final List<InvestigationTeamItem> team = const [],
       final List<InvestigationRootCauseItem> rootCauses = const [],
       final List<InvestigationCapaItem> capa = const [],
-      final List<InvestigationInquiredWithItem> inquiredWith = const []})
+      final List<InvestigationInquiredWithItem> inquiredWith = const [],
+      this.createdByEmpCode = "",
+      final List<String> receivedAs = const []})
       : _team = team,
         _rootCauses = rootCauses,
         _capa = capa,
-        _inquiredWith = inquiredWith;
+        _inquiredWith = inquiredWith,
+        _receivedAs = receivedAs;
 
   factory _$InvestigationReportResponseImpl.fromJson(
           Map<String, dynamic> json) =>
@@ -390,9 +419,22 @@ class _$InvestigationReportResponseImpl
     return EqualUnmodifiableListView(_inquiredWith);
   }
 
+// Phase-2 point 6 (All Investigation tabs)
+  @override
+  @JsonKey()
+  final String createdByEmpCode;
+  final List<String> _receivedAs;
+  @override
+  @JsonKey()
+  List<String> get receivedAs {
+    if (_receivedAs is EqualUnmodifiableListView) return _receivedAs;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableListView(_receivedAs);
+  }
+
   @override
   String toString() {
-    return 'InvestigationReportResponse(id: $id, incidentReportId: $incidentReportId, incidentUniqueId: $incidentUniqueId, reportDate: $reportDate, associatedRiskImageUrl: $associatedRiskImageUrl, lowQualityImageUrl: $lowQualityImageUrl, highQualityImageUrl: $highQualityImageUrl, machineryDetails: $machineryDetails, activityBeforeIncident: $activityBeforeIncident, raisedDate: $raisedDate, updatedDate: $updatedDate, team: $team, rootCauses: $rootCauses, capa: $capa, inquiredWith: $inquiredWith)';
+    return 'InvestigationReportResponse(id: $id, incidentReportId: $incidentReportId, incidentUniqueId: $incidentUniqueId, reportDate: $reportDate, associatedRiskImageUrl: $associatedRiskImageUrl, lowQualityImageUrl: $lowQualityImageUrl, highQualityImageUrl: $highQualityImageUrl, machineryDetails: $machineryDetails, activityBeforeIncident: $activityBeforeIncident, raisedDate: $raisedDate, updatedDate: $updatedDate, team: $team, rootCauses: $rootCauses, capa: $capa, inquiredWith: $inquiredWith, createdByEmpCode: $createdByEmpCode, receivedAs: $receivedAs)';
   }
 
   @override
@@ -426,7 +468,11 @@ class _$InvestigationReportResponseImpl
                 .equals(other._rootCauses, _rootCauses) &&
             const DeepCollectionEquality().equals(other._capa, _capa) &&
             const DeepCollectionEquality()
-                .equals(other._inquiredWith, _inquiredWith));
+                .equals(other._inquiredWith, _inquiredWith) &&
+            (identical(other.createdByEmpCode, createdByEmpCode) ||
+                other.createdByEmpCode == createdByEmpCode) &&
+            const DeepCollectionEquality()
+                .equals(other._receivedAs, _receivedAs));
   }
 
   @JsonKey(ignore: true)
@@ -447,7 +493,9 @@ class _$InvestigationReportResponseImpl
       const DeepCollectionEquality().hash(_team),
       const DeepCollectionEquality().hash(_rootCauses),
       const DeepCollectionEquality().hash(_capa),
-      const DeepCollectionEquality().hash(_inquiredWith));
+      const DeepCollectionEquality().hash(_inquiredWith),
+      createdByEmpCode,
+      const DeepCollectionEquality().hash(_receivedAs));
 
   @JsonKey(ignore: true)
   @override
@@ -467,22 +515,23 @@ class _$InvestigationReportResponseImpl
 abstract class _InvestigationReportResponse
     implements InvestigationReportResponse {
   const factory _InvestigationReportResponse(
-          {final int id,
-          final int incidentReportId,
-          final String incidentUniqueId,
-          final String reportDate,
-          final String associatedRiskImageUrl,
-          final String lowQualityImageUrl,
-          final String highQualityImageUrl,
-          final String machineryDetails,
-          final String activityBeforeIncident,
-          final String raisedDate,
-          final String updatedDate,
-          final List<InvestigationTeamItem> team,
-          final List<InvestigationRootCauseItem> rootCauses,
-          final List<InvestigationCapaItem> capa,
-          final List<InvestigationInquiredWithItem> inquiredWith}) =
-      _$InvestigationReportResponseImpl;
+      {final int id,
+      final int incidentReportId,
+      final String incidentUniqueId,
+      final String reportDate,
+      final String associatedRiskImageUrl,
+      final String lowQualityImageUrl,
+      final String highQualityImageUrl,
+      final String machineryDetails,
+      final String activityBeforeIncident,
+      final String raisedDate,
+      final String updatedDate,
+      final List<InvestigationTeamItem> team,
+      final List<InvestigationRootCauseItem> rootCauses,
+      final List<InvestigationCapaItem> capa,
+      final List<InvestigationInquiredWithItem> inquiredWith,
+      final String createdByEmpCode,
+      final List<String> receivedAs}) = _$InvestigationReportResponseImpl;
 
   factory _InvestigationReportResponse.fromJson(Map<String, dynamic> json) =
       _$InvestigationReportResponseImpl.fromJson;
@@ -517,6 +566,10 @@ abstract class _InvestigationReportResponse
   List<InvestigationCapaItem> get capa;
   @override // Root Cause – Inquired With (point 6)
   List<InvestigationInquiredWithItem> get inquiredWith;
+  @override // Phase-2 point 6 (All Investigation tabs)
+  String get createdByEmpCode;
+  @override
+  List<String> get receivedAs;
   @override
   @JsonKey(ignore: true)
   _$$InvestigationReportResponseImplCopyWith<_$InvestigationReportResponseImpl>

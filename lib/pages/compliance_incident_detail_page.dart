@@ -20,6 +20,12 @@ class ComplianceIncidentDetailPage extends StatelessWidget {
   /// the HOD review page to show the full incident context inline.
   final bool sectionsOnly;
 
+  /// When false, sections 1-3 (Incident / Medical / Safety, sourced from the
+  /// Safety Remark record) are omitted. The All Incident "View" page renders
+  /// those itself from the incident row — which also exists for incidents that
+  /// have no safety remark yet — and embeds only the investigation sections.
+  final bool showIncidentSections;
+
   /// When false, the CAPA Actions section is omitted. The HOD review page hides
   /// it here because CAPA details are shown per-employee in its own
   /// "Employee Compliance" cards instead.
@@ -31,6 +37,7 @@ class ComplianceIncidentDetailPage extends StatelessWidget {
     required this.onBack,
     this.sectionsOnly = false,
     this.showCapa = true,
+    this.showIncidentSections = true,
   });
 
   @override
@@ -81,32 +88,34 @@ class ComplianceIncidentDetailPage extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        // 1. Incident Details
-        _SectionCard(
-          title: 'Incident Details',
-          icon: Icons.assignment_outlined,
-          accent: kcStatBlue,
-          child: _incidentBody(context, s),
-        ),
-        const SizedBox(height: 16),
+        if (showIncidentSections) ...[
+          // 1. Incident Details
+          _SectionCard(
+            title: 'Incident Details',
+            icon: Icons.assignment_outlined,
+            accent: kcStatBlue,
+            child: _incidentBody(context, s),
+          ),
+          const SizedBox(height: 16),
 
-        // 2. Medical Assessment
-        _SectionCard(
-          title: 'Medical Assessment',
-          icon: Icons.medical_services_outlined,
-          accent: kcInfoFir,
-          child: _medicalBody(s),
-        ),
-        const SizedBox(height: 16),
+          // 2. Medical Assessment
+          _SectionCard(
+            title: 'Medical Assessment',
+            icon: Icons.medical_services_outlined,
+            accent: kcInfoFir,
+            child: _medicalBody(s),
+          ),
+          const SizedBox(height: 16),
 
-        // 3. Safety Remarks
-        _SectionCard(
-          title: "Safety Officer's Remark",
-          icon: Icons.rate_review_outlined,
-          accent: kcobservationgreen,
-          child: _safetyBody(s),
-        ),
-        const SizedBox(height: 16),
+          // 3. Safety Remarks
+          _SectionCard(
+            title: "Safety Officer's Remark",
+            icon: Icons.rate_review_outlined,
+            accent: kcobservationgreen,
+            child: _safetyBody(s),
+          ),
+          const SizedBox(height: 16),
+        ],
 
         // 4. Investigation Details
         _SectionCard(

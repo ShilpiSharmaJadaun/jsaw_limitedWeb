@@ -808,15 +808,19 @@ class _MedicalOfficerPageState extends State<MedicalOfficerPage> {
     return BlocConsumer<SaveMedicalResponseBloc, SaveMedicalResponseState>(
       bloc: saveMedicalResponseBloc,
       listener: (_, state) {
+        // The bloc can emit after this form has been closed/disposed; using
+        // `context` then throws "Looking up a deactivated widget's ancestor".
+        if (!mounted) return;
+        final messenger = ScaffoldMessenger.maybeOf(context);
         state.maybeWhen(
           success: (_, message) {
-            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            messenger?.showSnackBar(SnackBar(
               content: Text(message ?? "Data Saved Successfully"),
             ));
             _close(true);
           },
           failed: (_, message) {
-            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+            messenger?.showSnackBar(SnackBar(content: Text(message)));
           },
           orElse: () {},
         );

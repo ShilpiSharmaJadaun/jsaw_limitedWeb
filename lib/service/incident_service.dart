@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:jsaw_limited/pages/widgets/incident_filter.dart';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
@@ -330,9 +331,14 @@ class IncidentService{
         int pageSize,
         bool hasNext,
         bool hasPrevious,
-      })> getAllInvestigationReport({int page = 1, int pageSize = 10}) async {
+      })> getAllInvestigationReport({
+    int page = 1,
+    int pageSize = 10,
+    // Phase-2 point 6: raised (forms I created) | received (forms I'm named in) | all.
+    String scope = 'raised',
+  }) async {
     final url = Uri.parse(
-        "${root}investigationReport/getAllInvestigationReport?page=$page&pageSize=$pageSize");
+        "${root}investigationReport/getAllInvestigationReport?page=$page&pageSize=$pageSize&scope=$scope");
     try {
       final response = await authHttp.get(url, headers: getHeaders());
       if (response.statusCode < 200 || response.statusCode >= 300) {
@@ -701,26 +707,19 @@ class IncidentService{
         int pageSize,
         bool hasNext,
         bool hasPrevious,
-      })> getAllIncident(
-    String uniqueId,
-    String plant,
-    String deptName,
-    String responsibleShiftEngg,
-    String status,
-    String firDateTimeFrom,
-    String firDateTimeTo,
-    int page, {
+      })> getAllIncident({
+    IncidentFilter filter = IncidentFilter.empty,
+    // Phase-2 point 1 — tab scoping on the All Incident page (exact match, blank = no filter).
+    String raisedByEmpCode = '',
+    String employeeCode = '',
+    int page = 1,
     int pageSize = 10,
   }) async {
     const url = "${root}incidentReport/getIncidentReportFullViewByShiftEngg";
     final body = {
-      "uniqueId": uniqueId,
-      "plant": plant,
-      "deptName": deptName,
-      "responsibleShiftEngg": responsibleShiftEngg,
-      "status": status,
-      "firDateTimeFrom": firDateTimeFrom,
-      "firDateTimeTo": firDateTimeTo,
+      ...filter.toBody(),
+      "raisedByEmpCode": raisedByEmpCode,
+      "employeeCode": employeeCode,
       "page": page,
       "pageSize": pageSize,
     };
@@ -807,5 +806,68 @@ class IncidentService{
     if (e is TimeoutException) throw ApiError.timeOut();
     if (e is ApiError) throw e;
     throw ApiError.unKnown();
+  }
+
+  /// Phase-2 point 3: Export to Excel. Sends the same scope + filter the list
+  /// uses (no paging) and returns the .xlsx bytes. Throws [ApiError] with the
+  /// backend message when nothing matches or generation fails.
+  Future<Uint8List> exportIncidentsExcel({
+    IncidentFilter filter = IncidentFilter.empty,
+    String raisedByEmpCode = '',
+    String employeeCode = '',
+    required String exportTitle,
+    List<String> exportFilters = const [],
+  }) async {
+    const url = "${root}incidentReport/exportExcel";
+    final body = {
+      ...filter.toBody(),
+      "raisedByEmpCode": raisedByEmpCode,
+      "employeeCode": employeeCode,
+      "exportTitle": exportTitle,
+      "exportFilters": exportFilters,
+    };
+    final response = await authHttp.post(Uri.parse(url),
+        body: json.encode(body), headers: getHeaders());
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw ApiError.fromResponse(
+          'Server error ${response.statusCode}: ${response.body}');
+    }
+    final contentType = (response.headers['content-type'] ?? '').toLowerCase();
+    if (contentType.contains('spreadsheetml') ||
+        contentType.contains('octet-stream')) {
+      return response.bodyBytes;
+    }
+    // JSON {status:false, msg} — empty result or generation failure.
+    String msg = 'Excel export failed';
+    try {
+      final responseBody = json.decode(response.body);
+      if (responseBody is Map) {
+        msg = (responseBody['msg'] ?? responseBody['message'] ?? msg).toString();
+      }
+    } catch (_) {}
+    throw ApiError.fromResponse(msg);
+  }
+
+  /// Phase-2 point 2: distinct Plant / Department / Incident Type / Shift values
+  /// present in IncidentReport (for the filter pickers), plus every incident ID.
+  Future<IncidentFilterOptions> getIncidentFilterOptions() async {
+    const url = "${root}incidentReport/getFilterOptions";
+    final response = await authHttp.get(Uri.parse(url), headers: getHeaders());
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw ApiError.fromResponse(
+          'Server error ${response.statusCode}: ${response.body}');
+    }
+    final responseBody = json.decode(response.body);
+    final model = (responseBody is Map) ? responseBody['model'] : null;
+    final options = model is Map
+        ? IncidentFilterOptions.fromJson(Map<String, dynamic>.from(model))
+        : const IncidentFilterOptions();
+    List<String> ids = const [];
+    try {
+      ids = await getAllIncidentReportUniqueIds();
+    } catch (_) {
+      // IDs are a convenience for the picker; the dialog still works without them.
+    }
+    return options.withUniqueIds(ids);
   }
 }

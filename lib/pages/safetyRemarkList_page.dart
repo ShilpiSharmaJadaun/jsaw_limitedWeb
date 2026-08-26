@@ -10,6 +10,9 @@ import 'package:jsaw_limited/model/completeSafetyRemark_model.dart';
 import 'package:jsaw_limited/model/safetyRemarkList_model.dart';
 import 'package:jsaw_limited/pages/medical_Officer_page.dart';
 import 'package:jsaw_limited/pages/safety_remark_page.dart';
+import 'package:jsaw_limited/pages/incident_view_page.dart';
+import 'package:jsaw_limited/pages/widgets/incident_filter.dart';
+import 'package:jsaw_limited/model/allIncident_model.dart';
 import 'package:jsaw_limited/state/allMedicalOfficerList_state.dart';
 import 'package:jsaw_limited/state/completeSafetyRemark_state.dart';
 import 'package:jsaw_limited/state/downloadPdf_state.dart';
@@ -35,11 +38,19 @@ class SafetyRemarkListPage extends StatefulWidget {
 class _SafetyRemarkListPageState extends State<SafetyRemarkListPage> {
   late CompleteSafetyRemarkbloc completeSafetyRemarkbloc;
   late DownloadPdfBloc downloadPdfBloc;
+  late IncidentService _incidentService;
+
+  /// "Check Details" (user request 27-Aug-2026): read-only full-chain view of
+  /// the incident — incident details, the medical officer's assessment and
+  /// the safety remark — opened inline; null = list is shown.
+  AllIncidentModel? _viewIncident;
+  bool _openingView = false;
 
   @override
   void initState() {
     super.initState();
     final incidentService = Provider.of<IncidentService>(context, listen: false);
+    _incidentService = incidentService;
     completeSafetyRemarkbloc = CompleteSafetyRemarkbloc(incidentService);
     completeSafetyRemarkbloc.initState();
     downloadPdfBloc = DownloadPdfBloc(incidentService);
@@ -51,9 +62,63 @@ class _SafetyRemarkListPageState extends State<SafetyRemarkListPage> {
 
   @override
   Widget build(BuildContext context) {
+    final viewing = _viewIncident;
     return Scaffold(
       backgroundColor: kcDashboardBg1,
-      body: _buildAllIncidentList(),
+      body: viewing != null
+          ? IncidentViewPage(
+              key: ValueKey('safety-view-${viewing.uniqueId}'),
+              incident: viewing,
+              onBack: () => setState(() => _viewIncident = null),
+              // Only incident + medical + safety here (user request).
+              showChain: false,
+              title: 'Check Details — Safety Observation',
+            )
+          : _buildAllIncidentList(),
+    );
+  }
+
+  Future<void> _openCheckDetails(String uniqueId) async {
+    if (_openingView) return;
+    setState(() => _openingView = true);
+    try {
+      final res = await _incidentService.getAllIncident(
+        filter: IncidentFilter(uniqueId: uniqueId),
+        page: 1,
+        pageSize: 1,
+      );
+      if (!mounted) return;
+      if (res.items.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Incident $uniqueId was not found.')));
+        return;
+      }
+      setState(() => _viewIncident = res.items.first);
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(e.toString().replaceFirst('Exception: ', ''))));
+    } finally {
+      if (mounted) setState(() => _openingView = false);
+    }
+  }
+
+  Widget _buildCheckDetailsButton(VoidCallback onTap) {
+    return ElevatedButton.icon(
+      onPressed: _openingView ? null : onTap,
+      style: ElevatedButton.styleFrom(
+        backgroundColor: kcStatBlue,
+        foregroundColor: kcWhite,
+        elevation: 2,
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+        visualDensity: VisualDensity.compact,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      ),
+      icon: const Icon(Icons.fact_check_outlined, size: 16),
+      label: const Text(
+        'Check Details',
+        style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12.5),
+      ),
     );
   }
 
@@ -119,10 +184,10 @@ class _SafetyRemarkListPageState extends State<SafetyRemarkListPage> {
         itemCount: model.length,
         itemBuilder: (BuildContext context, int index) {
           return Container(
-            margin: const EdgeInsets.only(bottom: 16),
+            margin: const EdgeInsets.only(bottom: 10),
             decoration: BoxDecoration(
               color: Colors.white,
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(14),
               border: Border.all(color: Colors.grey.shade200, width: 1),
               boxShadow: [
                 BoxShadow(
@@ -133,7 +198,7 @@ class _SafetyRemarkListPageState extends State<SafetyRemarkListPage> {
               ],
             ),
             child: Padding(
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.all(10),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -141,8 +206,8 @@ class _SafetyRemarkListPageState extends State<SafetyRemarkListPage> {
                   ClipRRect(
                     borderRadius: BorderRadius.circular(12),
                     child: SizedBox(
-                      width: 22.screenWidth,
-                      height: 18.screenHeight,
+                      width: 16.screenWidth,
+                      height: 12.screenHeight,
                       child: ProgressiveImage(
                         highUrl: model[index].imageUrl,
                         lowUrl: model[index].lowQualityImageUrl,
@@ -239,7 +304,7 @@ class _SafetyRemarkListPageState extends State<SafetyRemarkListPage> {
 
                         // Soft gradient divider
                         Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 10),
+                          padding: const EdgeInsets.symmetric(vertical: 6),
                           child: Container(
                             height: 1,
                             decoration: BoxDecoration(
@@ -289,7 +354,7 @@ class _SafetyRemarkListPageState extends State<SafetyRemarkListPage> {
                             ),
                           ],
                         ),
-                        const SizedBox(height: 10),
+                        const SizedBox(height: 6),
 
                         // Observations
                         Row(
@@ -303,14 +368,14 @@ class _SafetyRemarkListPageState extends State<SafetyRemarkListPage> {
                             Expanded(
                               child: Padding(
                                 padding:
-                                const EdgeInsets.symmetric(vertical: 4),
+                                const EdgeInsets.symmetric(vertical: 2),
                                 child: Text(
                                   model[index].descpOfIncident,
-                                  maxLines: 3,
+                                  maxLines: 2,
                                   overflow: TextOverflow.ellipsis,
                                   style: TextStyle(
                                     fontWeight: FontWeight.w600,
-                                    fontSize: 2.screenWidth,
+                                    fontSize: 1.8.screenWidth,
                                     color: kcValueDark,
                                   ),
                                 ),
@@ -330,14 +395,14 @@ class _SafetyRemarkListPageState extends State<SafetyRemarkListPage> {
                             Expanded(
                               child: Padding(
                                 padding:
-                                const EdgeInsets.symmetric(vertical: 4),
+                                const EdgeInsets.symmetric(vertical: 2),
                                 child: Text(
                                   model[index].medicalOfficerRemarks,
-                                  maxLines: 3,
+                                  maxLines: 2,
                                   overflow: TextOverflow.ellipsis,
                                   style: TextStyle(
                                     fontWeight: FontWeight.w600,
-                                    fontSize: 2.screenWidth,
+                                    fontSize: 1.8.screenWidth,
                                     color: kcValueDark,
                                   ),
                                 ),
@@ -357,14 +422,14 @@ class _SafetyRemarkListPageState extends State<SafetyRemarkListPage> {
                             Expanded(
                               child: Padding(
                                 padding:
-                                const EdgeInsets.symmetric(vertical: 4),
+                                const EdgeInsets.symmetric(vertical: 2),
                                 child: Text(
                                   model[index].safetyRemarks,
-                                  maxLines: 3,
+                                  maxLines: 2,
                                   overflow: TextOverflow.ellipsis,
                                   style: TextStyle(
                                     fontWeight: FontWeight.w600,
-                                    fontSize: 2.screenWidth,
+                                    fontSize: 1.8.screenWidth,
                                     color: kcValueDark,
                                   ),
                                 ),
@@ -406,6 +471,13 @@ class _SafetyRemarkListPageState extends State<SafetyRemarkListPage> {
                               },
                             ),
                           ],
+                        ),
+                        const SizedBox(height: 6),
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: _buildCheckDetailsButton(
+                            () => _openCheckDetails(model[index].incidentUniqueId),
+                          ),
                         ),
 
                         // // Plant
@@ -463,7 +535,7 @@ class _SafetyRemarkListPageState extends State<SafetyRemarkListPage> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: EdgeInsets.symmetric(vertical: 0.4.screenHeight),
+          padding: EdgeInsets.symmetric(vertical: 0.15.screenHeight),
           child: Row(
             children: [
               _buildIconBadge(icon, iconColor),
@@ -480,12 +552,12 @@ class _SafetyRemarkListPageState extends State<SafetyRemarkListPage> {
   /// Colored circular icon badge — colorful icon on a tinted square background.
   Widget _buildIconBadge(IconData icon, Color color) {
     return Container(
-      padding: const EdgeInsets.all(6),
+      padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
         color: color.withOpacity(0.12),
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(8),
       ),
-      child: Icon(icon, color: color, size: 18),
+      child: Icon(icon, color: color, size: 15),
     );
   }
 
@@ -508,13 +580,13 @@ class _SafetyRemarkListPageState extends State<SafetyRemarkListPage> {
         ],
       ),
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
         child: Text(
           text,
           style: const TextStyle(
             color: Colors.white,
             fontWeight: FontWeight.w600,
-            fontSize: 13,
+            fontSize: 12,
           ),
         ),
       ),
@@ -526,7 +598,7 @@ class _SafetyRemarkListPageState extends State<SafetyRemarkListPage> {
     return Text(
       title,
       style: const TextStyle(
-        fontSize: 13,
+        fontSize: 12.5,
         fontWeight: FontWeight.w600,
         color: kcLabelGrey,
       ),
@@ -552,10 +624,10 @@ class _SafetyRemarkListPageState extends State<SafetyRemarkListPage> {
   Widget _buildTextBox(String title, Color color, {Color? accentColor}) {
     return Padding(
       padding: EdgeInsets.symmetric(
-          horizontal: 1.screenWidth, vertical: 0.3.screenHeight),
+          horizontal: 1.screenWidth, vertical: 0.15.screenHeight),
       child: Container(
         width: double.infinity,
-        constraints: BoxConstraints(minHeight: 3.5.screenHeight),
+        constraints: BoxConstraints(minHeight: 2.4.screenHeight),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(10),
@@ -586,17 +658,17 @@ class _SafetyRemarkListPageState extends State<SafetyRemarkListPage> {
               Expanded(
                 child: Padding(
                   padding: EdgeInsets.symmetric(
-                    horizontal: 1.5.screenWidth,
-                    vertical: 0.4.screenHeight,
+                    horizontal: 1.2.screenWidth,
+                    vertical: 0.2.screenHeight,
                   ),
                   child: Text(
                     title,
-                    maxLines: 3,
+                    maxLines: 2,
                     textAlign: TextAlign.center,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
                       fontWeight: FontWeight.w600,
-                      fontSize: 1.6.screenWidth,
+                      fontSize: 1.5.screenWidth,
                       color: color,
                     ),
                   ),

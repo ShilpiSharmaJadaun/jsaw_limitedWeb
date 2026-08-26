@@ -1,5 +1,8 @@
 import 'package:flutter/foundation.dart' show Uint8List;
 import 'package:flutter/material.dart';
+import 'incident_view_page.dart';
+import 'widgets/incident_filter.dart';
+import '../model/allIncident_model.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import '../model/allDepartment_model.dart';
@@ -45,6 +48,14 @@ class _InvestigationTeamPageState extends State<InvestigationTeamPage>
 
   // Inline edit mode (kept inside the tab so the app shell stays visible)
   InvestigationReportResponse? _editingReport;
+
+  /// Phase-2 point 6 — which slice the list tab shows:
+  /// 'received' (forms I'm named in), 'raised' (forms I created), 'all'.
+  String _listScope = 'received';
+
+  /// Read-only full-chain view opened from the Received / All tabs.
+  AllIncidentModel? _viewIncident;
+  bool _openingView = false;
 
   String _selectedIncidentUniqueId = "Select Incident ID";
 
@@ -201,6 +212,7 @@ class _InvestigationTeamPageState extends State<InvestigationTeamPage>
       final result = await _incidentService.getAllInvestigationReport(
         page: page ?? _listPage,
         pageSize: _listPageSize,
+        scope: _listScope,
       );
       if (!mounted) return;
       setState(() {
@@ -804,8 +816,17 @@ class _InvestigationTeamPageState extends State<InvestigationTeamPage>
         onSaved: () => _loadInvestigationList(page: _listPage),
       );
     }
+    final viewing = _viewIncident;
+    if (viewing != null) {
+      return IncidentViewPage(
+        key: ValueKey('inv-view-${viewing.uniqueId}'),
+        incident: viewing,
+        onBack: () => setState(() => _viewIncident = null),
+      );
+    }
     return Column(
       children: [
+        _buildScopeStrip(),
         _buildListSearchBar(),
         Expanded(
           child: _listSearchActive ? _buildSearchBody() : _buildPaginatedBody(),
@@ -814,6 +835,98 @@ class _InvestigationTeamPageState extends State<InvestigationTeamPage>
           _buildListPaginationBar(),
       ],
     );
+  }
+
+  static const _scopes = [
+    ('received', 'Received Form', Icons.inbox_outlined),
+    ('raised', 'Raised Form', Icons.add_alert_outlined),
+    ('all', 'All Forms', Icons.list_alt_outlined),
+  ];
+
+  /// Received Form · Raised Form · All Forms selector (Phase-2 point 6).
+  Widget _buildScopeStrip() {
+    return Container(
+      color: kcWhite,
+      padding: const EdgeInsets.fromLTRB(20, 12, 20, 4),
+      child: Row(
+        children: [
+          for (final (key, label, icon) in _scopes) ...[
+            ChoiceChip(
+              avatar: Icon(icon,
+                  size: 16, color: _listScope == key ? kcWhite : kcvoilet),
+              label: Text(label),
+              selected: _listScope == key,
+              showCheckmark: false,
+              selectedColor: kcvoilet,
+              backgroundColor: kcvoilet.withValues(alpha: 0.06),
+              side: BorderSide(
+                  color: _listScope == key
+                      ? kcvoilet
+                      : kcvoilet.withValues(alpha: 0.3)),
+              labelStyle: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w700,
+                color: _listScope == key ? kcWhite : kcvoilet,
+              ),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20)),
+              onSelected: (_) => _changeScope(key),
+            ),
+            const SizedBox(width: 8),
+          ],
+          const Spacer(),
+          if (_listLoadedOnce && !_loadingList)
+            Text(
+              '$_listTotalElements form(s)',
+              style: const TextStyle(
+                  fontSize: 12.5,
+                  fontWeight: FontWeight.w600,
+                  color: kcLabelGrey),
+            ),
+        ],
+      ),
+    );
+  }
+
+  void _changeScope(String scope) {
+    if (_listScope == scope) return;
+    setState(() {
+      _listScope = scope;
+      _listItems = [];
+      _listSearchResults = [];
+      _listSearchActive = false;
+      _listSearchController.clear();
+      _listLoadedOnce = false;
+      _listPage = 1;
+    });
+    _loadInvestigationList(page: 1);
+  }
+
+  /// Received / All tabs are read-only: open the point-4 full-chain incident
+  /// view (incident + medical + safety + investigation + compliance + FIR PDF).
+  Future<void> _openReadOnlyView(InvestigationReportResponse r) async {
+    if (_openingView) return;
+    setState(() => _openingView = true);
+    try {
+      final res = await _incidentService.getAllIncident(
+        filter: IncidentFilter(uniqueId: r.incidentUniqueId),
+        page: 1,
+        pageSize: 1,
+      );
+      if (!mounted) return;
+      if (res.items.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text('Incident ${r.incidentUniqueId} was not found.')));
+        return;
+      }
+      setState(() => _viewIncident = res.items.first);
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(e.toString().replaceFirst('Exception: ', ''))));
+    } finally {
+      if (mounted) setState(() => _openingView = false);
+    }
   }
 
   Widget _buildListSearchBar() {
@@ -882,6 +995,8 @@ class _InvestigationTeamPageState extends State<InvestigationTeamPage>
             _InvestigationReportCard(
               item: _listItems[i],
               onEdit: (r) => setState(() => _editingReport = r),
+            readOnly: _listScope != 'raised',
+            onView: _openReadOnlyView,
             ),
       ),
     );
@@ -900,6 +1015,8 @@ class _InvestigationTeamPageState extends State<InvestigationTeamPage>
           _InvestigationReportCard(
             item: _listSearchResults[i],
             onEdit: (r) => setState(() => _editingReport = r),
+            readOnly: _listScope != 'raised',
+            onView: _openReadOnlyView,
           ),
     );
   }
@@ -1056,34 +1173,23 @@ class _InvestigationTeamPageState extends State<InvestigationTeamPage>
     );
   }
 
+  /// Phase-2 point 5: the form's primary action, restyled to the app's
+  /// signature gradient submit (same look as "Save Incident" on the Incident
+  /// Reporting form). Behaviour unchanged: disabled + spinner while saving.
   Widget _submitButton() {
-    return SizedBox(
-      width: double.infinity,
-      child: ElevatedButton.icon(
-        onPressed: _submitting ? null : _submit,
-        icon: _submitting
-            ? const SizedBox(
-                width: 18,
-                height: 18,
-                child: CircularProgressIndicator(
-                    strokeWidth: 2, color: kcWhite),
-              )
-            : const Icon(Icons.check_circle_outline, color: kcWhite),
-        label: Text(
-          _submitting ? 'Saving…' : 'Submit Investigation Report',
-          style: const TextStyle(
-              color: kcWhite, fontSize: 15, fontWeight: FontWeight.w700),
-        ),
-        style: ElevatedButton.styleFrom(
-          backgroundColor:
-              _submitting ? kcLightGrey : kcobservationgreen,
-          padding: const EdgeInsets.symmetric(vertical: 14),
-          elevation: 2,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10),
+    return Column(
+      children: [
+        Divider(height: 1, color: Colors.grey.shade300),
+        const SizedBox(height: 18),
+        Center(
+          child: GradientSubmitButton(
+            busy: _submitting,
+            label: _submitting ? 'Saving…' : 'Submit Investigation',
+            icon: Icons.fact_check_outlined,
+            onTap: _submitting ? null : _submit,
           ),
         ),
-      ),
+      ],
     );
   }
 
@@ -2576,9 +2682,15 @@ class _CapaRow {
 class _InvestigationReportCard extends StatefulWidget {
   final InvestigationReportResponse item;
   final ValueChanged<InvestigationReportResponse> onEdit;
+
+  /// Phase-2 point 6: Received / All tabs show a View button instead of Edit.
+  final bool readOnly;
+  final ValueChanged<InvestigationReportResponse>? onView;
   const _InvestigationReportCard({
     required this.item,
     required this.onEdit,
+    this.readOnly = false,
+    this.onView,
   });
 
   @override
@@ -2659,6 +2771,10 @@ class _InvestigationReportCardState extends State<_InvestigationReportCard> {
                   color: kcWhite, fontSize: 14, fontWeight: FontWeight.w700),
             ),
           ),
+          // Why this form is in my Received tab / who raised it (read-only tabs).
+          for (final why in item.receivedAs) _headerChip(why),
+          if (widget.readOnly && item.createdByEmpCode.isNotEmpty)
+            _headerChip('Raised by ${item.createdByEmpCode}'),
           Container(
             padding:
                 const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
@@ -2833,9 +2949,15 @@ class _InvestigationReportCardState extends State<_InvestigationReportCard> {
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
               ElevatedButton.icon(
-                onPressed: () => widget.onEdit(item),
-                icon: const Icon(Icons.edit_outlined, size: 18),
-                label: const Text('Edit'),
+                onPressed: () => widget.readOnly
+                    ? widget.onView?.call(item)
+                    : widget.onEdit(item),
+                icon: Icon(
+                    widget.readOnly
+                        ? Icons.visibility_outlined
+                        : Icons.edit_outlined,
+                    size: 18),
+                label: Text(widget.readOnly ? 'View' : 'Edit'),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: kcvoilet,
                   foregroundColor: kcWhite,
@@ -3268,3 +3390,120 @@ class _UniqueIdPickerDialogState extends State<_UniqueIdPickerDialog> {
     );
   }
 }
+
+/// Signature gradient submit button (pink → orange, soft glow, hover lift).
+/// Shared look with the Incident Reporting "Save Incident" button.
+class GradientSubmitButton extends StatefulWidget {
+  const GradientSubmitButton({
+    super.key,
+    required this.label,
+    required this.onTap,
+    this.icon = Icons.save_outlined,
+    this.busy = false,
+    this.minWidth = 260,
+  });
+
+  final String label;
+  final VoidCallback? onTap;
+  final IconData icon;
+
+  /// Shows a spinner instead of the icon and greys the gradient.
+  final bool busy;
+  final double minWidth;
+
+  @override
+  State<GradientSubmitButton> createState() => _GradientSubmitButtonState();
+}
+
+class _GradientSubmitButtonState extends State<GradientSubmitButton> {
+  bool _hover = false;
+
+  static const _pink = Color(0xFFEC4899);
+  static const _orange = Color(0xFFF97316);
+
+  @override
+  Widget build(BuildContext context) {
+    final enabled = widget.onTap != null && !widget.busy;
+    final colors = enabled
+        ? const [_pink, _orange]
+        : [Colors.grey.shade400, Colors.grey.shade500];
+    return MouseRegion(
+      cursor: enabled ? SystemMouseCursors.click : SystemMouseCursors.basic,
+      onEnter: (_) => setState(() => _hover = true),
+      onExit: (_) => setState(() => _hover = false),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 160),
+        transform: Matrix4.translationValues(0, _hover && enabled ? -1.5 : 0, 0),
+        constraints: BoxConstraints(minWidth: widget.minWidth),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(colors: colors),
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: enabled
+              ? [
+                  BoxShadow(
+                    color: _pink.withValues(alpha: _hover ? 0.42 : 0.3),
+                    blurRadius: _hover ? 16 : 12,
+                    offset: Offset(0, _hover ? 6 : 4),
+                  ),
+                ]
+              : const [],
+        ),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            borderRadius: BorderRadius.circular(12),
+            onTap: enabled ? widget.onTap : null,
+            child: Padding(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 28, vertical: 16),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  if (widget.busy)
+                    const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(
+                          strokeWidth: 2, color: Colors.white),
+                    )
+                  else
+                    Icon(widget.icon, color: Colors.white, size: 20),
+                  const SizedBox(width: 10),
+                  Text(
+                    widget.label,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 0.3,
+                    ),
+                  ),
+                  if (!widget.busy) ...[
+                    const SizedBox(width: 10),
+                    const Icon(Icons.arrow_forward_ios,
+                        color: Colors.white, size: 14),
+                  ],
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Small translucent chip for the investigation card header band.
+Widget _headerChip(String text) => Container(
+      margin: const EdgeInsets.only(right: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.22),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.5)),
+      ),
+      child: Text(text,
+          style: const TextStyle(
+              color: kcWhite, fontSize: 11, fontWeight: FontWeight.w700)),
+    );

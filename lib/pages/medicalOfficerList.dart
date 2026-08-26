@@ -124,10 +124,10 @@ class _MedicalOfficerListState extends State<MedicalOfficerList> {
         itemCount: model.length,
         itemBuilder: (BuildContext context, int index) {
           return Container(
-            margin: const EdgeInsets.only(bottom: 16),
+            margin: const EdgeInsets.only(bottom: 10),
             decoration: BoxDecoration(
               color: Colors.white,
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(14),
               border: Border.all(color: Colors.grey.shade200, width: 1),
               boxShadow: [
                 BoxShadow(
@@ -138,7 +138,7 @@ class _MedicalOfficerListState extends State<MedicalOfficerList> {
               ],
             ),
             child: Padding(
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.all(10),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -146,8 +146,8 @@ class _MedicalOfficerListState extends State<MedicalOfficerList> {
                   ClipRRect(
                     borderRadius: BorderRadius.circular(12),
                     child: SizedBox(
-                      width: 22.screenWidth,
-                      height: 18.screenHeight,
+                      width: 16.screenWidth,
+                      height: 12.screenHeight,
                       child: ProgressiveImage(
                         highUrl: model[index].imageUrl,
                         lowUrl: model[index].lowQualityImageUrl,
@@ -244,7 +244,7 @@ class _MedicalOfficerListState extends State<MedicalOfficerList> {
 
                         // Soft gradient divider
                         Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 10),
+                          padding: const EdgeInsets.symmetric(vertical: 6),
                           child: Container(
                             height: 1,
                             decoration: BoxDecoration(
@@ -294,7 +294,7 @@ class _MedicalOfficerListState extends State<MedicalOfficerList> {
                             ),
                           ],
                         ),
-                        const SizedBox(height: 10),
+                        const SizedBox(height: 6),
 
                         // Observations
                         Row(
@@ -308,14 +308,14 @@ class _MedicalOfficerListState extends State<MedicalOfficerList> {
                             Expanded(
                               child: Padding(
                                 padding:
-                                const EdgeInsets.symmetric(vertical: 4),
+                                const EdgeInsets.symmetric(vertical: 2),
                                 child: Text(
                                   model[index].descpOfIncident,
-                                  maxLines: 3,
+                                  maxLines: 2,
                                   overflow: TextOverflow.ellipsis,
                                   style: TextStyle(
                                     fontWeight: FontWeight.w600,
-                                    fontSize: 2.screenWidth,
+                                    fontSize: 1.8.screenWidth,
                                     color: kcValueDark,
                                   ),
                                 ),
@@ -323,7 +323,7 @@ class _MedicalOfficerListState extends State<MedicalOfficerList> {
                             ),
                           ],
                         ),
-                        const SizedBox(height: 8),
+                        const SizedBox(height: 4),
                         Row(
                           //crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -335,14 +335,14 @@ class _MedicalOfficerListState extends State<MedicalOfficerList> {
                             Expanded(
                               child: Padding(
                                 padding:
-                                const EdgeInsets.symmetric(vertical: 4),
+                                const EdgeInsets.symmetric(vertical: 2),
                                 child: Text(
                                   model[index].medicalOfficerRemarks,
-                                  maxLines: 3,
+                                  maxLines: 2,
                                   overflow: TextOverflow.ellipsis,
                                   style: TextStyle(
                                     fontWeight: FontWeight.w600,
-                                    fontSize: 2.screenWidth,
+                                    fontSize: 1.8.screenWidth,
                                     color: kcValueDark,
                                   ),
                                 ),
@@ -350,7 +350,7 @@ class _MedicalOfficerListState extends State<MedicalOfficerList> {
                             ),
                           ],
                         ),
-                        const SizedBox(height: 10),
+                        const SizedBox(height: 6),
 
                         // Check Details (tracker point 3) — opens the read-only
                         // view of the submitted medical assessment.
@@ -411,13 +411,14 @@ class _MedicalOfficerListState extends State<MedicalOfficerList> {
         backgroundColor: kcStatBlue,
         foregroundColor: kcWhite,
         elevation: 2,
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+        visualDensity: VisualDensity.compact,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       ),
-      icon: const Icon(Icons.fact_check_outlined, size: 18),
+      icon: const Icon(Icons.fact_check_outlined, size: 16),
       label: const Text(
         'Check Details',
-        style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+        style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12.5),
       ),
     );
   }
@@ -434,7 +435,7 @@ class _MedicalOfficerListState extends State<MedicalOfficerList> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: EdgeInsets.symmetric(vertical: 0.4.screenHeight),
+          padding: EdgeInsets.symmetric(vertical: 0.15.screenHeight),
           child: Row(
             children: [
               _buildIconBadge(icon, iconColor),
@@ -451,12 +452,12 @@ class _MedicalOfficerListState extends State<MedicalOfficerList> {
   /// Colored circular icon badge — colorful icon on a tinted square background.
   Widget _buildIconBadge(IconData icon, Color color) {
     return Container(
-      padding: const EdgeInsets.all(6),
+      padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
         color: color.withOpacity(0.12),
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(8),
       ),
-      child: Icon(icon, color: color, size: 18),
+      child: Icon(icon, color: color, size: 15),
     );
   }
 
@@ -479,13 +480,13 @@ class _MedicalOfficerListState extends State<MedicalOfficerList> {
         ],
       ),
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
         child: Text(
           text,
           style: const TextStyle(
             color: Colors.white,
             fontWeight: FontWeight.w600,
-            fontSize: 13,
+            fontSize: 12,
           ),
         ),
       ),
@@ -497,7 +498,7 @@ class _MedicalOfficerListState extends State<MedicalOfficerList> {
     return Text(
       title,
       style: const TextStyle(
-        fontSize: 13,
+        fontSize: 12.5,
         fontWeight: FontWeight.w600,
         color: kcLabelGrey,
       ),
@@ -523,10 +524,10 @@ class _MedicalOfficerListState extends State<MedicalOfficerList> {
   Widget _buildTextBox(String title, Color color, {Color? accentColor}) {
     return Padding(
       padding: EdgeInsets.symmetric(
-          horizontal: 1.screenWidth, vertical: 0.3.screenHeight),
+          horizontal: 1.screenWidth, vertical: 0.15.screenHeight),
       child: Container(
         width: double.infinity,
-        constraints: BoxConstraints(minHeight: 3.5.screenHeight),
+        constraints: BoxConstraints(minHeight: 2.4.screenHeight),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(10),
@@ -557,17 +558,17 @@ class _MedicalOfficerListState extends State<MedicalOfficerList> {
               Expanded(
                 child: Padding(
                   padding: EdgeInsets.symmetric(
-                    horizontal: 1.5.screenWidth,
-                    vertical: 0.4.screenHeight,
+                    horizontal: 1.2.screenWidth,
+                    vertical: 0.2.screenHeight,
                   ),
                   child: Text(
                     title,
-                    maxLines: 3,
+                    maxLines: 2,
                     textAlign: TextAlign.center,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
                       fontWeight: FontWeight.w600,
-                      fontSize: 1.6.screenWidth,
+                      fontSize: 1.5.screenWidth,
                       color: color,
                     ),
                   ),

@@ -426,10 +426,10 @@ class _HseEditObservationPageState extends State<HseEditObservationPage>
 
   Widget _buildObservationCard(dynamic item) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 16),
+      margin: const EdgeInsets.only(bottom: 10),
       decoration: BoxDecoration(
         color: kcWhite,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(14),
         border: Border.all(color: kcVeryLightGrey, width: 1),
         boxShadow: [
           BoxShadow(
@@ -440,7 +440,7 @@ class _HseEditObservationPageState extends State<HseEditObservationPage>
         ],
       ),
       child: Padding(
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.all(10),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -577,7 +577,7 @@ class _HseEditObservationPageState extends State<HseEditObservationPage>
                     ],
                   ),
                   Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 10),
+                    padding: const EdgeInsets.symmetric(vertical: 6),
                     child: Container(
                       height: 1,
                       decoration: BoxDecoration(
@@ -630,7 +630,7 @@ class _HseEditObservationPageState extends State<HseEditObservationPage>
                             item.observationText.toString().isEmpty
                                 ? '—'
                                 : item.observationText.toString(),
-                            maxLines: 3,
+                            maxLines: 2,
                             overflow: TextOverflow.ellipsis,
                             style: const TextStyle(
                               fontWeight: FontWeight.w600,
@@ -727,7 +727,7 @@ class _HseEditObservationPageState extends State<HseEditObservationPage>
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.only(bottom: 4, top: 4),
+          padding: const EdgeInsets.only(bottom: 2, top: 2),
           child: Row(
             children: [
               _buildIconBadge(icon, iconColor),
@@ -743,12 +743,12 @@ class _HseEditObservationPageState extends State<HseEditObservationPage>
 
   Widget _buildIconBadge(IconData icon, Color color) {
     return Container(
-      padding: const EdgeInsets.all(6),
+      padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(8),
       ),
-      child: Icon(icon, color: color, size: 16),
+      child: Icon(icon, color: color, size: 15),
     );
   }
 
@@ -770,7 +770,7 @@ class _HseEditObservationPageState extends State<HseEditObservationPage>
         ],
       ),
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
         child: Text(
           text,
           style: const TextStyle(
@@ -801,7 +801,7 @@ class _HseEditObservationPageState extends State<HseEditObservationPage>
       padding: const EdgeInsets.symmetric(vertical: 2),
       child: Container(
         width: double.infinity,
-        constraints: const BoxConstraints(minHeight: 36),
+        constraints: const BoxConstraints(minHeight: 30),
         decoration: BoxDecoration(
           color: kcWhite,
           borderRadius: BorderRadius.circular(10),

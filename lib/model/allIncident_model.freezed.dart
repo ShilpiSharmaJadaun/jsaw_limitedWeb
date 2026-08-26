@@ -36,6 +36,10 @@ mixin _$AllIncidentModel {
   String get location => throw _privateConstructorUsedError;
   String get responsibleShiftEngg => throw _privateConstructorUsedError;
   String get responsibleHod => throw _privateConstructorUsedError;
+  String get raisedByEmpCode => throw _privateConstructorUsedError;
+  String get raisedByEmpName => throw _privateConstructorUsedError;
+  String get status => throw _privateConstructorUsedError;
+  String get investigationStatus => throw _privateConstructorUsedError;
   String get contactNumber => throw _privateConstructorUsedError;
   String get incidentType => throw _privateConstructorUsedError;
   String get workInjury => throw _privateConstructorUsedError;
@@ -88,6 +92,10 @@ abstract class $AllIncidentModelCopyWith<$Res> {
       String location,
       String responsibleShiftEngg,
       String responsibleHod,
+      String raisedByEmpCode,
+      String raisedByEmpName,
+      String status,
+      String investigationStatus,
       String contactNumber,
       String incidentType,
       String workInjury,
@@ -141,6 +149,10 @@ class _$AllIncidentModelCopyWithImpl<$Res, $Val extends AllIncidentModel>
     Object? location = null,
     Object? responsibleShiftEngg = null,
     Object? responsibleHod = null,
+    Object? raisedByEmpCode = null,
+    Object? raisedByEmpName = null,
+    Object? status = null,
+    Object? investigationStatus = null,
     Object? contactNumber = null,
     Object? incidentType = null,
     Object? workInjury = null,
@@ -228,6 +240,22 @@ class _$AllIncidentModelCopyWithImpl<$Res, $Val extends AllIncidentModel>
       responsibleHod: null == responsibleHod
           ? _value.responsibleHod
           : responsibleHod // ignore: cast_nullable_to_non_nullable
+              as String,
+      raisedByEmpCode: null == raisedByEmpCode
+          ? _value.raisedByEmpCode
+          : raisedByEmpCode // ignore: cast_nullable_to_non_nullable
+              as String,
+      raisedByEmpName: null == raisedByEmpName
+          ? _value.raisedByEmpName
+          : raisedByEmpName // ignore: cast_nullable_to_non_nullable
+              as String,
+      status: null == status
+          ? _value.status
+          : status // ignore: cast_nullable_to_non_nullable
+              as String,
+      investigationStatus: null == investigationStatus
+          ? _value.investigationStatus
+          : investigationStatus // ignore: cast_nullable_to_non_nullable
               as String,
       contactNumber: null == contactNumber
           ? _value.contactNumber
@@ -346,6 +374,10 @@ abstract class _$$AllIncidentModelImplCopyWith<$Res>
       String location,
       String responsibleShiftEngg,
       String responsibleHod,
+      String raisedByEmpCode,
+      String raisedByEmpName,
+      String status,
+      String investigationStatus,
       String contactNumber,
       String incidentType,
       String workInjury,
@@ -397,6 +429,10 @@ class __$$AllIncidentModelImplCopyWithImpl<$Res>
     Object? location = null,
     Object? responsibleShiftEngg = null,
     Object? responsibleHod = null,
+    Object? raisedByEmpCode = null,
+    Object? raisedByEmpName = null,
+    Object? status = null,
+    Object? investigationStatus = null,
     Object? contactNumber = null,
     Object? incidentType = null,
     Object? workInjury = null,
@@ -484,6 +520,22 @@ class __$$AllIncidentModelImplCopyWithImpl<$Res>
       responsibleHod: null == responsibleHod
           ? _value.responsibleHod
           : responsibleHod // ignore: cast_nullable_to_non_nullable
+              as String,
+      raisedByEmpCode: null == raisedByEmpCode
+          ? _value.raisedByEmpCode
+          : raisedByEmpCode // ignore: cast_nullable_to_non_nullable
+              as String,
+      raisedByEmpName: null == raisedByEmpName
+          ? _value.raisedByEmpName
+          : raisedByEmpName // ignore: cast_nullable_to_non_nullable
+              as String,
+      status: null == status
+          ? _value.status
+          : status // ignore: cast_nullable_to_non_nullable
+              as String,
+      investigationStatus: null == investigationStatus
+          ? _value.investigationStatus
+          : investigationStatus // ignore: cast_nullable_to_non_nullable
               as String,
       contactNumber: null == contactNumber
           ? _value.contactNumber
@@ -597,6 +649,10 @@ class _$AllIncidentModelImpl implements _AllIncidentModel {
       this.location = "",
       this.responsibleShiftEngg = "",
       this.responsibleHod = "",
+      this.raisedByEmpCode = "",
+      this.raisedByEmpName = "",
+      this.status = "",
+      this.investigationStatus = "",
       this.contactNumber = "",
       this.incidentType = "",
       this.workInjury = "",
@@ -673,6 +729,18 @@ class _$AllIncidentModelImpl implements _AllIncidentModel {
   final String responsibleHod;
   @override
   @JsonKey()
+  final String raisedByEmpCode;
+  @override
+  @JsonKey()
+  final String raisedByEmpName;
+  @override
+  @JsonKey()
+  final String status;
+  @override
+  @JsonKey()
+  final String investigationStatus;
+  @override
+  @JsonKey()
   final String contactNumber;
   @override
   @JsonKey()
@@ -740,7 +808,7 @@ class _$AllIncidentModelImpl implements _AllIncidentModel {
 
   @override
   String toString() {
-    return 'AllIncidentModel(id: $id, uniqueId: $uniqueId, incidentDateTime: $incidentDateTime, shift: $shift, employeeCode: $employeeCode, employeeName: $employeeName, age: $age, contractorName: $contractorName, contCode: $contCode, plant: $plant, plantCode: $plantCode, deptName: $deptName, deptCode: $deptCode, location: $location, responsibleShiftEngg: $responsibleShiftEngg, responsibleHod: $responsibleHod, contactNumber: $contactNumber, incidentType: $incidentType, workInjury: $workInjury, descpOfIncident: $descpOfIncident, firDateTime: $firDateTime, imageUrl: $imageUrl, raisedDate: $raisedDate, updatedDate: $updatedDate, medicalOfficerTypeOfInjury: $medicalOfficerTypeOfInjury, bodyPart: $bodyPart, natureOfInjury: $natureOfInjury, restUpto: $restUpto, fitForDutyFrom: $fitForDutyFrom, medicalOfficerRemarks: $medicalOfficerRemarks, medicalOfficerResponseDate: $medicalOfficerResponseDate, medicalOfficerUpdatedDate: $medicalOfficerUpdatedDate, safetyTypeOfInjury: $safetyTypeOfInjury, safetyRemarks: $safetyRemarks, safetyResponseDate: $safetyResponseDate, safetyUpdatedDate: $safetyUpdatedDate, lowQualityImageUrl: $lowQualityImageUrl, highQualityImageUrl: $highQualityImageUrl)';
+    return 'AllIncidentModel(id: $id, uniqueId: $uniqueId, incidentDateTime: $incidentDateTime, shift: $shift, employeeCode: $employeeCode, employeeName: $employeeName, age: $age, contractorName: $contractorName, contCode: $contCode, plant: $plant, plantCode: $plantCode, deptName: $deptName, deptCode: $deptCode, location: $location, responsibleShiftEngg: $responsibleShiftEngg, responsibleHod: $responsibleHod, raisedByEmpCode: $raisedByEmpCode, raisedByEmpName: $raisedByEmpName, status: $status, investigationStatus: $investigationStatus, contactNumber: $contactNumber, incidentType: $incidentType, workInjury: $workInjury, descpOfIncident: $descpOfIncident, firDateTime: $firDateTime, imageUrl: $imageUrl, raisedDate: $raisedDate, updatedDate: $updatedDate, medicalOfficerTypeOfInjury: $medicalOfficerTypeOfInjury, bodyPart: $bodyPart, natureOfInjury: $natureOfInjury, restUpto: $restUpto, fitForDutyFrom: $fitForDutyFrom, medicalOfficerRemarks: $medicalOfficerRemarks, medicalOfficerResponseDate: $medicalOfficerResponseDate, medicalOfficerUpdatedDate: $medicalOfficerUpdatedDate, safetyTypeOfInjury: $safetyTypeOfInjury, safetyRemarks: $safetyRemarks, safetyResponseDate: $safetyResponseDate, safetyUpdatedDate: $safetyUpdatedDate, lowQualityImageUrl: $lowQualityImageUrl, highQualityImageUrl: $highQualityImageUrl)';
   }
 
   @override
@@ -776,6 +844,13 @@ class _$AllIncidentModelImpl implements _AllIncidentModel {
                 other.responsibleShiftEngg == responsibleShiftEngg) &&
             (identical(other.responsibleHod, responsibleHod) ||
                 other.responsibleHod == responsibleHod) &&
+            (identical(other.raisedByEmpCode, raisedByEmpCode) ||
+                other.raisedByEmpCode == raisedByEmpCode) &&
+            (identical(other.raisedByEmpName, raisedByEmpName) ||
+                other.raisedByEmpName == raisedByEmpName) &&
+            (identical(other.status, status) || other.status == status) &&
+            (identical(other.investigationStatus, investigationStatus) ||
+                other.investigationStatus == investigationStatus) &&
             (identical(other.contactNumber, contactNumber) ||
                 other.contactNumber == contactNumber) &&
             (identical(other.incidentType, incidentType) ||
@@ -805,8 +880,7 @@ class _$AllIncidentModelImpl implements _AllIncidentModel {
                 other.fitForDutyFrom == fitForDutyFrom) &&
             (identical(other.medicalOfficerRemarks, medicalOfficerRemarks) ||
                 other.medicalOfficerRemarks == medicalOfficerRemarks) &&
-            (identical(other.medicalOfficerResponseDate,
-                    medicalOfficerResponseDate) ||
+            (identical(other.medicalOfficerResponseDate, medicalOfficerResponseDate) ||
                 other.medicalOfficerResponseDate ==
                     medicalOfficerResponseDate) &&
             (identical(other.medicalOfficerUpdatedDate, medicalOfficerUpdatedDate) ||
@@ -845,6 +919,10 @@ class _$AllIncidentModelImpl implements _AllIncidentModel {
         location,
         responsibleShiftEngg,
         responsibleHod,
+        raisedByEmpCode,
+        raisedByEmpName,
+        status,
+        investigationStatus,
         contactNumber,
         incidentType,
         workInjury,
@@ -902,6 +980,10 @@ abstract class _AllIncidentModel implements AllIncidentModel {
       final String location,
       final String responsibleShiftEngg,
       final String responsibleHod,
+      final String raisedByEmpCode,
+      final String raisedByEmpName,
+      final String status,
+      final String investigationStatus,
       final String contactNumber,
       final String incidentType,
       final String workInjury,
@@ -960,6 +1042,14 @@ abstract class _AllIncidentModel implements AllIncidentModel {
   String get responsibleShiftEngg;
   @override
   String get responsibleHod;
+  @override
+  String get raisedByEmpCode;
+  @override
+  String get raisedByEmpName;
+  @override
+  String get status;
+  @override
+  String get investigationStatus;
   @override
   String get contactNumber;
   @override

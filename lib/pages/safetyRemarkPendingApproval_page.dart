@@ -134,10 +134,10 @@ class _SafetyRemarkPendingApprovalPageState extends State<SafetyRemarkPendingApp
           itemCount: model.length,
           itemBuilder: (BuildContext context, int index) {
             return Container(
-              margin: const EdgeInsets.only(bottom: 16),
+              margin: const EdgeInsets.only(bottom: 10),
               decoration: BoxDecoration(
                 color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: BorderRadius.circular(14),
                 border: Border.all(color: Colors.grey.shade200, width: 1),
                 boxShadow: [
                   BoxShadow(
@@ -148,7 +148,7 @@ class _SafetyRemarkPendingApprovalPageState extends State<SafetyRemarkPendingApp
                 ],
               ),
               child: Padding(
-                padding: const EdgeInsets.all(12),
+                padding: const EdgeInsets.all(10),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -156,8 +156,8 @@ class _SafetyRemarkPendingApprovalPageState extends State<SafetyRemarkPendingApp
                     ClipRRect(
                       borderRadius: BorderRadius.circular(12),
                       child: SizedBox(
-                        width: 22.screenWidth,
-                        height: 18.screenHeight,
+                        width: 16.screenWidth,
+                        height: 12.screenHeight,
                         child: ProgressiveImage(
                           highUrl: model[index].imageUrl,
                           lowUrl: model[index].lowQualityImageUrl,
@@ -254,7 +254,7 @@ class _SafetyRemarkPendingApprovalPageState extends State<SafetyRemarkPendingApp
 
                           // Soft gradient divider
                           Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 10),
+                            padding: const EdgeInsets.symmetric(vertical: 6),
                             child: Container(
                               height: 1,
                               decoration: BoxDecoration(
@@ -304,7 +304,7 @@ class _SafetyRemarkPendingApprovalPageState extends State<SafetyRemarkPendingApp
                               ),
                             ],
                           ),
-                          const SizedBox(height: 10),
+                          const SizedBox(height: 6),
 
                           // Observations
                           Row(
@@ -318,14 +318,14 @@ class _SafetyRemarkPendingApprovalPageState extends State<SafetyRemarkPendingApp
                               Expanded(
                                 child: Padding(
                                   padding:
-                                  const EdgeInsets.symmetric(vertical: 4),
+                                  const EdgeInsets.symmetric(vertical: 2),
                                   child: Text(
                                     model[index].descpOfIncident,
-                                    maxLines: 3,
+                                    maxLines: 2,
                                     overflow: TextOverflow.ellipsis,
                                     style: TextStyle(
                                       fontWeight: FontWeight.w600,
-                                      fontSize: 2.screenWidth,
+                                      fontSize: 1.8.screenWidth,
                                       color: kcValueDark,
                                     ),
                                   ),
@@ -374,7 +374,7 @@ class _SafetyRemarkPendingApprovalPageState extends State<SafetyRemarkPendingApp
                                       Icons.arrow_forward_ios_sharp)),
                             ],
                           ),
-                          const SizedBox(height: 8),
+                          const SizedBox(height: 4),
 
 
 
@@ -433,7 +433,7 @@ class _SafetyRemarkPendingApprovalPageState extends State<SafetyRemarkPendingApp
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: EdgeInsets.symmetric(vertical: 0.4.screenHeight),
+          padding: EdgeInsets.symmetric(vertical: 0.15.screenHeight),
           child: Row(
             children: [
               _buildIconBadge(icon, iconColor),
@@ -450,12 +450,12 @@ class _SafetyRemarkPendingApprovalPageState extends State<SafetyRemarkPendingApp
   /// Colored circular icon badge — colorful icon on a tinted square background.
   Widget _buildIconBadge(IconData icon, Color color) {
     return Container(
-      padding: const EdgeInsets.all(6),
+      padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
         color: color.withOpacity(0.12),
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(8),
       ),
-      child: Icon(icon, color: color, size: 18),
+      child: Icon(icon, color: color, size: 15),
     );
   }
 
@@ -478,13 +478,13 @@ class _SafetyRemarkPendingApprovalPageState extends State<SafetyRemarkPendingApp
         ],
       ),
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
         child: Text(
           text,
           style: const TextStyle(
             color: Colors.white,
             fontWeight: FontWeight.w600,
-            fontSize: 13,
+            fontSize: 12,
           ),
         ),
       ),
@@ -496,7 +496,7 @@ class _SafetyRemarkPendingApprovalPageState extends State<SafetyRemarkPendingApp
     return Text(
       title,
       style: const TextStyle(
-        fontSize: 13,
+        fontSize: 12.5,
         fontWeight: FontWeight.w600,
         color: kcLabelGrey,
       ),
@@ -522,10 +522,10 @@ class _SafetyRemarkPendingApprovalPageState extends State<SafetyRemarkPendingApp
   Widget _buildTextBox(String title, Color color, {Color? accentColor}) {
     return Padding(
       padding: EdgeInsets.symmetric(
-          horizontal: 1.screenWidth, vertical: 0.3.screenHeight),
+          horizontal: 1.screenWidth, vertical: 0.15.screenHeight),
       child: Container(
         width: double.infinity,
-        constraints: BoxConstraints(minHeight: 3.5.screenHeight),
+        constraints: BoxConstraints(minHeight: 2.4.screenHeight),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(10),
@@ -556,17 +556,17 @@ class _SafetyRemarkPendingApprovalPageState extends State<SafetyRemarkPendingApp
               Expanded(
                 child: Padding(
                   padding: EdgeInsets.symmetric(
-                    horizontal: 1.5.screenWidth,
-                    vertical: 0.4.screenHeight,
+                    horizontal: 1.2.screenWidth,
+                    vertical: 0.2.screenHeight,
                   ),
                   child: Text(
                     title,
-                    maxLines: 3,
+                    maxLines: 2,
                     textAlign: TextAlign.center,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
                       fontWeight: FontWeight.w600,
-                      fontSize: 1.6.screenWidth,
+                      fontSize: 1.5.screenWidth,
                       color: color,
                     ),
                   ),

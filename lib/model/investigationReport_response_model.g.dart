@@ -40,6 +40,11 @@ _$InvestigationReportResponseImpl _$$InvestigationReportResponseImplFromJson(
                   e as Map<String, dynamic>))
               .toList() ??
           const [],
+      createdByEmpCode: json['createdByEmpCode'] as String? ?? "",
+      receivedAs: (json['receivedAs'] as List<dynamic>?)
+              ?.map((e) => e as String)
+              .toList() ??
+          const [],
     );
 
 Map<String, dynamic> _$$InvestigationReportResponseImplToJson(
@@ -60,6 +65,8 @@ Map<String, dynamic> _$$InvestigationReportResponseImplToJson(
       'rootCauses': instance.rootCauses,
       'capa': instance.capa,
       'inquiredWith': instance.inquiredWith,
+      'createdByEmpCode': instance.createdByEmpCode,
+      'receivedAs': instance.receivedAs,
     };
 
 _$InvestigationTeamItemImpl _$$InvestigationTeamItemImplFromJson(

@@ -304,7 +304,7 @@ class _ReceivedObservationPageState extends State<ReceivedObservationPage>
               itemBuilder: (BuildContext context, int index) {
                 final item = model.model[index];
                 return Container(
-                  margin: const EdgeInsets.only(bottom: 16),
+                  margin: const EdgeInsets.only(bottom: 10),
                   decoration: BoxDecoration(
                     color: kcWhite,
                     borderRadius: BorderRadius.circular(16),
@@ -318,7 +318,7 @@ class _ReceivedObservationPageState extends State<ReceivedObservationPage>
                     ],
                   ),
                   child: Padding(
-                    padding: const EdgeInsets.all(12),
+                    padding: const EdgeInsets.all(10),
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -475,7 +475,7 @@ class _ReceivedObservationPageState extends State<ReceivedObservationPage>
                                   ),
                                 ],
                               ),
-                              const SizedBox(height: 10),
+                              const SizedBox(height: 6),
                               // Compliance + Priority
                               Row(
                                 mainAxisAlignment:
@@ -526,7 +526,7 @@ class _ReceivedObservationPageState extends State<ReceivedObservationPage>
                                   ),
                                 ],
                               ),
-                              const SizedBox(height: 12),
+                              const SizedBox(height: 6),
                               // Observation paragraph
                               Row(
                                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -544,7 +544,7 @@ class _ReceivedObservationPageState extends State<ReceivedObservationPage>
                                         item.observationText.isEmpty
                                             ? '—'
                                             : item.observationText,
-                                        maxLines: 3,
+                                        maxLines: 2,
                                         overflow: TextOverflow.ellipsis,
                                         style: const TextStyle(
                                           fontWeight: FontWeight.w600,
@@ -557,7 +557,7 @@ class _ReceivedObservationPageState extends State<ReceivedObservationPage>
                                   ),
                                 ],
                               ),
-                              const SizedBox(height: 8),
+                              const SizedBox(height: 4),
                               // Corrective measure paragraph + edit arrow
                               Row(
                                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -671,7 +671,7 @@ class _ReceivedObservationPageState extends State<ReceivedObservationPage>
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.only(bottom: 4, top: 4),
+          padding: const EdgeInsets.only(bottom: 2, top: 2),
           child: Row(
             children: [
               _buildIconBadge(icon, iconColor),
@@ -687,12 +687,12 @@ class _ReceivedObservationPageState extends State<ReceivedObservationPage>
 
   Widget _buildIconBadge(IconData icon, Color color) {
     return Container(
-      padding: const EdgeInsets.all(6),
+      padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(8),
       ),
-      child: Icon(icon, color: color, size: 16),
+      child: Icon(icon, color: color, size: 15),
     );
   }
 
@@ -714,7 +714,7 @@ class _ReceivedObservationPageState extends State<ReceivedObservationPage>
         ],
       ),
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
         child: Text(
           text,
           style: const TextStyle(
@@ -746,7 +746,7 @@ class _ReceivedObservationPageState extends State<ReceivedObservationPage>
       padding: const EdgeInsets.symmetric(vertical: 2),
       child: Container(
         width: double.infinity,
-        constraints: const BoxConstraints(minHeight: 36),
+        constraints: const BoxConstraints(minHeight: 30),
         decoration: BoxDecoration(
           color: kcWhite,
           borderRadius: BorderRadius.circular(10),

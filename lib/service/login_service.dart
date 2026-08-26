@@ -70,7 +70,17 @@ class LoginService {
 
         return  LoginModel.fromJson(responseBody["model"]);
       } else {
-        throw ApiError.fromResponse(responseBody['msg']);
+        // msg can be NULL for some backend failures — a bare String cast here
+        // threw "type 'Null' is not a subtype of type 'String'" at login.
+        // HTTP 5xx (e.g. DB unreachable) arrives as a Spring error body with
+        // "message"/"error" instead of "msg".
+        final m = responseBody is Map ? responseBody : const {};
+        final msg = (m['msg'] ?? m['message'] ?? m['error'])?.toString();
+        throw ApiError.fromResponse(response.statusCode >= 500
+            ? 'Server is not responding (${response.statusCode}). Please try again in a moment.'
+            : (msg == null || msg.trim().isEmpty)
+                ? 'Login failed, please try again'
+                : msg);
       }
     } catch (e, trace) {
       print("Error: $e");

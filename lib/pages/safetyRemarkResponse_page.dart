@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:jsaw_limited/pages/allIncident_page.dart';
 import 'package:jsaw_limited/pages/safetyRemarkList_page.dart';
 import 'package:jsaw_limited/pages/safetyRemarkPendingApproval_page.dart';
 import '../utils/app_color.dart';
@@ -19,7 +18,7 @@ class _SafetyRemarkResponsePageState extends State<SafetyRemarkResponsePage>
   @override
   void initState() {
     super.initState();
-    tabController = TabController(length: 3, vsync: this);
+    tabController = TabController(length: 2, vsync: this);
     tabController.addListener(() => setState(() {}));
   }
 
@@ -56,7 +55,6 @@ class _SafetyRemarkResponsePageState extends State<SafetyRemarkResponsePage>
             tabs: [
               _tab(Icons.pending_actions_outlined, 'Pending for Approval'),
               _tab(Icons.list_alt_outlined, 'Complete'),
-              _tab(Icons.all_inbox, "All Incident")
             ],
           ),
           Expanded(
@@ -65,7 +63,6 @@ class _SafetyRemarkResponsePageState extends State<SafetyRemarkResponsePage>
               children: const [
                 SafetyRemarkPendingApprovalPage(),
                 SafetyRemarkListPage(),
-                AllIncidentPage()
               ],
             ),
           ),
