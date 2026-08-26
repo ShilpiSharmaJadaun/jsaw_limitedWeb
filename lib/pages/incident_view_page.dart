@@ -16,6 +16,8 @@ import '../utils/app_color.dart';
 import '../utils/progressive_image.dart';
 import 'compliance_incident_detail_page.dart';
 import 'widgets/incident_filter.dart';
+import '../utils/pdf_download.dart';
+import '../error/api_error.dart';
 
 /// All Incident page — read-only **View** of one incident (Phase-2 point 4).
 ///
@@ -62,6 +64,34 @@ class _IncidentViewPageState extends State<IncidentViewPage> {
   /// Compliance review state; `null` when unavailable.
   late final Future<ComplianceReview?> _review;
 
+  /// True once the bundle shows an investigation exists (enables Report PDF).
+  bool _hasInvestigation = false;
+  bool _invPdfBusy = false;
+
+  Future<void> _downloadInvestigationPdf() async {
+    if (_invPdfBusy) return;
+    setState(() => _invPdfBusy = true);
+    try {
+      final incidentService =
+          Provider.of<IncidentService>(context, listen: false);
+      final bytes =
+          await incidentService.downloadInvestigationPdfByUid(r.uniqueId);
+      savePdfBytes('Investigation_Report_${r.uniqueId}.pdf', bytes);
+    } on ApiError catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(e.message)));
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text(e.toString().replaceFirst('Exception: ', ''))));
+      }
+    } finally {
+      if (mounted) setState(() => _invPdfBusy = false);
+    }
+  }
+
   @override
   void initState() {
     super.initState();
@@ -74,6 +104,11 @@ class _IncidentViewPageState extends State<IncidentViewPage> {
           .getComplianceDetailForReview(id)
           .then<ComplianceIncident?>((d) => d)
           .catchError((_) => null);
+      _detail.then((d) {
+        if (mounted && d != null && !d.investigation.isEmpty) {
+          setState(() => _hasInvestigation = true);
+        }
+      });
       _review = _compliance
           .getComplianceForReview(id)
           .then<ComplianceReview?>((r) => r)
@@ -278,6 +313,30 @@ class _IncidentViewPageState extends State<IncidentViewPage> {
             ),
           ),
           const Spacer(),
+          if (widget.showChain && _hasInvestigation) ...[
+            ElevatedButton.icon(
+              onPressed: _invPdfBusy ? null : _downloadInvestigationPdf,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: kcWhite,
+                foregroundColor: kcPdfIconRed,
+                disabledBackgroundColor: Colors.white70,
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20)),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+              ),
+              icon: _invPdfBusy
+                  ? const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(strokeWidth: 2))
+                  : const Icon(Icons.download_outlined, size: 18),
+              label: Text(_invPdfBusy ? 'Preparing…' : 'Investigation Report',
+                  style: const TextStyle(fontWeight: FontWeight.w700)),
+            ),
+            const SizedBox(width: 8),
+          ],
           BlocBuilder<DownloadPdfBloc, DownloadPdfState>(
             bloc: _pdfBloc,
             builder: (_, state) {

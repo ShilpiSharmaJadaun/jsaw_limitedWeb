@@ -672,6 +672,35 @@ class IncidentService{
     return null;
   }
 
+  /// Incident Investigation Report (FR-03 v2.0) PDF, filled from the DB.
+  /// Throws [ApiError] with the backend message when the incident has no
+  /// investigation yet or generation fails.
+  Future<Uint8List> downloadInvestigationPdfByUid(String uniqueId) async {
+    const url = "${root}investigationReportPdf/downloadByIncident";
+    final response = await authHttp.post(
+      Uri.parse(url),
+      body: json.encode({"incidentUniqueId": uniqueId}),
+      headers: getHeaders(),
+    );
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw ApiError.fromResponse(
+          'Investigation Report PDF failed (${response.statusCode})');
+    }
+    final contentType = (response.headers['content-type'] ?? '').toLowerCase();
+    if (contentType.contains('application/pdf') ||
+        contentType.contains('octet-stream')) {
+      return response.bodyBytes;
+    }
+    String msg = 'Investigation Report PDF is not available.';
+    try {
+      final body = json.decode(response.body);
+      if (body is Map) {
+        msg = (body['msg'] ?? body['message'] ?? msg).toString();
+      }
+    } catch (_) {}
+    throw ApiError.fromResponse(msg);
+  }
+
   ///Save Safety Remark
 
   Future<String?> saveSafetyRemarkResponse(Map<String, dynamic>data) async {

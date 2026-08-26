@@ -17,6 +17,8 @@ import 'employee_picker_dialog.dart';
 import 'inquired_with_picker_dialog.dart';
 import '../model/activeEmployeeLookup_model.dart';
 import 'image_picker.dart';
+import '../utils/pdf_download.dart';
+import '../error/api_error.dart';
 
 class InvestigationTeamPage extends StatefulWidget {
   const InvestigationTeamPage({super.key});
@@ -56,6 +58,32 @@ class _InvestigationTeamPageState extends State<InvestigationTeamPage>
   /// Read-only full-chain view opened from the Received / All tabs.
   AllIncidentModel? _viewIncident;
   bool _openingView = false;
+
+  /// Incident whose Investigation Report PDF is being generated (button spinner).
+  String? _pdfBusyId;
+
+  /// Download the filled FR-03 Investigation Report for one incident.
+  Future<void> _downloadInvestigationPdf(String incidentUniqueId) async {
+    if (_pdfBusyId != null) return;
+    setState(() => _pdfBusyId = incidentUniqueId);
+    try {
+      final bytes =
+          await _incidentService.downloadInvestigationPdfByUid(incidentUniqueId);
+      savePdfBytes('Investigation_Report_$incidentUniqueId.pdf', bytes);
+    } on ApiError catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(e.message)));
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text(e.toString().replaceFirst('Exception: ', ''))));
+      }
+    } finally {
+      if (mounted) setState(() => _pdfBusyId = null);
+    }
+  }
 
   String _selectedIncidentUniqueId = "Select Incident ID";
 
@@ -997,6 +1025,8 @@ class _InvestigationTeamPageState extends State<InvestigationTeamPage>
               onEdit: (r) => setState(() => _editingReport = r),
             readOnly: _listScope != 'raised',
             onView: _openReadOnlyView,
+            onPdf: _downloadInvestigationPdf,
+            pdfBusy: _pdfBusyId == _listItems[i].incidentUniqueId,
             ),
       ),
     );
@@ -1017,6 +1047,8 @@ class _InvestigationTeamPageState extends State<InvestigationTeamPage>
             onEdit: (r) => setState(() => _editingReport = r),
             readOnly: _listScope != 'raised',
             onView: _openReadOnlyView,
+            onPdf: _downloadInvestigationPdf,
+            pdfBusy: _pdfBusyId == _listSearchResults[i].incidentUniqueId,
           ),
     );
   }
@@ -2686,11 +2718,17 @@ class _InvestigationReportCard extends StatefulWidget {
   /// Phase-2 point 6: Received / All tabs show a View button instead of Edit.
   final bool readOnly;
   final ValueChanged<InvestigationReportResponse>? onView;
+
+  /// Investigation Report (FR-03) PDF download; [pdfBusy] shows a spinner.
+  final ValueChanged<String>? onPdf;
+  final bool pdfBusy;
   const _InvestigationReportCard({
     required this.item,
     required this.onEdit,
     this.readOnly = false,
     this.onView,
+    this.onPdf,
+    this.pdfBusy = false,
   });
 
   @override
@@ -2775,6 +2813,40 @@ class _InvestigationReportCardState extends State<_InvestigationReportCard> {
           for (final why in item.receivedAs) _headerChip(why),
           if (widget.readOnly && item.createdByEmpCode.isNotEmpty)
             _headerChip('Raised by ${item.createdByEmpCode}'),
+          // Investigation Report download — filled button in the header band,
+          // right-aligned (user request 27-Aug-2026).
+          if (widget.onPdf != null)
+            Padding(
+              padding: const EdgeInsets.only(right: 8),
+              child: SizedBox(
+                height: 30,
+                child: ElevatedButton.icon(
+                  onPressed: widget.pdfBusy
+                      ? null
+                      : () => widget.onPdf!(item.incidentUniqueId),
+                  icon: widget.pdfBusy
+                      ? const SizedBox(
+                          width: 14,
+                          height: 14,
+                          child: CircularProgressIndicator(
+                              strokeWidth: 2, color: kcPdfIconRed))
+                      : const Icon(Icons.download_outlined, size: 16),
+                  label: Text(widget.pdfBusy ? 'Preparing…' : 'Investigation Report',
+                      style: const TextStyle(
+                          fontSize: 12, fontWeight: FontWeight.w700)),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: kcWhite,
+                    foregroundColor: kcPdfIconRed,
+                    disabledBackgroundColor: Colors.white70,
+                    elevation: 0,
+                    visualDensity: VisualDensity.compact,
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16)),
+                  ),
+                ),
+              ),
+            ),
           Container(
             padding:
                 const EdgeInsets.symmetric(horizontal: 8, vertical: 3),

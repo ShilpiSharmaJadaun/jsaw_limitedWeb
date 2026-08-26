@@ -3,6 +3,9 @@ import 'package:flutter/material.dart';
 import '../model/compliance_api_models.dart';
 import '../model/compliance_incident_model.dart';
 import '../service/compliance_service.dart';
+import '../service/incident_service.dart';
+import '../utils/pdf_download.dart';
+import '../error/api_error.dart';
 import '../utils/app_color.dart';
 import 'compliance_incident_detail_page.dart' show complianceStatusColor;
 
@@ -29,6 +32,32 @@ class InvestigationsRaisedPage extends StatefulWidget {
 
 class _InvestigationsRaisedPageState extends State<InvestigationsRaisedPage> {
   final ComplianceService _service = ComplianceService();
+  final IncidentService _incidentService = IncidentService();
+
+  /// Incident whose Investigation Report PDF is being generated.
+  String? _pdfBusyId;
+
+  Future<void> _downloadInvestigationPdf(String incidentUniqueId) async {
+    if (_pdfBusyId != null) return;
+    setState(() => _pdfBusyId = incidentUniqueId);
+    try {
+      final bytes =
+          await _incidentService.downloadInvestigationPdfByUid(incidentUniqueId);
+      savePdfBytes('Investigation_Report_$incidentUniqueId.pdf', bytes);
+    } on ApiError catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(e.message)));
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text(e.toString().replaceFirst('Exception: ', ''))));
+      }
+    } finally {
+      if (mounted) setState(() => _pdfBusyId = null);
+    }
+  }
   final TextEditingController _searchController = TextEditingController();
 
   List<ComplianceSummary> _all = [];
@@ -462,6 +491,29 @@ class _InvestigationsRaisedPageState extends State<InvestigationsRaisedPage> {
                           ),
                         ),
                         const SizedBox(width: 10),
+                        OutlinedButton.icon(
+                          onPressed: _pdfBusyId != null
+                              ? null
+                              : () => _downloadInvestigationPdf(c.incidentUniqueId),
+                          icon: _pdfBusyId == c.incidentUniqueId
+                              ? const SizedBox(
+                                  width: 16,
+                                  height: 16,
+                                  child: CircularProgressIndicator(strokeWidth: 2))
+                              : const Icon(Icons.download_outlined, size: 18),
+                          label: Text(_pdfBusyId == c.incidentUniqueId
+                              ? 'Preparing…'
+                              : 'Investigation Report'),
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: kcPdfIconRed,
+                            side: const BorderSide(color: kcPdfIconRed),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 14, vertical: 12),
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8)),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
                         ElevatedButton.icon(
                           onPressed: () => _openDetail(c),
                           icon: const Icon(Icons.visibility_outlined, size: 18),

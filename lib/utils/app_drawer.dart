@@ -98,7 +98,6 @@ class AppDrawer extends StatelessWidget {
     final isMedicalOfficer = html.window.localStorage.getItem('kOfficerType') == 'M';
     final canWriteUs = empCode == '116500';
     // Investigation role flags — cached at login from /compliance/myInvestigationRoles.
-    final invTeam = html.window.localStorage.getItem('kInvTeam') == 'true';
     final invCapa = html.window.localStorage.getItem('kInvCapa') == 'true';
     final invHod = html.window.localStorage.getItem('kInvHod') == 'true';
 
@@ -179,14 +178,8 @@ class AppDrawer extends StatelessWidget {
           color: _cyan,
           page: InvestigationTeamPage(),
         ),
-      if (invTeam)
-        const _DrawerEntry(
-          section: 'Incident Tracking',
-          title: 'Investigation Initiated',
-          icon: Icons.assignment_ind_outlined,
-          color: _teal,
-          page: InvestigationsRaisedPage(),
-        ),
+      // "Investigation Initiated" (team-member list) removed 27-Aug-2026 at the user's request:
+      // the Received Form tab on Investigation Details now covers those investigations.
       if (invHod)
         const _DrawerEntry(
           section: 'Incident Tracking',
