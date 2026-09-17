@@ -2,6 +2,9 @@ import 'dart:ui' hide window;
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:jsaw_limited/bloc/allMedicalOfficerList_bloc.dart';
 import 'package:flutter/material.dart';
+import '../error/api_error.dart';
+import '../utils/pdf_download.dart';
+import 'widgets/incident_filter.dart';
 import 'package:jsaw_limited/bloc/downloadPdf_bloc.dart';
 import 'package:jsaw_limited/bloc/safetyRemarkList_bloc.dart';
 import 'package:jsaw_limited/model/allMedicalOfficerList_model.dart';
@@ -51,6 +54,126 @@ class _SafetyRemarkPendingApprovalPageState extends State<SafetyRemarkPendingApp
   // instead of being pushed as a separate full-screen route.
   SafetyRemarkListModel? _selectedModel;
 
+  // Phase-3 point 4: shared incident filter (applied in the browser — this
+  // list is loaded whole) + icon-only Excel export of the same scope.
+  IncidentFilter _filter = IncidentFilter.empty;
+  Future<IncidentFilterOptions>? _filterOptions;
+  bool _exporting = false;
+  static const _kStatuses = ['PENDING_SAFETY_REMARKS'];
+  static const _kExportTitle = 'Safety Remarks - Pending for Approval';
+
+  Future<IncidentFilterOptions> _optionsFuture() {
+    final incidentService = Provider.of<IncidentService>(context, listen: false);
+    return _filterOptions ??= incidentService.getIncidentFilterOptions();
+  }
+
+  Future<void> _openFilter() async {
+    final result = await showIncidentFilterDialog(
+      context: context,
+      initial: _filter,
+      options: _optionsFuture(),
+      showRaisedBy: false,
+      showStatus: false,
+    );
+    if (result == null || !mounted) return;
+    setState(() => _filter = result);
+  }
+
+  void _clearFilter() => setState(() => _filter = IncidentFilter.empty);
+
+  /// Reset = clear filters and reload the list (Phase-3 bug 1a semantics).
+  void _reset() {
+    setState(() => _filter = IncidentFilter.empty);
+    safetyRemarkListBloc.initState();
+  }
+
+  List<SafetyRemarkListModel> _applyFilter(List<SafetyRemarkListModel> all) => all
+      .where((m) => incidentFilterMatches(
+            _filter,
+            uniqueId: m.incidentUniqueId,
+            incidentDateTime: m.incidentDateTime,
+            plant: m.plant,
+            deptName: m.deptName,
+            incidentType: m.incidentType,
+            shift: m.shift,
+            employeeName: m.employeeName,
+            employeeCode: m.employeeCode,
+          ))
+      .toList();
+
+  Future<void> _exportExcel() async {
+    if (_exporting) return;
+    setState(() => _exporting = true);
+    try {
+      final incidentService = Provider.of<IncidentService>(context, listen: false);
+      final bytes = await incidentService.exportIncidentsExcel(
+        filter: _filter,
+        statuses: _kStatuses,
+        exportTitle: _kExportTitle,
+        exportFilters: [for (final c in _filter.chips) '${c.key}: ${c.value}'],
+      );
+      final now = DateTime.now();
+      String two(int v) => v.toString().padLeft(2, '0');
+      final stamp =
+          '${now.year}${two(now.month)}${two(now.day)}-${two(now.hour)}${two(now.minute)}';
+      saveXlsxBytes('Safety_Pending_$stamp.xlsx', bytes);
+    } on ApiError catch (e) {
+      _toast(e.message);
+    } catch (e) {
+      _toast('Excel export failed: $e');
+    } finally {
+      if (mounted) setState(() => _exporting = false);
+    }
+  }
+
+  void _toast(String msg) {
+    if (!mounted) return;
+    ScaffoldMessenger.maybeOf(context)
+      ?..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(content: Text(msg)));
+  }
+
+  Widget _toolbar() => IncidentFilterBar(
+        filter: _filter,
+        onOpen: _openFilter,
+        onClear: _clearFilter,
+        onRefresh: _reset,
+        currentPage: 1,
+        totalPages: 1,
+        hasPrev: false,
+        hasNext: false,
+        onPrev: () {},
+        onNext: () {},
+        exporting: _exporting,
+        onExport: _exportExcel,
+        showPaging: false,
+      );
+
+  Widget _emptyFiltered(String message) => Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [kcDashboardBg1, kcDashboardBg2],
+          ),
+        ),
+        alignment: Alignment.center,
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.filter_alt_off_outlined, size: 56, color: kcLightGrey),
+            const SizedBox(height: 12),
+            Text(message,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: kcValueDark)),
+          ],
+        ),
+      );
+
   @override
   Widget build(BuildContext context) {
     if (_selectedModel != null) {
@@ -77,16 +200,28 @@ class _SafetyRemarkPendingApprovalPageState extends State<SafetyRemarkPendingApp
       bloc: safetyRemarkListBloc,
       listener: (_, state) {},
       builder: (_, state) {
-        return state.when(
+        Widget filtered(List<SafetyRemarkListModel> all) {
+          final list = _applyFilter(all);
+          return (list.isEmpty && !_filter.isEmpty)
+              ? _emptyFiltered('No pending incidents match the current filters')
+              : _buildContent(list);
+        }
+        final body = state.when(
             loading: (_) {
               return Center(
                 child: Lottie.asset("assets/lottie/loading.json",
                     height: 80, width: 80),
               );
             },
-            content: _buildContent,
-            success: _buildContent,
-            failed: (form, __) => _buildContent(form));
+            content: filtered,
+            success: filtered,
+            failed: (form, __) => filtered(form));
+        return Column(
+          children: [
+            _toolbar(),
+            Expanded(child: body),
+          ],
+        );
       },
     );
   }
@@ -99,16 +234,7 @@ class _SafetyRemarkPendingApprovalPageState extends State<SafetyRemarkPendingApp
           success: (uniqueId, bytes) {
             final safeName =
             uniqueId.replaceAll(RegExp(r'[\\/:*?"<>|]'), '_');
-            final blob = html.Blob(
-              [bytes.toJS].toJS,
-              html.BlobPropertyBag(type: 'application/pdf'),
-            );
-            final url = html.URL.createObjectURL(blob);
-            html.HTMLAnchorElement()
-              ..href = url
-              ..setAttribute('download', '$safeName.pdf')
-              ..click();
-            html.URL.revokeObjectURL(url);
+            showPdfViewer(context, 'FIR — $uniqueId', '$safeName.pdf', bytes);
           },
           failed: (_, message) {
             ScaffoldMessenger.of(context).showSnackBar(
@@ -366,12 +492,13 @@ class _SafetyRemarkPendingApprovalPageState extends State<SafetyRemarkPendingApp
                                   );
                                 },
                               ),
-                              IconButton(
-                                  onPressed: () {
-                                    setState(() => _selectedModel = model[index]);
-                                  },
-                                  icon: const Icon(
-                                      Icons.arrow_forward_ios_sharp)),
+                              // Phase-3 bug 4: ">" opens the Safety Remarks form.
+                              IncidentOpenChevronButton(
+                                tooltip: 'Open Safety Remarks form',
+                                onPressed: () {
+                                  setState(() => _selectedModel = model[index]);
+                                },
+                              ),
                             ],
                           ),
                           const SizedBox(height: 4),

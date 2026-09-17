@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart' show Uint8List;
 import 'package:flutter/material.dart';
+import '../utils/page_header.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../model/compliance_incident_model.dart';
@@ -152,34 +153,22 @@ class ComplianceIncidentDetailPage extends StatelessWidget {
 
   // ----------------------------------------------------------------- header
   Widget _embeddedHeader(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-      // App signature header gradient (matches PageHeader / SubPageHeader).
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          colors: [Color(0xFFFF7B2C), Color(0xFFEF4A8B), Color(0xFF8B5CF6)],
-          begin: Alignment.centerLeft,
-          end: Alignment.centerRight,
-        ),
-      ),
+    // Inline header band, design 40-b (29-Aug-2026).
+    return InlineHeaderBand(
       child: Row(
         children: [
-          IconButton(
-            tooltip: 'Back to list',
-            onPressed: onBack,
-            icon: const Icon(Icons.arrow_back, color: kcWhite),
-          ),
+          InlineBackButton(onPressed: onBack),
           const SizedBox(width: 4),
           const Text(
             'Compliance Action',
             style: TextStyle(
-              color: kcWhite,
+              color: kInlineHeaderInk,
               fontSize: 16,
               fontWeight: FontWeight.w700,
             ),
           ),
           const Spacer(),
-          _statusPill(incident.status, onDark: true),
+          _statusPill(incident.status),
         ],
       ),
     );
@@ -750,14 +739,20 @@ Color complianceStatusColor(String status) {
 /// overall status COMPLETE only means "every employee has submitted" — from
 /// the reviewer's point of view that incident is still PENDING their action,
 /// so it must not read as "Complete" in those screens.
-String complianceStageLabel(String status, {bool closureMode = false}) {
+String complianceStageLabel(String status,
+    {bool closureMode = false, bool raiserMode = false}) {
   switch (status.trim().toUpperCase()) {
     case 'PENDING':
       return 'Pending · awaiting submissions';
     case 'COMPLETE':
-      return closureMode ? 'Pending · awaiting HOD review' : 'Pending Review';
+      // All employees submitted — the RAISER acts first (Sep-2026; the HOD
+      // does not approve, their review page is a status viewer).
+      if (raiserMode) return 'Pending Your Review';
+      return 'Pending · awaiting raiser review';
+    case 'RAISER_REVIEWED':
     case 'REVIEW_COMPLETED':
-      return closureMode ? 'Awaiting Closure' : 'Review Completed';
+      if (raiserMode) return 'Closed by you · with HSE team';
+      return closureMode ? 'Awaiting Closure' : 'Awaiting HSE Closure';
     case 'CLOSED':
       return 'Closed';
     default:
@@ -765,13 +760,17 @@ String complianceStageLabel(String status, {bool closureMode = false}) {
   }
 }
 
-/// Colour matching [complianceStageLabel] (everything not yet reviewed is
-/// amber, reviewed-but-open is purple, closed is green).
+/// Colour matching [complianceStageLabel] — aligned with the stage-wise
+/// colour coding on the incident cards (customer request Sep-2026):
+/// submissions pending = blue, awaiting raiser review = pink,
+/// awaiting HSE closure = purple, closed = green.
 Color complianceStageColor(String status) {
   switch (status.trim().toUpperCase()) {
     case 'PENDING':
+      return kcStatBlue; // CAPA submissions pending
     case 'COMPLETE':
-      return kcStatAmber;
+      return kcInfoLocation; // pink — waiting on the raiser's review
+    case 'RAISER_REVIEWED':
     case 'REVIEW_COMPLETED':
       return kcStatPurple;
     case 'CLOSED':
@@ -783,6 +782,8 @@ Color complianceStageColor(String status) {
 
 String complianceStatusLabel(String status) {
   switch (status.trim().toUpperCase()) {
+    case 'RAISER_REVIEWED':
+      return 'Awaiting Closure';
     case 'REVIEW_COMPLETED':
       return 'Review Completed';
     case 'PENDING':
@@ -1251,11 +1252,12 @@ class _ComplianceSubmitSectionState extends State<_ComplianceSubmitSection> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                    (widget.incident.mySubmission?.reopenSource ?? '')
-                                .toUpperCase() ==
-                            'SAFETY'
-                        ? 'Reopened by Safety Team'
-                        : 'Reopened by HOD',
+                    switch ((widget.incident.mySubmission?.reopenSource ?? '')
+                        .toUpperCase()) {
+                      'SAFETY' => 'Reopened by Safety Team',
+                      'RAISER' => 'Reopened by the Incident Raiser',
+                      _ => 'Reopened by HOD',
+                    },
                     style: const TextStyle(
                         fontWeight: FontWeight.w800,
                         color: kcInfoFir,

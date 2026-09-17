@@ -84,8 +84,11 @@ class _EditReceivedObservationsPageState extends State<EditReceivedObservationsP
     DateTime? selectedDate = await showDatePicker(
       context: context,
       initialDate: DateTime.now(),
-      firstDate: DateTime.now().subtract(const Duration(days: 2)),
-      lastDate: DateTime.now().add(Duration(days: 365)),
+      // Customer request (Sep-2026): the target date must not be restricted
+      // to today/future — dates on or before the observation date must be
+      // selectable too (e.g. back-filling compliance already done).
+      firstDate: DateTime(2000),
+      lastDate: DateTime.now().add(const Duration(days: 365)),
       helpText: "Select Target Date on Calendar",
     );
 

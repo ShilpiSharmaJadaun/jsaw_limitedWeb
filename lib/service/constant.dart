@@ -6,7 +6,7 @@ const root = 'http://localhost:8091/JSAW/';
 // const root = 'http://172.16.23.7:8686/JSAW/';
 
 /// Bump this alongside pubspec.yaml's version on each release.
-const appVersion = '1.0.0';
+const appVersion = '1.0.3';
 
 const headers = <String, String>{
   'Accept': 'Application/json',

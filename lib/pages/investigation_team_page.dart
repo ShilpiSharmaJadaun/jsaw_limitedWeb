@@ -52,8 +52,33 @@ class _InvestigationTeamPageState extends State<InvestigationTeamPage>
   InvestigationReportResponse? _editingReport;
 
   /// Phase-2 point 6 — which slice the list tab shows:
-  /// 'received' (forms I'm named in), 'raised' (forms I created), 'all'.
-  String _listScope = 'received';
+  /// 'raised' (forms I created) or 'all'. The 'received' scope (forms I'm
+  /// named in) still exists in the backend but its chip was removed
+  /// 29-Aug-2026 at the user's request (Phase-3).
+  String _listScope = 'raised';
+
+  /// Incident whose investigation is being exported to Excel (button spinner).
+  String? _excelBusyId;
+
+  /// Per-card Excel export of one incident's investigation (Phase-3, user
+  /// request 29-Aug-2026: Excel icon next to the PDF icon on every card).
+  Future<void> _downloadInvestigationExcel(String incidentUniqueId) async {
+    if (_excelBusyId != null) return;
+    setState(() => _excelBusyId = incidentUniqueId);
+    try {
+      final bytes = await _incidentService.exportInvestigationsExcel(
+          incidentUniqueId: incidentUniqueId);
+      saveXlsxBytes(
+          'Investigation_${incidentUniqueId.replaceAll(RegExp(r'[^A-Za-z0-9]+'), '_')}.xlsx',
+          bytes);
+    } on ApiError catch (e) {
+      _listToast(e.message);
+    } catch (e) {
+      _listToast(e.toString().replaceFirst('Exception: ', ''));
+    } finally {
+      if (mounted) setState(() => _excelBusyId = null);
+    }
+  }
 
   /// Read-only full-chain view opened from the Received / All tabs.
   AllIncidentModel? _viewIncident;
@@ -69,7 +94,9 @@ class _InvestigationTeamPageState extends State<InvestigationTeamPage>
     try {
       final bytes =
           await _incidentService.downloadInvestigationPdfByUid(incidentUniqueId);
-      savePdfBytes('Investigation_Report_$incidentUniqueId.pdf', bytes);
+      if (!mounted) return;
+      await showPdfViewer(context, 'Investigation Report — $incidentUniqueId',
+          'Investigation_Report_$incidentUniqueId.pdf', bytes);
     } on ApiError catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context)
@@ -866,54 +893,74 @@ class _InvestigationTeamPageState extends State<InvestigationTeamPage>
   }
 
   static const _scopes = [
-    ('received', 'Received Form', Icons.inbox_outlined),
-    ('raised', 'Raised Form', Icons.add_alert_outlined),
-    ('all', 'All Forms', Icons.list_alt_outlined),
+    ('raised', 'Raised', Icons.add_alert_outlined),
+    ('all', 'All', Icons.list_alt_outlined),
   ];
 
-  /// Received Form · Raised Form · All Forms selector (Phase-2 point 6).
+  /// Raised · All selector (Phase-2 point 6; Received chip removed 29-Aug-2026).
+  /// Styled as a segmented control in the app's signature gradient so it sits
+  /// with the page header / submit button instead of plain Material chips.
   Widget _buildScopeStrip() {
     return Container(
       color: kcWhite,
-      padding: const EdgeInsets.fromLTRB(20, 12, 20, 4),
+      padding: const EdgeInsets.fromLTRB(20, 12, 20, 8),
       child: Row(
         children: [
-          for (final (key, label, icon) in _scopes) ...[
-            ChoiceChip(
-              avatar: Icon(icon,
-                  size: 16, color: _listScope == key ? kcWhite : kcvoilet),
-              label: Text(label),
-              selected: _listScope == key,
-              showCheckmark: false,
-              selectedColor: kcvoilet,
-              backgroundColor: kcvoilet.withValues(alpha: 0.06),
-              side: BorderSide(
-                  color: _listScope == key
-                      ? kcvoilet
-                      : kcvoilet.withValues(alpha: 0.3)),
-              labelStyle: TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w700,
-                color: _listScope == key ? kcWhite : kcvoilet,
-              ),
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(20)),
-              onSelected: (_) => _changeScope(key),
+          Container(
+            padding: const EdgeInsets.all(4),
+            decoration: BoxDecoration(
+              color: kcvoilet.withValues(alpha: 0.07),
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: kcvoilet.withValues(alpha: 0.18)),
             ),
-            const SizedBox(width: 8),
-          ],
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                for (final (key, label, icon) in _scopes)
+                  _ScopeSegment(
+                    label: label,
+                    icon: icon,
+                    selected: _listScope == key,
+                    onTap: () => _changeScope(key),
+                  ),
+              ],
+            ),
+          ),
           const Spacer(),
           if (_listLoadedOnce && !_loadingList)
-            Text(
-              '$_listTotalElements form(s)',
-              style: const TextStyle(
-                  fontSize: 12.5,
-                  fontWeight: FontWeight.w600,
-                  color: kcLabelGrey),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+              decoration: BoxDecoration(
+                color: kcWhite,
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: kcvoilet.withValues(alpha: 0.28)),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.description_outlined,
+                      size: 15, color: kcvoilet),
+                  const SizedBox(width: 6),
+                  Text(
+                    '$_listTotalElements ${_listTotalElements == 1 ? 'form' : 'forms'}',
+                    style: const TextStyle(
+                        fontSize: 12.5,
+                        fontWeight: FontWeight.w700,
+                        color: kcvoilet),
+                  ),
+                ],
+              ),
             ),
         ],
       ),
     );
+  }
+
+  void _listToast(String msg) {
+    if (!mounted) return;
+    ScaffoldMessenger.maybeOf(context)
+      ?..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(content: Text(msg)));
   }
 
   void _changeScope(String scope) {
@@ -1027,6 +1074,8 @@ class _InvestigationTeamPageState extends State<InvestigationTeamPage>
             onView: _openReadOnlyView,
             onPdf: _downloadInvestigationPdf,
             pdfBusy: _pdfBusyId == _listItems[i].incidentUniqueId,
+            onExcel: _downloadInvestigationExcel,
+            excelBusy: _excelBusyId == _listItems[i].incidentUniqueId,
             ),
       ),
     );
@@ -1049,6 +1098,8 @@ class _InvestigationTeamPageState extends State<InvestigationTeamPage>
             onView: _openReadOnlyView,
             onPdf: _downloadInvestigationPdf,
             pdfBusy: _pdfBusyId == _listSearchResults[i].incidentUniqueId,
+            onExcel: _downloadInvestigationExcel,
+            excelBusy: _excelBusyId == _listSearchResults[i].incidentUniqueId,
           ),
     );
   }
@@ -2027,24 +2078,60 @@ class _InvestigationTeamPageState extends State<InvestigationTeamPage>
           ],
         ),
         const SizedBox(height: 12),
-        _factsField(
-          controller: _machineryDetailsController,
-          label:
-              'If caused by machinery, mention the name of the machine/equipment and the parts that caused the incident',
-          hint:
-              'Machine / equipment name and the parts involved (leave blank if not machinery related)',
-          required: false,
-        ),
-        const SizedBox(height: 12),
-        _factsField(
-          controller: _activityBeforeIncidentController,
-          label:
-              'What the Injured Person Was Doing Just Before and at the Time of the Occurrence',
-          hint:
-              'Describe the activity just before and at the time of the occurrence',
-          required: true,
+        // User request 29-Aug-2026: the two fact boxes sit side by side on
+        // wide screens (each in its own bordered box), stacked on narrow ones.
+        LayoutBuilder(
+          builder: (context, c) {
+            final machinery = _factsBox(_factsField(
+              controller: _machineryDetailsController,
+              label:
+                  'If caused by machinery, mention the name of the machine/equipment and the parts that caused the incident',
+              hint:
+                  'Machine / equipment name and the parts involved (leave blank if not machinery related)',
+              required: false,
+            ));
+            final activity = _factsBox(_factsField(
+              controller: _activityBeforeIncidentController,
+              label:
+                  'What the Injured Person Was Doing Just Before and at the Time of the Occurrence',
+              hint:
+                  'Describe the activity just before and at the time of the occurrence',
+              required: true,
+            ));
+            if (c.maxWidth < 700) {
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [machinery, const SizedBox(height: 12), activity],
+              );
+            }
+            // IntrinsicHeight: the Row sits in an unbounded-height Column, so
+            // a stretched cross axis needs a finite height to stretch to.
+            return IntrinsicHeight(
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Expanded(child: machinery),
+                  const SizedBox(width: 16),
+                  Expanded(child: activity),
+                ],
+              ),
+            );
+          },
         ),
       ],
+    );
+  }
+
+  /// Bordered box around one fact field (side-by-side layout, 29-Aug-2026).
+  Widget _factsBox(Widget child) {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(14, 12, 14, 6),
+      decoration: BoxDecoration(
+        color: kcvoilet.withValues(alpha: 0.035),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: kcvoilet.withValues(alpha: 0.22)),
+      ),
+      child: child,
     );
   }
 
@@ -2722,6 +2809,10 @@ class _InvestigationReportCard extends StatefulWidget {
   /// Investigation Report (FR-03) PDF download; [pdfBusy] shows a spinner.
   final ValueChanged<String>? onPdf;
   final bool pdfBusy;
+
+  /// Excel export of this one investigation; [excelBusy] shows a spinner.
+  final ValueChanged<String>? onExcel;
+  final bool excelBusy;
   const _InvestigationReportCard({
     required this.item,
     required this.onEdit,
@@ -2729,6 +2820,8 @@ class _InvestigationReportCard extends StatefulWidget {
     this.onView,
     this.onPdf,
     this.pdfBusy = false,
+    this.onExcel,
+    this.excelBusy = false,
   });
 
   @override
@@ -2815,36 +2908,29 @@ class _InvestigationReportCardState extends State<_InvestigationReportCard> {
             _headerChip('Raised by ${item.createdByEmpCode}'),
           // Investigation Report download — filled button in the header band,
           // right-aligned (user request 27-Aug-2026).
+          // Icon-only since 29-Aug-2026 (Phase-3: "icon, not text").
           if (widget.onPdf != null)
             Padding(
               padding: const EdgeInsets.only(right: 8),
-              child: SizedBox(
-                height: 30,
-                child: ElevatedButton.icon(
-                  onPressed: widget.pdfBusy
-                      ? null
-                      : () => widget.onPdf!(item.incidentUniqueId),
-                  icon: widget.pdfBusy
-                      ? const SizedBox(
-                          width: 14,
-                          height: 14,
-                          child: CircularProgressIndicator(
-                              strokeWidth: 2, color: kcPdfIconRed))
-                      : const Icon(Icons.download_outlined, size: 16),
-                  label: Text(widget.pdfBusy ? 'Preparing…' : 'Investigation Report',
-                      style: const TextStyle(
-                          fontSize: 12, fontWeight: FontWeight.w700)),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: kcWhite,
-                    foregroundColor: kcPdfIconRed,
-                    disabledBackgroundColor: Colors.white70,
-                    elevation: 0,
-                    visualDensity: VisualDensity.compact,
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16)),
-                  ),
-                ),
+              child: PdfDownloadIconButton(
+                size: 30,
+                busy: widget.pdfBusy,
+                onPressed: widget.pdfBusy
+                    ? null
+                    : () => widget.onPdf!(item.incidentUniqueId),
+              ),
+            ),
+          // Excel export of this investigation, next to the PDF icon.
+          if (widget.onExcel != null)
+            Padding(
+              padding: const EdgeInsets.only(right: 8),
+              child: ExcelExportIconButton(
+                size: 30,
+                busy: widget.excelBusy,
+                tooltip: 'Export this investigation to Excel',
+                onPressed: widget.excelBusy
+                    ? null
+                    : () => widget.onExcel!(item.incidentUniqueId),
               ),
             ),
           Container(
@@ -3330,7 +3416,8 @@ class _InvestigationReportCardState extends State<_InvestigationReportCard> {
             children: [
               _capaChip('Emp Code', c.respEmpCode.isEmpty ? '—' : c.respEmpCode),
               _capaChip('Emp Name', c.respEmpName.isEmpty ? '—' : c.respEmpName),
-              _capaChip('Dept', c.respDeptCode.isEmpty ? '—' : c.respDeptCode),
+              // Dept code chip removed at the user's request (17-Sep-2026):
+              // the raw DeptCode meant nothing to readers.
               _capaChip('Target', c.targetDate.isEmpty ? '—' : c.targetDate),
             ],
           ),
@@ -3579,3 +3666,90 @@ Widget _headerChip(String text) => Container(
           style: const TextStyle(
               color: kcWhite, fontSize: 11, fontWeight: FontWeight.w700)),
     );
+
+/// One segment of the Raised · All selector on the All Investigations tab.
+/// Selected = signature gradient (orange → pink → violet) with a soft glow;
+/// unselected = violet text on the tinted track.
+class _ScopeSegment extends StatefulWidget {
+  const _ScopeSegment({
+    required this.label,
+    required this.icon,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final String label;
+  final IconData icon;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  State<_ScopeSegment> createState() => _ScopeSegmentState();
+}
+
+class _ScopeSegmentState extends State<_ScopeSegment> {
+  bool _hover = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final selected = widget.selected;
+    final fg = selected ? kcWhite : kcvoilet;
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      onEnter: (_) => setState(() => _hover = true),
+      onExit: (_) => setState(() => _hover = false),
+      child: GestureDetector(
+        onTap: widget.onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          curve: Curves.easeOut,
+          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 9),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(11),
+            gradient: selected
+                ? const LinearGradient(
+                    colors: [
+                      Color(0xFFFF7B2C),
+                      Color(0xFFEF4A8B),
+                      Color(0xFF8B5CF6),
+                    ],
+                    begin: Alignment.centerLeft,
+                    end: Alignment.centerRight,
+                  )
+                : null,
+            color: selected
+                ? null
+                : (_hover
+                    ? kcvoilet.withValues(alpha: 0.10)
+                    : Colors.transparent),
+            boxShadow: selected
+                ? [
+                    BoxShadow(
+                      color: const Color(0xFFEF4A8B).withValues(alpha: 0.30),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ]
+                : null,
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(widget.icon, size: 16, color: fg),
+              const SizedBox(width: 7),
+              Text(
+                widget.label,
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 0.2,
+                  color: fg,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}

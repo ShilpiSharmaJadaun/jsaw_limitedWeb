@@ -226,6 +226,22 @@ class ComplianceService {
     throw Exception((body is Map ? body['msg']?.toString() : null) ?? 'Close failed');
   }
 
+  /// Incident raiser closes their review level (allowed only when all
+  /// complete); overall becomes RAISER_REVIEWED and goes to the HOD.
+  Future<String?> raiserCloseCompliance(String incidentUniqueId) async {
+    final url = "${root}compliance/raiserCloseCompliance";
+    final response = await authHttp.post(
+      Uri.parse(url),
+      body: json.encode({"incidentUniqueId": incidentUniqueId}),
+      headers: getHeaders(),
+    );
+    final body = json.decode(response.body);
+    if (body is Map && body['status'] == true) {
+      return body['msg']?.toString();
+    }
+    throw Exception((body is Map ? body['msg']?.toString() : null) ?? 'Close failed');
+  }
+
   /// HOD completes the Compliance Review (allowed only when all complete);
   /// overall becomes REVIEW_COMPLETED and goes to the Safety team.
   Future<String?> closeCompliance(String incidentUniqueId) async {

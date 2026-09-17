@@ -9,6 +9,7 @@ import 'package:jsaw_limited/pages/compliance_incident_page.dart';
 import 'package:jsaw_limited/pages/dashboardSelection.dart';
 import 'package:jsaw_limited/pages/employee_reporting_page.dart';
 import 'package:jsaw_limited/pages/graph_page.dart';
+import 'package:jsaw_limited/pages/incident_dashboard_page.dart';
 import 'package:jsaw_limited/pages/investigation_team_page.dart';
 import 'package:jsaw_limited/pages/investigations_raised_page.dart';
 import 'package:jsaw_limited/pages/observation.dart';
@@ -137,6 +138,16 @@ class AppDrawer extends StatelessWidget {
       // Investigation -> Compliance.
       // Overview list of every incident first (point 13: ALL incident pages
       // live under this heading), then the workflow pages.
+      // Graphical dashboard (customer request Sep-2026): injuries total /
+      // plant-wise / department-wise / category-wise / type-wise.
+      if (isIncidentUser)
+        const _DrawerEntry(
+          section: 'Incident Tracking',
+          title: 'Incident Dashboard',
+          icon: Icons.insights_outlined,
+          color: _blue,
+          page: IncidentDashboardPage(),
+        ),
       if (isIncidentUser)
         const _DrawerEntry(
           section: 'Incident Tracking',
@@ -161,11 +172,11 @@ class AppDrawer extends StatelessWidget {
           color: _teal,
           page: MedicalOfficerResponsePage(),
         ),
-      // Safety Observation is a Safety / HSE-team activity only (point 11).
+      // Safety Remarks is a Safety / HSE-team activity only (point 11).
       if (khse)
         const _DrawerEntry(
           section: 'Incident Tracking',
-          title: 'Safety Observation',
+          title: 'Safety Remarks',
           icon: Icons.health_and_safety_outlined,
           color: _orange,
           page: SafetyRemarkResponsePage(),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../utils/page_header.dart';
 import 'package:jsaw_limited/bloc/saveSafetyRemarkResponse_bloc.dart';
 import 'package:jsaw_limited/model/safetyRemarkList_model.dart';
 import 'package:jsaw_limited/state/saveSafetyRemarkResponse_state.dart';
@@ -117,89 +118,43 @@ class _SafetyRemarkPageState extends State<SafetyRemarkPage> {
 
   // -------------------- Header --------------------
   Widget _buildHeader(SafetyRemarkListModel m) {
-    return Container(
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.centerLeft,
-          end: Alignment.centerRight,
-          colors: [Color(0xFFFF7B2C), Color(0xFFEF4A8B), Color(0xFF8B5CF6)],
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Color(0x33000000),
-            blurRadius: 12,
-            offset: Offset(0, 4),
+    // Inline header band, design 40-b (29-Aug-2026).
+    return InlineHeaderBand(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          InlineBackButton(onPressed: () => _close(false)),
+          const SizedBox(width: 6),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text(
+                  "Safety Remarks",
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                    color: kInlineHeaderInk,
+                    letterSpacing: 0.2,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  m.incidentUniqueId.isEmpty
+                      ? "Incident details"
+                      : "Incident ID: ${m.incidentUniqueId}",
+                  style: const TextStyle(
+                    fontSize: 13,
+                    color: kcLabelGrey,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
           ),
+          if (m.incidentType.isNotEmpty) InlineHeaderChip(m.incidentType),
         ],
-      ),
-      child: SafeArea(
-        bottom: false,
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(8, 8, 16, 18),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Material(
-                color: Colors.white.withValues(alpha: 0.18),
-                shape: const CircleBorder(),
-                child: IconButton(
-                  icon: const Icon(Icons.arrow_back, color: kcWhite),
-                  onPressed: () => _close(false),
-                  tooltip: 'Back',
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Text(
-                      "Safety Observation",
-                      style: TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.w700,
-                        color: kcWhite,
-                        letterSpacing: 0.2,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      m.incidentUniqueId.isEmpty
-                          ? "Incident details"
-                          : "Incident ID: ${m.incidentUniqueId}",
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: Colors.white.withValues(alpha: 0.92),
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              if (m.incidentType.isNotEmpty) _statusChip(m.incidentType),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _statusChip(String label) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.22),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.35)),
-      ),
-      child: Text(
-        label,
-        style: const TextStyle(
-          color: kcWhite,
-          fontSize: 11,
-          fontWeight: FontWeight.w600,
-        ),
       ),
     );
   }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../utils/page_header.dart';
 
 import '../model/compliance_api_models.dart';
 import '../model/compliance_incident_model.dart';
@@ -24,15 +25,22 @@ class ComplianceReviewPage extends StatefulWidget {
   /// null, it falls back to a stand-alone Scaffold (legacy pushed-route usage).
   final VoidCallback? onBack;
 
-  /// false = HOD "Compliance Review" (reopen individuals, Complete Review).
+  /// false = HOD "Compliance Review" — VIEW ONLY since 01-Sep-2026 (the HOD
+  ///         monitors status; the raiser and the HSE team hold the actions).
   /// true  = Safety/HSE "Compliance Closure" (reopen individuals, final Close).
   final bool closureMode;
+
+  /// true = the INCIDENT RAISER's review level (first step, Sep-2026):
+  /// reached from All Incident → Raised; reopen individuals or close the
+  /// review, which forwards the incident to the HSE team (RAISER_REVIEWED).
+  final bool raiserMode;
 
   const ComplianceReviewPage({
     super.key,
     required this.incidentUniqueId,
     this.onBack,
     this.closureMode = false,
+    this.raiserMode = false,
   });
 
   @override
@@ -42,8 +50,11 @@ class ComplianceReviewPage extends StatefulWidget {
 class _ComplianceReviewPageState extends State<ComplianceReviewPage> {
   final ComplianceService _service = ComplianceService();
 
-  String get _modeTitle =>
-      widget.closureMode ? 'Compliance Closure' : 'Compliance Review';
+  String get _modeTitle => widget.raiserMode
+      ? 'Review Compliance'
+      : widget.closureMode
+          ? 'Compliance Closure'
+          : 'Compliance Review';
   ComplianceReview? _review;
   ComplianceIncident? _detail; // full incident context (same as detail page)
   bool _loading = true;
@@ -126,29 +137,18 @@ class _ComplianceReviewPageState extends State<ComplianceReviewPage> {
   // Gradient back-header matching the Compliance Incident detail page so the
   // review opens inside the app rather than as a separate full-screen route.
   Widget _embeddedHeader() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          colors: [Color(0xFFFF7B2C), Color(0xFFEF4A8B), Color(0xFF8B5CF6)],
-          begin: Alignment.centerLeft,
-          end: Alignment.centerRight,
-        ),
-      ),
+    // Inline header band, design 40-b (29-Aug-2026).
+    return InlineHeaderBand(
       child: Row(
         children: [
-          IconButton(
-            tooltip: 'Back to list',
-            onPressed: widget.onBack,
-            icon: const Icon(Icons.arrow_back, color: kcWhite),
-          ),
+          InlineBackButton(onPressed: widget.onBack),
           const SizedBox(width: 4),
           Expanded(
             child: Text(
               '$_modeTitle · ${widget.incidentUniqueId}',
               overflow: TextOverflow.ellipsis,
               style: const TextStyle(
-                color: kcWhite,
+                color: kInlineHeaderInk,
                 fontSize: 16,
                 fontWeight: FontWeight.w700,
               ),
@@ -157,7 +157,7 @@ class _ComplianceReviewPageState extends State<ComplianceReviewPage> {
           IconButton(
             tooltip: 'Refresh',
             onPressed: _loading ? null : _load,
-            icon: const Icon(Icons.refresh, color: kcWhite),
+            icon: const Icon(Icons.refresh, color: kcvoilet),
           ),
         ],
       ),
@@ -292,7 +292,7 @@ class _ComplianceReviewPageState extends State<ComplianceReviewPage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                    'Status: ${complianceStageLabel(review.overallStatus, closureMode: widget.closureMode)}',
+                    'Status: ${complianceStageLabel(review.overallStatus, closureMode: widget.closureMode, raiserMode: widget.raiserMode)}',
                     style: const TextStyle(
                         color: kcWhite,
                         fontSize: 16,
@@ -423,8 +423,7 @@ class _ComplianceReviewPageState extends State<ComplianceReviewPage> {
                         style:
                             const TextStyle(fontSize: 11, color: kcLabelGrey)),
                   ],
-                  if (a.status.toUpperCase() == 'REOPEN' &&
-                      a.reviewRemark.isNotEmpty) ...[
+                  if (a.status.toUpperCase() == 'REOPEN') ...[
                     const SizedBox(height: 8),
                     Container(
                       width: double.infinity,
@@ -434,12 +433,25 @@ class _ComplianceReviewPageState extends State<ComplianceReviewPage> {
                         borderRadius: BorderRadius.circular(8),
                         border: Border.all(color: kcInfoFir.withOpacity(0.4)),
                       ),
-                      child: Text('Reopen reason: ${a.reviewRemark}',
-                          style: const TextStyle(
-                              fontSize: 12, color: kcInfoFir)),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(_reopenByLabel(a.reopenSource),
+                              style: const TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w800,
+                                  color: kcInfoFir)),
+                          if (a.reviewRemark.isNotEmpty) ...[
+                            const SizedBox(height: 4),
+                            Text('Reason: ${a.reviewRemark}',
+                                style: const TextStyle(
+                                    fontSize: 12, color: kcInfoFir)),
+                          ],
+                        ],
+                      ),
                     ),
                   ],
-                  if (submitted) ...[
+                  if (submitted && _canReopen) ...[
                     const SizedBox(height: 10),
                     Align(
                       alignment: Alignment.centerRight,
@@ -584,32 +596,66 @@ class _ComplianceReviewPageState extends State<ComplianceReviewPage> {
   String _pillText(ComplianceReview review) {
     final s = review.overallStatus.toUpperCase();
     if (s == 'CLOSED') return 'Closed';
-    if (s == 'REVIEW_COMPLETED') {
-      return widget.closureMode
-          ? 'Ready to close'
-          : 'Review completed · with Safety team';
+    if (s == 'REVIEW_COMPLETED' || s == 'RAISER_REVIEWED') {
+      if (widget.raiserMode) return 'Closed by you · with HSE team';
+      if (widget.closureMode) return 'Ready to close';
+      return 'Awaiting HSE closure';
     }
-    if (widget.closureMode) return 'Awaiting HOD review';
-    return review.canClose ? 'Ready to complete review' : 'Awaiting submissions';
+    if (widget.raiserMode) {
+      return review.canRaiserClose ? 'Ready to close' : 'Awaiting submissions';
+    }
+    return 'Awaiting raiser review';
+  }
+
+  /// Whether this page's mode carries any action at all (the HOD's
+  /// Compliance Review is a status viewer — no close, no reopen).
+  bool get _actionable => widget.raiserMode || widget.closureMode;
+
+  /// Whether THIS mode may reopen a submitted report right now. Once the
+  /// raiser closes their review the incident is with the HSE team, and only
+  /// the HSE team can reopen (user rule 01-Sep-2026); a reopen puts the
+  /// status back to PENDING, which re-enables the raiser's buttons.
+  bool get _canReopen {
+    if (!_actionable) return false;
+    final s = _review?.overallStatus.trim().toUpperCase() ?? '';
+    if (s == 'CLOSED') return false;
+    if (widget.raiserMode) {
+      return s != 'RAISER_REVIEWED' && s != 'REVIEW_COMPLETED';
+    }
+    return true; // HSE: any time before final closure
+  }
+
+  bool get _canAct {
+    final review = _review;
+    if (review == null) return false;
+    if (widget.raiserMode) return review.canRaiserClose;
+    if (widget.closureMode) return review.canFinalClose;
+    return false; // HOD: view only
   }
 
   Widget _closeBar(ComplianceReview review) {
-    final canClose =
-        widget.closureMode ? review.canFinalClose : review.canClose;
+    final canClose = _canAct;
     final s = review.overallStatus.toUpperCase();
     final String hint;
     if (s == 'CLOSED') {
       hint = 'This incident is closed.';
+    } else if (widget.raiserMode) {
+      if (s == 'RAISER_REVIEWED' || s == 'REVIEW_COMPLETED') {
+        hint = 'You closed this review — it is with the Safety/HSE team now.';
+      } else {
+        hint = canClose
+            ? 'All employees submitted — check each report; close the review to forward it to the Safety/HSE team, or reopen an employee above.'
+            : 'Close is disabled until every employee submits (and none are reopened).';
+      }
     } else if (widget.closureMode) {
       hint = canClose
-          ? 'HOD review is complete — you can close this incident, or reopen an employee above.'
-          : 'Close is disabled until the HOD completes the Compliance Review.';
-    } else if (s == 'REVIEW_COMPLETED') {
-      hint = 'Review completed — forwarded to the Safety team for closure.';
+          ? 'The incident raiser closed the review — you can close this incident, or reopen an employee above.'
+          : 'Close is disabled until the incident raiser closes the compliance review.';
     } else {
-      hint = canClose
-          ? 'All employees submitted — you can complete the review and forward to the Safety team.'
-          : 'Complete Review is disabled until every employee submits (and none are reopened).';
+      // HOD: status viewer only.
+      hint = s == 'RAISER_REVIEWED' || s == 'REVIEW_COMPLETED'
+          ? 'The raiser closed the review — awaiting the Safety/HSE team\'s closure. View only.'
+          : 'View only — the incident raiser reviews the compliance and the Safety/HSE team closes the incident.';
     }
     return Container(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
@@ -635,6 +681,7 @@ class _ComplianceReviewPageState extends State<ComplianceReviewPage> {
                 ),
               ),
               const SizedBox(width: 12),
+              if (_actionable)
               ElevatedButton.icon(
                 onPressed: (canClose && !_busy) ? _close : null,
                 icon: Icon(
@@ -642,9 +689,9 @@ class _ComplianceReviewPageState extends State<ComplianceReviewPage> {
                         ? Icons.lock_outline
                         : Icons.task_alt_outlined,
                     size: 18),
-                label: Text(widget.closureMode
-                    ? 'Close Incident'
-                    : 'Complete Review'),
+                label: Text(widget.raiserMode
+                    ? 'Close Compliance'
+                    : 'Close Incident'),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF16A34A),
                   foregroundColor: kcWhite,
@@ -701,7 +748,11 @@ class _ComplianceReviewPageState extends State<ComplianceReviewPage> {
         incidentUniqueId: widget.incidentUniqueId,
         empUnqId: a.empUnqId,
         reviewRemark: reason,
-        source: widget.closureMode ? 'SAFETY' : 'HOD',
+        source: widget.raiserMode
+            ? 'RAISER'
+            : widget.closureMode
+                ? 'SAFETY'
+                : 'HOD',
       );
       if (!mounted) return;
       _snack(msg ?? 'Compliance reopened.');
@@ -719,10 +770,10 @@ class _ComplianceReviewPageState extends State<ComplianceReviewPage> {
       context: context,
       builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        title: Text(widget.closureMode ? 'Close Incident' : 'Complete Review'),
-        content: Text(widget.closureMode
-            ? 'Close this incident? This marks the compliance CLOSED for all employees (final).'
-            : 'Complete the review? The incident will be marked REVIEW COMPLETED and forwarded to the Safety team for closure.'),
+        title: Text(widget.raiserMode ? 'Close Compliance' : 'Close Incident'),
+        content: Text(widget.raiserMode
+            ? 'Close the compliance review? The incident will be forwarded to the Safety/HSE team for closure.'
+            : 'Close this incident? This marks the compliance CLOSED for all employees (final).'),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
@@ -733,7 +784,7 @@ class _ComplianceReviewPageState extends State<ComplianceReviewPage> {
             style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF16A34A),
                 foregroundColor: kcWhite),
-            child: Text(widget.closureMode ? 'Close' : 'Complete'),
+            child: const Text('Close'),
           ),
         ],
       ),
@@ -742,11 +793,12 @@ class _ComplianceReviewPageState extends State<ComplianceReviewPage> {
 
     setState(() => _busy = true);
     try {
-      final msg = widget.closureMode
-          ? await _service.finalCloseCompliance(widget.incidentUniqueId)
-          : await _service.closeCompliance(widget.incidentUniqueId);
+      final msg = widget.raiserMode
+          ? await _service.raiserCloseCompliance(widget.incidentUniqueId)
+          : await _service.finalCloseCompliance(widget.incidentUniqueId);
       if (!mounted) return;
-      _snack(msg ?? (widget.closureMode ? 'Incident closed.' : 'Review completed.'));
+      _snack(msg ??
+          (widget.raiserMode ? 'Compliance review closed.' : 'Incident closed.'));
       if (widget.onBack != null) {
         widget.onBack!();
       } else {
@@ -807,5 +859,18 @@ class _ComplianceReviewPageState extends State<ComplianceReviewPage> {
   bool _isComplete(String status) {
     final s = status.toUpperCase();
     return s == 'COMPLETE' || s == 'CLOSED';
+  }
+
+  String _reopenByLabel(String source) {
+    switch (source.trim().toUpperCase()) {
+      case 'SAFETY':
+        return 'Reopened by HSE Team';
+      case 'RAISER':
+        return 'Reopened by the Incident Raiser';
+      case 'HOD':
+        return 'Reopened by HOD';
+      default:
+        return 'Reopened';
+    }
   }
 }

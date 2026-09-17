@@ -2,6 +2,9 @@ import 'dart:ui' hide window;
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:jsaw_limited/bloc/allMedicalOfficerList_bloc.dart';
 import 'package:flutter/material.dart';
+import '../error/api_error.dart';
+import '../utils/pdf_download.dart';
+import 'widgets/incident_filter.dart';
 import 'package:jsaw_limited/bloc/completeMedicalResponse_bloc.dart';
 import 'package:jsaw_limited/model/allMedicalOfficerList_model.dart';
 import 'package:jsaw_limited/model/completeMedicalResponse_model.dart';
@@ -43,6 +46,104 @@ class _MedicalOfficerListState extends State<MedicalOfficerList> {
   // the selected completed response is shown INLINE (inside the app shell).
   CompleteMedicalResponseModel? _selected;
 
+  // Phase-3 point 2: shared incident filter (applied in the browser — this
+  // list is loaded whole) + icon-only Excel export of the same scope.
+  IncidentFilter _filter = IncidentFilter.empty;
+  Future<IncidentFilterOptions>? _filterOptions;
+  bool _exporting = false;
+  // Complete = the medical assessment is submitted: the incident has moved on
+  // to Safety Remarks or is already CLOSED.
+  static const _kStatuses = ['PENDING_SAFETY_REMARKS', 'CLOSED'];
+  static const _kExportTitle = 'Medical Assessment - Complete';
+
+  Future<IncidentFilterOptions> _optionsFuture() {
+    final incidentService = Provider.of<IncidentService>(context, listen: false);
+    return _filterOptions ??= incidentService.getIncidentFilterOptions();
+  }
+
+  Future<void> _openFilter() async {
+    final result = await showIncidentFilterDialog(
+      context: context,
+      initial: _filter,
+      options: _optionsFuture(),
+      showRaisedBy: false,
+      showStatus: false,
+    );
+    if (result == null || !mounted) return;
+    setState(() => _filter = result);
+  }
+
+  void _clearFilter() => setState(() => _filter = IncidentFilter.empty);
+
+  /// Reset = clear filters and reload the list (Phase-3 bug 1a semantics).
+  void _reset() {
+    setState(() => _filter = IncidentFilter.empty);
+    completeMedicalResponseBloc.initState();
+  }
+
+  List<CompleteMedicalResponseModel> _applyFilter(List<CompleteMedicalResponseModel> all) =>
+      all
+          .where((m) => incidentFilterMatches(
+                _filter,
+                uniqueId: m.incidentUniqueId,
+                incidentDateTime: m.incidentDateTime,
+                plant: m.plant,
+                deptName: m.deptName,
+                incidentType: m.incidentType,
+                shift: m.shift,
+                employeeName: m.employeeName,
+                employeeCode: m.employeeCode,
+              ))
+          .toList();
+
+  Future<void> _exportExcel() async {
+    if (_exporting) return;
+    setState(() => _exporting = true);
+    try {
+      final incidentService = Provider.of<IncidentService>(context, listen: false);
+      final bytes = await incidentService.exportIncidentsExcel(
+        filter: _filter,
+        statuses: _kStatuses,
+        exportTitle: _kExportTitle,
+        exportFilters: [for (final c in _filter.chips) '${c.key}: ${c.value}'],
+      );
+      final now = DateTime.now();
+      String two(int v) => v.toString().padLeft(2, '0');
+      final stamp =
+          '${now.year}${two(now.month)}${two(now.day)}-${two(now.hour)}${two(now.minute)}';
+      saveXlsxBytes('Medical_Complete_$stamp.xlsx', bytes);
+    } on ApiError catch (e) {
+      _toast(e.message);
+    } catch (e) {
+      _toast('Excel export failed: $e');
+    } finally {
+      if (mounted) setState(() => _exporting = false);
+    }
+  }
+
+  void _toast(String msg) {
+    if (!mounted) return;
+    ScaffoldMessenger.maybeOf(context)
+      ?..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(content: Text(msg)));
+  }
+
+  Widget _toolbar() => IncidentFilterBar(
+        filter: _filter,
+        onOpen: _openFilter,
+        onClear: _clearFilter,
+        onRefresh: _reset,
+        currentPage: 1,
+        totalPages: 1,
+        hasPrev: false,
+        hasNext: false,
+        onPrev: () {},
+        onNext: () {},
+        exporting: _exporting,
+        onExport: _exportExcel,
+        showPaging: false,
+      );
+
   @override
   Widget build(BuildContext context) {
     if (_selected != null) {
@@ -62,20 +163,31 @@ class _MedicalOfficerListState extends State<MedicalOfficerList> {
       bloc: completeMedicalResponseBloc,
       listener: (_, state) {},
       builder: (_, state) {
-        return state.when(
+        Widget filtered(List<CompleteMedicalResponseModel> all) {
+          if (all.isEmpty) {
+            return _buildEmpty('No completed medical responses found');
+          }
+          final list = _applyFilter(all);
+          return list.isEmpty
+              ? _buildEmpty('No completed medical responses match the current filters')
+              : _buildContent(list);
+        }
+        final body = state.when(
             loading: (_) {
               return Center(
                 child: Lottie.asset("assets/lottie/loading.json",
                     height: 80, width: 80),
               );
             },
-            content: (model) => model.isEmpty
-                ? _buildEmpty('No completed medical responses found')
-                : _buildContent(model),
-            success: (model) => model.isEmpty
-                ? _buildEmpty('No completed medical responses found')
-                : _buildContent(model),
+            content: filtered,
+            success: filtered,
             failed: (_, msg) => _buildEmpty(msg));
+        return Column(
+          children: [
+            _toolbar(),
+            Expanded(child: body),
+          ],
+        );
       },
     );
   }

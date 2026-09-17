@@ -17,6 +17,9 @@ Future<T?> showEmployeePicker<T>(
   String Function(T)? extraSearch,
   Set<String> alreadySelected = const {},
   String emptyText = 'No matching employee',
+  VoidCallback? onOther,
+  String otherLabel = 'Others — not in employee master',
+  String otherSubtitle = "Enter the person's details manually",
 }) {
   return showDialog<T>(
     context: context,
@@ -29,6 +32,9 @@ Future<T?> showEmployeePicker<T>(
       extraSearch: extraSearch,
       alreadySelected: alreadySelected,
       emptyText: emptyText,
+      onOther: onOther,
+      otherLabel: otherLabel,
+      otherSubtitle: otherSubtitle,
     ),
   );
 }
@@ -46,6 +52,14 @@ class EmployeePickerSheet<T> extends StatefulWidget {
   final Set<String> alreadySelected;
   final String emptyText;
 
+  /// When given, a pinned "Others" row is shown above the list — for people
+  /// not present in the master data (e.g. short-duty workers). Tapping it
+  /// closes the picker and invokes the callback so the caller can collect
+  /// the details manually.
+  final VoidCallback? onOther;
+  final String otherLabel;
+  final String otherSubtitle;
+
   const EmployeePickerSheet({
     super.key,
     required this.items,
@@ -56,6 +70,9 @@ class EmployeePickerSheet<T> extends StatefulWidget {
     this.extraSearch,
     this.alreadySelected = const {},
     this.emptyText = 'No matching employee',
+    this.onOther,
+    this.otherLabel = 'Others — not in employee master',
+    this.otherSubtitle = "Enter the person's details manually",
   });
 
   @override
@@ -134,7 +151,48 @@ class _EmployeePickerSheetState<T> extends State<EmployeePickerSheet<T>> {
       content: SizedBox(
         width: 460,
         height: 420,
-        child: _filtered.isEmpty
+        child: Column(
+          children: [
+            if (widget.onOther != null) ...[
+              ListTile(
+                dense: true,
+                leading: CircleAvatar(
+                  radius: 16,
+                  backgroundColor: kcobservationgreen.withOpacity(0.12),
+                  child: const Icon(Icons.person_add_alt_1,
+                      color: kcobservationgreen, size: 18),
+                ),
+                title: Text(widget.otherLabel,
+                    style: const TextStyle(
+                        fontSize: 13.5,
+                        fontWeight: FontWeight.w700,
+                        color: kcobservationgreen)),
+                subtitle: Text(widget.otherSubtitle,
+                    style: const TextStyle(fontSize: 12)),
+                trailing: const Icon(Icons.chevron_right,
+                    color: kcobservationgreen, size: 18),
+                onTap: () {
+                  Navigator.pop(context);
+                  widget.onOther!();
+                },
+              ),
+              Divider(height: 1, color: Colors.grey.shade300),
+            ],
+            Expanded(child: _buildEmployeeList()),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Close'),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildEmployeeList() {
+    return _filtered.isEmpty
             ? Center(
                 child: Text(widget.emptyText,
                     style: const TextStyle(color: kcLabelGrey)))
@@ -178,14 +236,6 @@ class _EmployeePickerSheetState<T> extends State<EmployeePickerSheet<T>> {
                     onTap: taken ? null : () => Navigator.pop(context, e),
                   );
                 },
-              ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: const Text('Close'),
-        ),
-      ],
-    );
+              );
   }
 }

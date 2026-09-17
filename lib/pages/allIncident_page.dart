@@ -21,6 +21,7 @@ import '../bloc/all_filter_observation_bloc.dart';
 import '../service/incident_service.dart';
 import 'widgets/incident_filter.dart';
 import 'incident_view_page.dart';
+import 'compliance_review_page.dart';
 import '../error/api_error.dart';
 import '../utils/app_color.dart';
 import '../utils/progressive_image.dart';
@@ -36,7 +37,9 @@ enum IncidentListMode {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// AllIncidentPage — tab host: Received Incident · Raised Incident · All Incidents
+// AllIncidentPage — tab host: Raised Incident · All Incidents
+// (the Received Incident tab was removed 29-Aug-2026 at the user's request —
+// Phase-3 bug 1(b); IncidentListMode.received is kept for a possible revisit).
 // (same shape as ObservationPage so the customer gets the familiar layout).
 // ─────────────────────────────────────────────────────────────────────────────
 class AllIncidentPage extends StatefulWidget {
@@ -53,7 +56,7 @@ class _AllIncidentPageState extends State<AllIncidentPage>
   @override
   void initState() {
     super.initState();
-    tabController = TabController(length: 3, vsync: this);
+    tabController = TabController(length: 2, vsync: this);
   }
 
   @override
@@ -84,7 +87,6 @@ class _AllIncidentPageState extends State<AllIncidentPage>
                   fontWeight: FontWeight.w500, fontSize: 13, letterSpacing: 0.2),
               dividerColor: kcVeryLightGrey,
               tabs: [
-                _tab(Icons.inbox_outlined, 'Received Incident'),
                 _tab(Icons.add_alert_outlined, 'Raised Incident'),
                 _tab(Icons.list_alt_outlined, 'All Incidents'),
               ],
@@ -94,7 +96,6 @@ class _AllIncidentPageState extends State<AllIncidentPage>
             child: TabBarView(
               controller: tabController,
               children: const [
-                IncidentListTab(mode: IncidentListMode.received),
                 IncidentListTab(mode: IncidentListMode.raised),
                 IncidentListTab(mode: IncidentListMode.all),
               ],
@@ -146,6 +147,10 @@ class _IncidentListTabState extends State<IncidentListTab>
   /// Kept as state (not Navigator.push) so Back returns to the same tab with
   /// its filter and page intact.
   AllIncidentModel? _selected;
+
+  /// Incident opened with "Review Compliance" (raiser review level, Sep-2026);
+  /// only used on the Raised tab. Null = list is shown.
+  String? _reviewIncidentId;
 
   String get _tabTitle {
     switch (widget.mode) {
@@ -204,19 +209,22 @@ class _IncidentListTabState extends State<IncidentListTab>
       final incidentService =
           Provider.of<IncidentService>(context, listen: false);
       final filter = allIncidentbloc.filter;
+      // Customer point A (Sep-2026): the All Incident export is the FR-16
+      // consolidated "INCIDENT REPORTING & TRACKER" sheet (FIR + Investigation
+      // + compliance in one row per incident, photos embedded).
       final bytes = await incidentService.exportIncidentsExcel(
         filter: filter,
         raisedByEmpCode: allIncidentbloc.raisedByEmpCode,
         employeeCode: allIncidentbloc.employeeCode,
         exportTitle: _tabTitle,
         exportFilters: [for (final c in filter.chips) '${c.key}: ${c.value}'],
+        consolidated: true,
       );
       final now = DateTime.now();
       String two(int v) => v.toString().padLeft(2, '0');
       final stamp =
           '${now.year}${two(now.month)}${two(now.day)}-${two(now.hour)}${two(now.minute)}';
-      final fileName =
-          'Incidents_${_tabTitle.replaceAll(RegExp(r'[^A-Za-z0-9]+'), '_')}_$stamp.xlsx';
+      final fileName = 'Incident_Tracker_$stamp.xlsx';
       final blob = html.Blob(
         [bytes.toJS].toJS,
         html.BlobPropertyBag(
@@ -274,6 +282,13 @@ class _IncidentListTabState extends State<IncidentListTab>
   int currentPage = 0;
   late String raisedSessionID = window.localStorage.getItem('kRaisedSessionID') ?? "";
 
+  /// The logged-in user raised this incident (personalizes the stage pill:
+  /// "Pending Your Review" instead of "Pending Raiser Review").
+  bool _isMine(AllIncidentModel m) {
+    final me = (window.localStorage.getItem('kEmployeeCode') ?? '').trim();
+    return me.isNotEmpty && m.raisedByEmpCode.trim() == me;
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -284,6 +299,21 @@ class _IncidentListTabState extends State<IncidentListTab>
         key: ValueKey('view-${selected.uniqueId}'),
         incident: selected,
         onBack: () => setState(() => _selected = null),
+      );
+    }
+    final reviewId = _reviewIncidentId;
+    if (reviewId != null) {
+      // Raiser review level: the raiser checks each CAPA compliance report,
+      // reopens individuals or closes the review (→ HOD). Same screen the
+      // HSE team uses for closure, in raiser mode.
+      return ComplianceReviewPage(
+        key: ValueKey('raiser-review-$reviewId'),
+        incidentUniqueId: reviewId,
+        raiserMode: true,
+        onBack: () {
+          setState(() => _reviewIncidentId = null);
+          allIncidentbloc.refresh(); // stage may have changed (reopen/close)
+        },
       );
     }
     return Column(
@@ -297,7 +327,9 @@ class _IncidentListTabState extends State<IncidentListTab>
               filter: allIncidentbloc.filter,
               onOpen: _openFilter,
               onClear: _clearFilter,
-              onRefresh: allIncidentbloc.refresh,
+              // Phase-3 bug 1(a): the button is a Reset — clear every filter
+              // and reload from page 1.
+              onRefresh: _clearFilter,
               currentPage: allIncidentbloc.currentPage,
               totalPages: allIncidentbloc.totalPages,
               hasPrev: allIncidentbloc.hasPrevious && !isLoading,
@@ -421,6 +453,11 @@ class _IncidentListTabState extends State<IncidentListTab>
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         itemCount: model.length,
         itemBuilder: (BuildContext context, int index) {
+          // Raiser review level (option 5, user pick 01-Sep-2026): raised-tab
+          // cards with an investigation close with a tinted footer strip that
+          // carries the hint + gradient "Review Compliance" + outline "View".
+          final bool showStrip = widget.mode == IncidentListMode.raised &&
+              model[index].investigationStatus.trim().isNotEmpty;
           return Container(
             margin: const EdgeInsets.only(bottom: 10),
             decoration: BoxDecoration(
@@ -435,7 +472,10 @@ class _IncidentListTabState extends State<IncidentListTab>
                 ),
               ],
             ),
-            child: Padding(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+            Padding(
               padding: const EdgeInsets.all(10),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -486,6 +526,7 @@ class _IncidentListTabState extends State<IncidentListTab>
                                 status: model[index].status,
                                 investigationStatus:
                                     model[index].investigationStatus,
+                                viewerIsRaiser: _isMine(model[index]),
                               ),
                             ],
                           ),
@@ -681,13 +722,15 @@ class _IncidentListTabState extends State<IncidentListTab>
                         const SizedBox(height: 4),
 
                         // View (Phase-2 point 4) — read-only full-chain view
-                        // of this incident, opened inline.
-                        Align(
-                          alignment: Alignment.centerRight,
-                          child: _buildViewButton(
-                            () => setState(() => _selected = model[index]),
+                        // of this incident, opened inline. Hidden when the
+                        // footer strip is shown (View moves into the strip).
+                        if (!showStrip)
+                          Align(
+                            alignment: Alignment.centerRight,
+                            child: _buildViewButton(
+                              () => setState(() => _selected = model[index]),
+                            ),
                           ),
-                        ),
                         Row(
                           //crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -776,6 +819,9 @@ class _IncidentListTabState extends State<IncidentListTab>
                 ],
               ),
             ),
+            if (showStrip) _buildComplianceStrip(model[index]),
+              ],
+            ),
           );
         },
       ),
@@ -800,6 +846,103 @@ class _IncidentListTabState extends State<IncidentListTab>
       label: const Text('View',
           style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12.5)),
     );
+  }
+
+  /// Footer strip (option 5, 01-Sep-2026): tinted band closing a raised-tab
+  /// card that has an investigation — stage hint left, gradient "Review
+  /// Compliance" + outline "View" right.
+  Widget _buildComplianceStrip(AllIncidentModel m) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
+      decoration: const BoxDecoration(
+        color: Color(0xFFF4F2FD),
+        border: Border(top: BorderSide(color: Color(0xFFE3DDF8))),
+        borderRadius: BorderRadius.only(
+          bottomLeft: Radius.circular(13),
+          bottomRight: Radius.circular(13),
+        ),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              _complianceHint(m.investigationStatus),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(fontSize: 12, color: kcLabelGrey),
+            ),
+          ),
+          const SizedBox(width: 10),
+          _gradientReviewButton(
+              () => setState(() => _reviewIncidentId = m.uniqueId)),
+          const SizedBox(width: 8),
+          OutlinedButton.icon(
+            onPressed: () => setState(() => _selected = m),
+            style: OutlinedButton.styleFrom(
+              foregroundColor: kcStatBlue,
+              side: const BorderSide(color: kcStatBlue, width: 1.5),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+              visualDensity: VisualDensity.compact,
+              shape:
+                  RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+            ),
+            icon: const Icon(Icons.visibility_outlined, size: 16),
+            label: const Text('View',
+                style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12.5)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Signature-gradient "Review Compliance" button used in the footer strip.
+  Widget _gradientReviewButton(VoidCallback onTap) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Color(0xFFFF7B2C), Color(0xFFEF4A8B), Color(0xFF8B5CF6)],
+        ),
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFFEF4A8B).withOpacity(0.35),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: ElevatedButton.icon(
+        onPressed: onTap,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.transparent,
+          shadowColor: Colors.transparent,
+          foregroundColor: kcWhite,
+          elevation: 0,
+          padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 7),
+          visualDensity: VisualDensity.compact,
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        ),
+        icon: const Icon(Icons.fact_check_outlined, size: 16),
+        label: const Text('Review Compliance',
+            style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12.5)),
+      ),
+    );
+  }
+
+  /// One-line stage hint for the footer strip, from the investigation status.
+  String _complianceHint(String invStatus) {
+    switch (invStatus.trim().toUpperCase()) {
+      case 'COMPLETE':
+        return 'All compliance reports submitted — ready for your review';
+      case 'RAISER_REVIEWED':
+      case 'REVIEW_COMPLETED':
+        return 'You closed this review — awaiting HSE closure';
+      case 'CLOSED':
+        return 'Incident closed';
+      default:
+        return 'Compliance reports pending — you can check the progress';
+    }
   }
 
   Widget _buildInfoSection({

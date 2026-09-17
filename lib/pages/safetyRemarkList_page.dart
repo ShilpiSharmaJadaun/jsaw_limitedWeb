@@ -2,6 +2,8 @@ import 'dart:ui' hide window;
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:jsaw_limited/bloc/allMedicalOfficerList_bloc.dart';
 import 'package:flutter/material.dart';
+import '../error/api_error.dart';
+import '../utils/pdf_download.dart';
 import 'package:jsaw_limited/bloc/completeSafetyRemark_bloc.dart';
 import 'package:jsaw_limited/bloc/downloadPdf_bloc.dart';
 import 'package:jsaw_limited/bloc/safetyRemarkList_bloc.dart';
@@ -46,6 +48,126 @@ class _SafetyRemarkListPageState extends State<SafetyRemarkListPage> {
   AllIncidentModel? _viewIncident;
   bool _openingView = false;
 
+  // Phase-3 point 4: shared incident filter (applied in the browser — this
+  // list is loaded whole) + icon-only Excel export of the same scope.
+  IncidentFilter _filter = IncidentFilter.empty;
+  Future<IncidentFilterOptions>? _filterOptions;
+  bool _exporting = false;
+  static const _kStatuses = ['CLOSED'];
+  static const _kExportTitle = 'Safety Remarks - Complete';
+
+  Future<IncidentFilterOptions> _optionsFuture() {
+    final incidentService = Provider.of<IncidentService>(context, listen: false);
+    return _filterOptions ??= incidentService.getIncidentFilterOptions();
+  }
+
+  Future<void> _openFilter() async {
+    final result = await showIncidentFilterDialog(
+      context: context,
+      initial: _filter,
+      options: _optionsFuture(),
+      showRaisedBy: false,
+      showStatus: false,
+    );
+    if (result == null || !mounted) return;
+    setState(() => _filter = result);
+  }
+
+  void _clearFilter() => setState(() => _filter = IncidentFilter.empty);
+
+  /// Reset = clear filters and reload the list (Phase-3 bug 1a semantics).
+  void _reset() {
+    setState(() => _filter = IncidentFilter.empty);
+    completeSafetyRemarkbloc.initState();
+  }
+
+  List<CompleteSafetyRemarkModel> _applyFilter(List<CompleteSafetyRemarkModel> all) => all
+      .where((m) => incidentFilterMatches(
+            _filter,
+            uniqueId: m.incidentUniqueId,
+            incidentDateTime: m.incidentDateTime,
+            plant: m.plant,
+            deptName: m.deptName,
+            incidentType: m.incidentType,
+            shift: m.shift,
+            employeeName: m.employeeName,
+            employeeCode: m.employeeCode,
+          ))
+      .toList();
+
+  Future<void> _exportExcel() async {
+    if (_exporting) return;
+    setState(() => _exporting = true);
+    try {
+      final incidentService = Provider.of<IncidentService>(context, listen: false);
+      final bytes = await incidentService.exportIncidentsExcel(
+        filter: _filter,
+        statuses: _kStatuses,
+        exportTitle: _kExportTitle,
+        exportFilters: [for (final c in _filter.chips) '${c.key}: ${c.value}'],
+      );
+      final now = DateTime.now();
+      String two(int v) => v.toString().padLeft(2, '0');
+      final stamp =
+          '${now.year}${two(now.month)}${two(now.day)}-${two(now.hour)}${two(now.minute)}';
+      saveXlsxBytes('Safety_Complete_$stamp.xlsx', bytes);
+    } on ApiError catch (e) {
+      _toast(e.message);
+    } catch (e) {
+      _toast('Excel export failed: $e');
+    } finally {
+      if (mounted) setState(() => _exporting = false);
+    }
+  }
+
+  void _toast(String msg) {
+    if (!mounted) return;
+    ScaffoldMessenger.maybeOf(context)
+      ?..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(content: Text(msg)));
+  }
+
+  Widget _toolbar() => IncidentFilterBar(
+        filter: _filter,
+        onOpen: _openFilter,
+        onClear: _clearFilter,
+        onRefresh: _reset,
+        currentPage: 1,
+        totalPages: 1,
+        hasPrev: false,
+        hasNext: false,
+        onPrev: () {},
+        onNext: () {},
+        exporting: _exporting,
+        onExport: _exportExcel,
+        showPaging: false,
+      );
+
+  Widget _emptyFiltered(String message) => Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [kcDashboardBg1, kcDashboardBg2],
+          ),
+        ),
+        alignment: Alignment.center,
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.filter_alt_off_outlined, size: 56, color: kcLightGrey),
+            const SizedBox(height: 12),
+            Text(message,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: kcValueDark)),
+          ],
+        ),
+      );
+
   @override
   void initState() {
     super.initState();
@@ -72,7 +194,7 @@ class _SafetyRemarkListPageState extends State<SafetyRemarkListPage> {
               onBack: () => setState(() => _viewIncident = null),
               // Only incident + medical + safety here (user request).
               showChain: false,
-              title: 'Check Details — Safety Observation',
+              title: 'Check Details — Safety Remarks',
             )
           : _buildAllIncidentList(),
     );
@@ -103,22 +225,12 @@ class _SafetyRemarkListPageState extends State<SafetyRemarkListPage> {
     }
   }
 
+  /// Phase-3 bug 4: the "Check Details" text became the ">" symbol.
   Widget _buildCheckDetailsButton(VoidCallback onTap) {
-    return ElevatedButton.icon(
+    return IncidentOpenChevronButton(
+      tooltip: 'Check Details',
+      busy: _openingView,
       onPressed: _openingView ? null : onTap,
-      style: ElevatedButton.styleFrom(
-        backgroundColor: kcStatBlue,
-        foregroundColor: kcWhite,
-        elevation: 2,
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
-        visualDensity: VisualDensity.compact,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-      ),
-      icon: const Icon(Icons.fact_check_outlined, size: 16),
-      label: const Text(
-        'Check Details',
-        style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12.5),
-      ),
     );
   }
 
@@ -127,16 +239,28 @@ class _SafetyRemarkListPageState extends State<SafetyRemarkListPage> {
       bloc: completeSafetyRemarkbloc,
       listener: (_, state) {},
       builder: (_, state) {
-        return state.when(
+        Widget filtered(List<CompleteSafetyRemarkModel> all) {
+          final list = _applyFilter(all);
+          return (list.isEmpty && !_filter.isEmpty)
+              ? _emptyFiltered('No completed safety remarks match the current filters')
+              : _buildContent(list);
+        }
+        final body = state.when(
             loading: (_) {
               return Center(
                 child: Lottie.asset("assets/lottie/loading.json",
                     height: 80, width: 80),
               );
             },
-            content: _buildContent,
-            success: _buildContent,
-            failed: (form, __) => _buildContent(form));
+            content: filtered,
+            success: filtered,
+            failed: (form, __) => filtered(form));
+        return Column(
+          children: [
+            _toolbar(),
+            Expanded(child: body),
+          ],
+        );
       },
     );
   }
@@ -149,16 +273,7 @@ class _SafetyRemarkListPageState extends State<SafetyRemarkListPage> {
           success: (uniqueId, bytes) {
             final safeName =
                 uniqueId.replaceAll(RegExp(r'[\\/:*?"<>|]'), '_');
-            final blob = html.Blob(
-              [bytes.toJS].toJS,
-              html.BlobPropertyBag(type: 'application/pdf'),
-            );
-            final url = html.URL.createObjectURL(blob);
-            html.HTMLAnchorElement()
-              ..href = url
-              ..setAttribute('download', '$safeName.pdf')
-              ..click();
-            html.URL.revokeObjectURL(url);
+            showPdfViewer(context, 'FIR — $uniqueId', '$safeName.pdf', bytes);
           },
           failed: (_, message) {
             ScaffoldMessenger.of(context).showSnackBar(

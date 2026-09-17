@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../utils/page_header.dart';
 
 import '../model/completeMedicalResponse_model.dart';
 import '../utils/app_color.dart';
@@ -64,46 +65,22 @@ class MedicalResponseDetailPage extends StatelessWidget {
 
   // ----------------------------------------------------------------- header
   Widget _header() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-      // App signature header gradient (matches the other inline pages).
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          colors: [Color(0xFFFF7B2C), Color(0xFFEF4A8B), Color(0xFF8B5CF6)],
-          begin: Alignment.centerLeft,
-          end: Alignment.centerRight,
-        ),
-      ),
+    // Inline header band, design 40-b (29-Aug-2026).
+    return InlineHeaderBand(
       child: Row(
         children: [
-          IconButton(
-            tooltip: 'Back to list',
-            onPressed: onBack,
-            icon: const Icon(Icons.arrow_back, color: kcWhite),
-          ),
+          InlineBackButton(onPressed: onBack),
           const SizedBox(width: 4),
           const Text(
             'Check Details — Medical Response',
             style: TextStyle(
-              color: kcWhite,
+              color: kInlineHeaderInk,
               fontSize: 16,
               fontWeight: FontWeight.w700,
             ),
           ),
           const Spacer(),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.22),
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: Colors.white.withOpacity(0.6)),
-            ),
-            child: Text(
-              response.incidentUniqueId,
-              style: const TextStyle(
-                  color: kcWhite, fontSize: 12, fontWeight: FontWeight.w700),
-            ),
-          ),
+          InlineHeaderChip(response.incidentUniqueId),
         ],
       ),
     );

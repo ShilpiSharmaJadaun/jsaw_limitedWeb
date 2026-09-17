@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import '../error/api_error.dart';
+import '../utils/pdf_download.dart';
+import 'widgets/incident_filter.dart';
 import '../utils/app_color.dart';
 import 'dart:ui' hide window;
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -42,6 +45,127 @@ class _MedicalOfficerPendingApprovalPageState extends State<MedicalOfficerPendin
   // instead of being pushed as a separate full-screen route.
   AllMedicalOfficerListModel? _selectedModel;
 
+  // Phase-3 point 2: shared incident filter (applied in the browser — this
+  // list is loaded whole) + icon-only Excel export of the same scope.
+  IncidentFilter _filter = IncidentFilter.empty;
+  Future<IncidentFilterOptions>? _filterOptions;
+  bool _exporting = false;
+  static const _kStatuses = ['PENDING_MEDICAL_OFFICER'];
+  static const _kExportTitle = 'Medical Assessment - Pending for Approval';
+
+  Future<IncidentFilterOptions> _optionsFuture() {
+    final incidentService = Provider.of<IncidentService>(context, listen: false);
+    return _filterOptions ??= incidentService.getIncidentFilterOptions();
+  }
+
+  Future<void> _openFilter() async {
+    final result = await showIncidentFilterDialog(
+      context: context,
+      initial: _filter,
+      options: _optionsFuture(),
+      showRaisedBy: false,
+      showStatus: false,
+    );
+    if (result == null || !mounted) return;
+    setState(() => _filter = result);
+  }
+
+  void _clearFilter() => setState(() => _filter = IncidentFilter.empty);
+
+  /// Reset = clear filters and reload the list (Phase-3 bug 1a semantics).
+  void _reset() {
+    setState(() => _filter = IncidentFilter.empty);
+    allMedicalOfficerListBloc.initState();
+  }
+
+  List<AllMedicalOfficerListModel> _applyFilter(List<AllMedicalOfficerListModel> all) =>
+      all
+          .where((m) => incidentFilterMatches(
+                _filter,
+                uniqueId: m.uniqueId,
+                incidentDateTime: m.incidentDateTime,
+                plant: m.plant,
+                deptName: m.deptName,
+                incidentType: m.incidentType,
+                shift: m.shift,
+                employeeName: m.employeeName,
+                employeeCode: m.employeeCode,
+              ))
+          .toList();
+
+  Future<void> _exportExcel() async {
+    if (_exporting) return;
+    setState(() => _exporting = true);
+    try {
+      final incidentService = Provider.of<IncidentService>(context, listen: false);
+      final bytes = await incidentService.exportIncidentsExcel(
+        filter: _filter,
+        statuses: _kStatuses,
+        exportTitle: _kExportTitle,
+        exportFilters: [for (final c in _filter.chips) '${c.key}: ${c.value}'],
+      );
+      final now = DateTime.now();
+      String two(int v) => v.toString().padLeft(2, '0');
+      final stamp =
+          '${now.year}${two(now.month)}${two(now.day)}-${two(now.hour)}${two(now.minute)}';
+      saveXlsxBytes('Medical_Pending_$stamp.xlsx', bytes);
+    } on ApiError catch (e) {
+      _toast(e.message);
+    } catch (e) {
+      _toast('Excel export failed: $e');
+    } finally {
+      if (mounted) setState(() => _exporting = false);
+    }
+  }
+
+  void _toast(String msg) {
+    if (!mounted) return;
+    ScaffoldMessenger.maybeOf(context)
+      ?..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(content: Text(msg)));
+  }
+
+  Widget _toolbar() => IncidentFilterBar(
+        filter: _filter,
+        onOpen: _openFilter,
+        onClear: _clearFilter,
+        onRefresh: _reset,
+        currentPage: 1,
+        totalPages: 1,
+        hasPrev: false,
+        hasNext: false,
+        onPrev: () {},
+        onNext: () {},
+        exporting: _exporting,
+        onExport: _exportExcel,
+        showPaging: false,
+      );
+
+  Widget _emptyFiltered() => Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [kcDashboardBg1, kcDashboardBg2],
+          ),
+        ),
+        alignment: Alignment.center,
+        padding: const EdgeInsets.all(24),
+        child: const Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.filter_alt_off_outlined, size: 56, color: kcLightGrey),
+            SizedBox(height: 12),
+            Text('No pending incidents match the current filters',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: kcValueDark)),
+          ],
+        ),
+      );
+
   @override
   Widget build(BuildContext context) {
     if (_selectedModel != null) {
@@ -67,16 +191,28 @@ class _MedicalOfficerPendingApprovalPageState extends State<MedicalOfficerPendin
       bloc: allMedicalOfficerListBloc,
       listener: (_, state) {},
       builder: (_, state) {
-        return state.when(
+        Widget filtered(List<AllMedicalOfficerListModel> all) {
+          final list = _applyFilter(all);
+          return (list.isEmpty && !_filter.isEmpty)
+              ? _emptyFiltered()
+              : _buildContent(list);
+        }
+        final body = state.when(
             loading: (_) {
               return Center(
                 child: Lottie.asset("assets/lottie/loading.json",
                     height: 80, width: 80),
               );
             },
-            content: _buildContent,
-            success: _buildContent,
-            failed: (form, __) => _buildContent(form));
+            content: filtered,
+            success: filtered,
+            failed: (form, __) => filtered(form));
+        return Column(
+          children: [
+            _toolbar(),
+            Expanded(child: body),
+          ],
+        );
       },
     );
   }

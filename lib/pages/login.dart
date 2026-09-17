@@ -463,7 +463,10 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                 Navigator.pushNamedAndRemoveUntil(
                     context, '/developer-portal', (_) => false);
               } else {
-                Navigator.pushNamed(context, AppRoutes.dashboardSelection);
+                // Replace the whole stack so no pop can ever land back on
+                // the login page while a session is active.
+                Navigator.pushNamedAndRemoveUntil(
+                    context, AppRoutes.dashboardSelection, (_) => false);
               }
             },
             failed: (_, message) {

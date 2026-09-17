@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:jsaw_limited/pages/widgets/observation_filter.dart';
 import 'package:jsaw_limited/utils/app_color.dart';
 import 'package:jsaw_limited/utils/compact_date_range_picker.dart';
@@ -32,16 +33,20 @@ String incidentStatusLabel(String code) =>
 /// medical → safety → investigation → compliance review → closure.
 /// [status] = IncidentReport.Status, [investigationStatus] = latest
 /// InvestigationReport.Status ('' when no investigation yet).
-String incidentStageLabel(String status, String investigationStatus) {
+/// [viewerIsRaiser]: the logged-in user raised this incident — a stage that
+/// waits on the raiser reads as theirs ("Pending Your Review").
+String incidentStageLabel(String status, String investigationStatus,
+    {bool viewerIsRaiser = false}) {
   final inv = investigationStatus.trim().toUpperCase();
   if (inv.isNotEmpty) {
     switch (inv) {
       case 'CLOSED':
         return 'Closed';
       case 'REVIEW_COMPLETED':
+      case 'RAISER_REVIEWED':
         return 'Awaiting Closure';
       case 'COMPLETE':
-        return 'Pending Review';
+        return viewerIsRaiser ? 'Pending Your Review' : 'Pending Raiser Review';
       default:
         return 'Compliance Pending';
     }
@@ -51,9 +56,11 @@ String incidentStageLabel(String status, String investigationStatus) {
   return incidentStatusLabel(status);
 }
 
-/// Colour for [incidentStageLabel]: amber while something is pending on the
-/// medical/safety side, blue for investigation/compliance work in progress,
-/// purple when awaiting HSE closure, green when closed.
+/// Colour for [incidentStageLabel] — one DISTINCT colour per workflow stage
+/// (customer request Sep-2026), progressing through the chain:
+/// Pending Medical Officer (amber) → Pending Safety Remarks (cyan) →
+/// Pending Investigation (indigo) → Compliance Pending (blue) →
+/// Pending Raiser Review (pink) → Awaiting Closure (purple) → Closed (green).
 Color incidentStageColor(String status, String investigationStatus) {
   final inv = investigationStatus.trim().toUpperCase();
   if (inv.isNotEmpty) {
@@ -61,12 +68,24 @@ Color incidentStageColor(String status, String investigationStatus) {
       case 'CLOSED':
         return kcStatGreen;
       case 'REVIEW_COMPLETED':
+      case 'RAISER_REVIEWED':
         return kcStatPurple;
+      case 'COMPLETE':
+        return kcInfoLocation; // pink — waiting on the raiser's review
       default:
-        return kcStatBlue;
+        return kcStatBlue; // compliance submissions pending
     }
   }
-  return kcStatAmber;
+  switch (status.trim().toUpperCase()) {
+    case 'PENDING_MEDICAL_OFFICER':
+      return kcStatAmber;
+    case 'PENDING_SAFETY_REMARKS':
+      return kcObservationCyan;
+    case 'CLOSED': // safety done, no investigation yet
+      return kcInfoResponsibility; // indigo — Pending Investigation
+    default:
+      return kcStatAmber;
+  }
 }
 
 /// Small rounded status chip used on the incident cards and the view header.
@@ -75,17 +94,23 @@ class IncidentStagePill extends StatelessWidget {
     super.key,
     required this.status,
     required this.investigationStatus,
+    this.viewerIsRaiser = false,
     this.fontSize = 11.5,
   });
 
   final String status;
   final String investigationStatus;
+
+  /// The logged-in user raised this incident — stages that wait on the raiser
+  /// read as "Pending Your Review".
+  final bool viewerIsRaiser;
   final double fontSize;
 
   @override
   Widget build(BuildContext context) {
     final color = incidentStageColor(status, investigationStatus);
-    final label = incidentStageLabel(status, investigationStatus);
+    final label = incidentStageLabel(status, investigationStatus,
+        viewerIsRaiser: viewerIsRaiser);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
@@ -317,6 +342,8 @@ Future<IncidentFilter?> showIncidentFilterDialog({
   required Future<IncidentFilterOptions> options,
   bool showEmployee = true,
   bool showRaisedBy = true,
+  // false on pages whose status is fixed (Medical / Safety Pending & Complete).
+  bool showStatus = true,
 }) {
   return showDialog<IncidentFilter>(
     context: context,
@@ -325,6 +352,7 @@ Future<IncidentFilter?> showIncidentFilterDialog({
       options: options,
       showEmployee: showEmployee,
       showRaisedBy: showRaisedBy,
+      showStatus: showStatus,
     ),
   );
 }
@@ -335,12 +363,14 @@ class _IncidentFilterDialog extends StatefulWidget {
     required this.options,
     required this.showEmployee,
     required this.showRaisedBy,
+    this.showStatus = true,
   });
 
   final IncidentFilter initial;
   final Future<IncidentFilterOptions> options;
   final bool showEmployee;
   final bool showRaisedBy;
+  final bool showStatus;
 
   @override
   State<_IncidentFilterDialog> createState() => _IncidentFilterDialogState();
@@ -400,7 +430,7 @@ class _IncidentFilterDialogState extends State<_IncidentFilterDialog> {
         deptName: dept.value,
         incidentType: type.value,
         shift: shift.value,
-        status: statusCode,
+        status: widget.showStatus ? statusCode : '',
         employeeSearch: widget.showEmployee ? employeeCtl.text.trim() : '',
         raisedBySearch: widget.showRaisedBy ? raisedByCtl.text.trim() : '',
         incidentDateFrom: startDateCtl.text.trim(),
@@ -447,8 +477,10 @@ class _IncidentFilterDialogState extends State<_IncidentFilterDialog> {
                         ]),
                         _section('Classification', [
                           loading ? const LoadingChip() : _typeChip(opts),
-                          const SizedBox(height: 8),
-                          _statusChip(),
+                          if (widget.showStatus) ...[
+                            const SizedBox(height: 8),
+                            _statusChip(),
+                          ],
                           const SizedBox(height: 8),
                           loading ? const LoadingChip() : _shiftChip(opts),
                         ]),
@@ -791,12 +823,17 @@ class IncidentFilterBar extends StatelessWidget {
     required this.onNext,
     this.exporting = false,
     this.onExport,
+    this.showPaging = true,
   });
 
   final IncidentFilter filter;
   final VoidCallback onOpen;
   final VoidCallback onClear;
   final VoidCallback onRefresh;
+
+  /// false on lists that are not server-paged (Medical / Safety pages):
+  /// hides Prev · page pill · Next and right-aligns Reset · Filter · Excel.
+  final bool showPaging;
 
   /// 1-based page index and total page count from the bloc.
   final int currentPage;
@@ -826,13 +863,17 @@ class IncidentFilterBar extends StatelessWidget {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                incidentPageButton(
-                  icon: Icons.chevron_left_rounded,
-                  label: 'Prev',
-                  enabled: hasPrev,
-                  onPressed: onPrev,
-                ),
-                incidentPagePill(currentPage, totalPages),
+                if (showPaging)
+                  incidentPageButton(
+                    icon: Icons.chevron_left_rounded,
+                    label: 'Prev',
+                    enabled: hasPrev,
+                    onPressed: onPrev,
+                  ),
+                if (showPaging)
+                  incidentPagePill(currentPage, totalPages)
+                else
+                  const Spacer(),
                 Row(
                   children: [
                     // Refresh
@@ -844,7 +885,7 @@ class IncidentFilterBar extends StatelessWidget {
                         shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(6)),
                       ),
-                      tooltip: 'Refresh',
+                      tooltip: 'Reset — clear filters and reload',
                       icon: const Icon(Icons.refresh),
                     ),
                     const SizedBox(width: 10),
@@ -868,32 +909,11 @@ class IncidentFilterBar extends StatelessWidget {
                               fontWeight: FontWeight.w600, fontSize: 14)),
                     ),
                     const SizedBox(width: 10),
-                    // Export Excel
-                    if (exporting)
-                      const SizedBox(
-                          width: 38,
-                          height: 38,
-                          child: CircularProgressIndicator(strokeWidth: 2))
-                    else
-                      ElevatedButton.icon(
-                        onPressed: onExport,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: kcWhite,
-                          foregroundColor: kcobservationgreen,
-                          elevation: 0,
-                          side: const BorderSide(
-                              color: kcobservationgreen, width: 1.2),
-                          fixedSize: const Size(160, 38),
-                          shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8)),
-                        ),
-                        icon: Image.asset('assets/images/excelicon.png',
-                            width: 16, height: 16),
-                        label: const Text('Export Excel',
-                            style: TextStyle(
-                                fontSize: 13, fontWeight: FontWeight.w600)),
-                      ),
-                    const SizedBox(width: 10),
+                    // Export Excel — icon only (Phase-3 bug 1c).
+                    ExcelExportIconButton(
+                        onPressed: onExport, busy: exporting),
+                    if (showPaging) const SizedBox(width: 10),
+                    if (showPaging)
                     incidentPageButton(
                       icon: Icons.chevron_right_rounded,
                       label: 'Next',
@@ -955,6 +975,230 @@ class IncidentFilterBar extends StatelessWidget {
               ),
             ),
         ],
+      ),
+    );
+  }
+}
+
+/// Icon-only "Export to Excel" button (Phase-3 bug 1c / 2 / 4 — customer wants
+/// the Excel icon without text). White 38×38 square, green outline, spinner
+/// while [busy]; the label lives in the tooltip.
+class ExcelExportIconButton extends StatelessWidget {
+  const ExcelExportIconButton({
+    super.key,
+    required this.onPressed,
+    this.busy = false,
+    this.size = 38,
+    this.tooltip = 'Export to Excel',
+  });
+
+  final VoidCallback? onPressed;
+  final bool busy;
+  final double size;
+  final String tooltip;
+
+  @override
+  Widget build(BuildContext context) {
+    if (busy) {
+      return SizedBox(
+        width: size,
+        height: size,
+        child: Padding(
+          padding: EdgeInsets.all(size * 0.24),
+          child: const CircularProgressIndicator(strokeWidth: 2),
+        ),
+      );
+    }
+    return Tooltip(
+      message: tooltip,
+      child: Material(
+        color: kcWhite,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(8),
+          side: const BorderSide(color: kcobservationgreen, width: 1.2),
+        ),
+        child: InkWell(
+          onTap: onPressed,
+          borderRadius: BorderRadius.circular(8),
+          child: SizedBox(
+            width: size,
+            height: size,
+            child: Center(
+              child: Image.asset('assets/images/excelicon.png',
+                  width: size * 0.53, height: size * 0.53),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Icon-only "Investigation Report (PDF)" download button (Phase-3, user
+/// request 29-Aug-2026: icon without text, like the Excel export button).
+/// White square with a red outline and PDF icon; spinner while [busy]; the
+/// label lives in the tooltip.
+class PdfDownloadIconButton extends StatelessWidget {
+  const PdfDownloadIconButton({
+    super.key,
+    required this.onPressed,
+    this.busy = false,
+    this.size = 38,
+    this.tooltip = 'Download Investigation Report (PDF)',
+  });
+
+  final VoidCallback? onPressed;
+  final bool busy;
+  final double size;
+  final String tooltip;
+
+  @override
+  Widget build(BuildContext context) {
+    final iconSize = size * 0.55;
+    if (busy) {
+      return SizedBox(
+        width: size,
+        height: size,
+        child: Padding(
+          padding: EdgeInsets.all(size * 0.25),
+          child: const CircularProgressIndicator(
+              strokeWidth: 2, color: kcPdfIconRed),
+        ),
+      );
+    }
+    return Tooltip(
+      message: tooltip,
+      child: Material(
+        color: kcWhite,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(8),
+          side: const BorderSide(color: kcPdfIconRed, width: 1.2),
+        ),
+        child: InkWell(
+          onTap: onPressed,
+          borderRadius: BorderRadius.circular(8),
+          child: SizedBox(
+            width: size,
+            height: size,
+            child: Center(
+              child: Icon(Icons.picture_as_pdf_outlined,
+                  size: iconSize, color: kcPdfIconRed),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Client-side matcher (Phase-3 point 2 / 4): the Medical Assessment and Safety
+// Remarks lists are loaded whole (no server paging), so the shared filter is
+// applied in the browser. Status / Raised-by are not part of those lists.
+// ─────────────────────────────────────────────────────────────────────────────
+final DateFormat _kIncidentDateTimeFmt = DateFormat('dd-MMMM-yyyy h:mm:ss a');
+
+DateTime? parseIncidentDateTime(String raw) {
+  final v = raw.trim();
+  if (v.isEmpty) return null;
+  try {
+    return _kIncidentDateTimeFmt.parse(v);
+  } catch (_) {
+    return DateTime.tryParse(v);
+  }
+}
+
+bool incidentFilterMatches(
+  IncidentFilter f, {
+  required String uniqueId,
+  required String incidentDateTime,
+  required String plant,
+  required String deptName,
+  required String incidentType,
+  required String shift,
+  required String employeeName,
+  required String employeeCode,
+}) {
+  if (f.isEmpty) return true;
+  bool eq(String a, String b) => a.trim().toLowerCase() == b.trim().toLowerCase();
+
+  if (f.uniqueId.isNotEmpty && !eq(uniqueId, f.uniqueId)) return false;
+  if (f.plant.isNotEmpty && !eq(plant, f.plant)) return false;
+  if (f.deptName.isNotEmpty && !eq(deptName, f.deptName)) return false;
+  if (f.incidentType.isNotEmpty && !eq(incidentType, f.incidentType)) {
+    return false;
+  }
+  if (f.shift.isNotEmpty) {
+    final s = shift.trim().toLowerCase();
+    final want = f.shift.trim().toLowerCase();
+    if (s != want && !s.startsWith(want)) return false;
+  }
+  if (f.employeeSearch.isNotEmpty) {
+    final q = f.employeeSearch.trim().toLowerCase();
+    if (!employeeName.toLowerCase().contains(q) &&
+        !employeeCode.toLowerCase().contains(q)) {
+      return false;
+    }
+  }
+  if (f.incidentDateFrom.isNotEmpty || f.incidentDateTo.isNotEmpty) {
+    final dt = parseIncidentDateTime(incidentDateTime);
+    if (dt == null) return false;
+    final day = DateTime(dt.year, dt.month, dt.day);
+    if (f.incidentDateFrom.isNotEmpty) {
+      final from = DateTime.tryParse(f.incidentDateFrom);
+      if (from != null && day.isBefore(from)) return false;
+    }
+    if (f.incidentDateTo.isNotEmpty) {
+      final to = DateTime.tryParse(f.incidentDateTo);
+      if (to != null && day.isAfter(to)) return false;
+    }
+  }
+  return true;
+}
+
+/// Round "open" chevron (Phase-3 bug 4: the customer wants the ">" symbol
+/// instead of the "Check Details" text on the Safety Remarks lists).
+class IncidentOpenChevronButton extends StatelessWidget {
+  const IncidentOpenChevronButton({
+    super.key,
+    required this.onPressed,
+    this.busy = false,
+    this.tooltip = 'Open',
+    this.color = kcStatBlue,
+  });
+
+  final VoidCallback? onPressed;
+  final bool busy;
+  final String tooltip;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    if (busy) {
+      return const SizedBox(
+        width: 34,
+        height: 34,
+        child: Padding(
+          padding: EdgeInsets.all(8),
+          child: CircularProgressIndicator(strokeWidth: 2),
+        ),
+      );
+    }
+    return Tooltip(
+      message: tooltip,
+      child: Material(
+        color: color,
+        shape: const CircleBorder(),
+        elevation: 2,
+        child: InkWell(
+          onTap: onPressed,
+          customBorder: const CircleBorder(),
+          child: const SizedBox(
+            width: 34,
+            height: 34,
+            child: Icon(Icons.chevron_right_rounded, color: kcWhite, size: 24),
+          ),
+        ),
       ),
     );
   }

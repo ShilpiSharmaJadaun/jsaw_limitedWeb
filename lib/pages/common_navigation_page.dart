@@ -136,6 +136,8 @@ class _CommonNavigationPageState extends State<CommonNavigationPage> {
         return '/graph';
       case 'All Incident':
         return '/all-incident';
+      case 'Incident Dashboard':
+        return '/incident-dashboard';
       // Reporting
       case 'Raise Observation':
         return '/raise-observation';
@@ -143,7 +145,7 @@ class _CommonNavigationPageState extends State<CommonNavigationPage> {
         return '/incident-tracking';
       case 'Medical Assessment':
         return '/medical-officer-response';
-      case 'Safety Observation':
+      case 'Safety Remarks':
         return '/safety-remark-form';
       case 'Investigation Details':
         return '/investigation-form';

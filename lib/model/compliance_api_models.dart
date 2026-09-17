@@ -63,6 +63,7 @@ class ComplianceAssigneeReview {
   final String imageUrl;
   final String submittedDate;
   final String reviewRemark;
+  final String reopenSource; // RAISER / HOD / SAFETY (who reopened, if REOPEN)
 
   const ComplianceAssigneeReview({
     required this.empUnqId,
@@ -73,6 +74,7 @@ class ComplianceAssigneeReview {
     required this.imageUrl,
     required this.submittedDate,
     required this.reviewRemark,
+    this.reopenSource = '',
   });
 
   factory ComplianceAssigneeReview.fromJson(Map<String, dynamic> m) =>
@@ -85,6 +87,7 @@ class ComplianceAssigneeReview {
         imageUrl: _s(m['imageUrl']),
         submittedDate: _s(m['submittedDate']),
         reviewRemark: _s(m['reviewRemark']),
+        reopenSource: _s(m['reopenSource']),
       );
 }
 
@@ -92,7 +95,8 @@ class ComplianceAssigneeReview {
 class ComplianceReview {
   final String incidentUniqueId;
   final String overallStatus;
-  final bool canClose;      // HOD may "Complete Review"
+  final bool canRaiserClose; // incident raiser may close their review level
+  final bool canClose;      // HOD may "Complete Review" (overall RAISER_REVIEWED)
   final bool canFinalClose; // Safety/HSE may "Close" (overall REVIEW_COMPLETED)
   final List<ComplianceAssigneeReview> assignees;
 
@@ -100,6 +104,7 @@ class ComplianceReview {
     required this.incidentUniqueId,
     required this.overallStatus,
     required this.canClose,
+    this.canRaiserClose = false,
     this.canFinalClose = false,
     required this.assignees,
   });
@@ -115,6 +120,7 @@ class ComplianceReview {
       incidentUniqueId: _s(m['incidentUniqueId']),
       overallStatus: _s(m['overallStatus']).isEmpty ? 'PENDING' : _s(m['overallStatus']),
       canClose: _b(m['canClose']),
+      canRaiserClose: _b(m['canRaiserClose']),
       canFinalClose: _b(m['canFinalClose']),
       assignees: list,
     );

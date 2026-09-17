@@ -1,6 +1,7 @@
 import 'dart:js_interop';
 
 import 'package:flutter/material.dart';
+import '../utils/page_header.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:provider/provider.dart';
 import 'package:web/web.dart' as html;
@@ -25,7 +26,7 @@ import '../error/api_error.dart';
 /// tabs. Shows the whole chain for the record:
 ///   1. Incident Details          ┐ from the list row (always available, even
 ///   2. Medical Assessment        │ for incidents that have not reached the
-///   3. Safety Observation        ┘ Safety team yet)
+///   3. Safety Remarks        ┘ Safety team yet)
 ///   4. Investigation Details / CAPA / Risk photo — the existing compliance
 ///      detail sections, loaded on open (skipped when no investigation yet)
 ///   5. Compliance status — per-CAPA-owner submissions + overall stage
@@ -43,7 +44,7 @@ class IncidentViewPage extends StatefulWidget {
   final AllIncidentModel incident;
   final VoidCallback onBack;
 
-  /// When false (Safety Observation "Check Details"), only the Incident /
+  /// When false (Safety Remarks "Check Details"), only the Incident /
   /// Medical / Safety sections are shown — no workflow strip, no
   /// investigation / CAPA / compliance sections, and the two compliance
   /// bundle calls are skipped.
@@ -76,7 +77,9 @@ class _IncidentViewPageState extends State<IncidentViewPage> {
           Provider.of<IncidentService>(context, listen: false);
       final bytes =
           await incidentService.downloadInvestigationPdfByUid(r.uniqueId);
-      savePdfBytes('Investigation_Report_${r.uniqueId}.pdf', bytes);
+      if (!mounted) return;
+      await showPdfViewer(context, 'Investigation Report — ${r.uniqueId}',
+          'Investigation_Report_${r.uniqueId}.pdf', bytes);
     } on ApiError catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context)
@@ -139,16 +142,7 @@ class _IncidentViewPageState extends State<IncidentViewPage> {
           success: (uniqueId, bytes) {
             final safeName =
                 uniqueId.replaceAll(RegExp(r'[\\/:*?"<>|]'), '_');
-            final blob = html.Blob(
-              [bytes.toJS].toJS,
-              html.BlobPropertyBag(type: 'application/pdf'),
-            );
-            final url = html.URL.createObjectURL(blob);
-            html.HTMLAnchorElement()
-              ..href = url
-              ..setAttribute('download', '$safeName.pdf')
-              ..click();
-            html.URL.revokeObjectURL(url);
+            showPdfViewer(context, 'FIR — $uniqueId', '$safeName.pdf', bytes);
           },
           failed: (_, message) => ScaffoldMessenger.of(context)
             ..hideCurrentSnackBar()
@@ -203,7 +197,7 @@ class _IncidentViewPageState extends State<IncidentViewPage> {
                             ),
                             const SizedBox(height: 16),
                             _SectionCard(
-                              title: 'Safety Observation',
+                              title: 'Safety Remarks',
                               icon: Icons.rate_review_outlined,
                               accent: kcobservationgreen,
                               child: _hasSafety
@@ -264,76 +258,35 @@ class _IncidentViewPageState extends State<IncidentViewPage> {
 
   // ───────────────────────────────────────────────────────────────── header
   Widget _header() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          colors: [Color(0xFFFF7B2C), Color(0xFFEF4A8B), Color(0xFF8B5CF6)],
-          begin: Alignment.centerLeft,
-          end: Alignment.centerRight,
-        ),
-      ),
+    // Inline header band, design 40-b (29-Aug-2026).
+    return InlineHeaderBand(
       child: Row(
         children: [
-          IconButton(
-            tooltip: 'Back to list',
-            onPressed: widget.onBack,
-            icon: const Icon(Icons.arrow_back, color: kcWhite),
-          ),
+          InlineBackButton(onPressed: widget.onBack),
           const SizedBox(width: 4),
           Text(
             widget.title,
             style: const TextStyle(
-                color: kcWhite, fontSize: 16, fontWeight: FontWeight.w700),
+                color: kInlineHeaderInk,
+                fontSize: 16,
+                fontWeight: FontWeight.w700),
           ),
           const SizedBox(width: 12),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.22),
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: Colors.white.withValues(alpha: 0.6)),
-            ),
-            child: Text(
-              r.uniqueId,
-              style: const TextStyle(
-                  color: kcWhite, fontSize: 12, fontWeight: FontWeight.w700),
-            ),
-          ),
+          InlineHeaderChip(r.uniqueId),
           const SizedBox(width: 8),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 1),
-            decoration: BoxDecoration(
-              color: kcWhite,
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: IncidentStagePill(
-              status: r.status,
-              investigationStatus: r.investigationStatus,
-            ),
+          IncidentStagePill(
+            status: r.status,
+            investigationStatus: r.investigationStatus,
+            viewerIsRaiser: r.raisedByEmpCode.trim() ==
+                (html.window.localStorage.getItem('kEmployeeCode') ?? '')
+                    .trim(),
           ),
           const Spacer(),
           if (widget.showChain && _hasInvestigation) ...[
-            ElevatedButton.icon(
+            // Icon-only since 29-Aug-2026 (Phase-3: "icon, not text").
+            PdfDownloadIconButton(
+              busy: _invPdfBusy,
               onPressed: _invPdfBusy ? null : _downloadInvestigationPdf,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: kcWhite,
-                foregroundColor: kcPdfIconRed,
-                disabledBackgroundColor: Colors.white70,
-                elevation: 0,
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(20)),
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-              ),
-              icon: _invPdfBusy
-                  ? const SizedBox(
-                      width: 16,
-                      height: 16,
-                      child: CircularProgressIndicator(strokeWidth: 2))
-                  : const Icon(Icons.download_outlined, size: 18),
-              label: Text(_invPdfBusy ? 'Preparing…' : 'Investigation Report',
-                  style: const TextStyle(fontWeight: FontWeight.w700)),
             ),
             const SizedBox(width: 8),
           ],
@@ -345,9 +298,9 @@ class _IncidentViewPageState extends State<IncidentViewPage> {
               return ElevatedButton.icon(
                 onPressed: busy ? null : () => _pdfBloc.downloadByUid(r.uniqueId),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: kcWhite,
-                  foregroundColor: kcvoilet,
-                  disabledBackgroundColor: Colors.white70,
+                  backgroundColor: kcvoilet,
+                  foregroundColor: kcWhite,
+                  disabledBackgroundColor: kcVeryLightGrey,
                   elevation: 0,
                   shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(20)),
@@ -382,7 +335,7 @@ class _IncidentViewPageState extends State<IncidentViewPage> {
     return [
       const _Stage('Incident Reporting', true),
       _Stage('Medical Officer', _hasMedical),
-      _Stage('Safety Observation', _hasSafety),
+      _Stage('Safety Remarks', _hasSafety),
       _Stage('Investigation Details', hasInvestigation, pending: !loaded),
       _Stage('Investigation Initiated', hasInvestigation, pending: !loaded),
       _Stage('Compliance Review', reviewDone, pending: !loaded),

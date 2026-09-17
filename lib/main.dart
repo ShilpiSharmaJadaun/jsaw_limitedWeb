@@ -4,6 +4,7 @@ import 'package:jsaw_limited/bloc/allSafetyObservationRaisedbyManager_bloc.dart'
 import 'package:jsaw_limited/bloc/hazardgraphExport_bloc.dart';
 import 'package:jsaw_limited/model/filterObservation_model.dart';
 import 'package:jsaw_limited/pages/allIncident_page.dart';
+import 'package:jsaw_limited/pages/incident_dashboard_page.dart';
 import 'package:jsaw_limited/pages/approve_reject_table_page.dart';
 import 'package:jsaw_limited/pages/change_password_page.dart';
 import 'package:jsaw_limited/pages/common_navigation_page.dart';
@@ -161,12 +162,16 @@ class MyApp extends StatelessWidget {
                 child: MedicalOfficerResponsePage(),
               ),
               '/safety-remark-form': (context) => const CommonNavigationPage(
-                title: 'Safety Observation',
+                title: 'Safety Remarks',
                 child: SafetyRemarkResponsePage(),
               ),
               '/investigation-form': (context) => const CommonNavigationPage(
                 title: 'Investigation Details',
                 child: InvestigationTeamPage(),
+              ),
+              '/incident-dashboard': (context) => const CommonNavigationPage(
+                title: 'Incident Dashboard',
+                child: IncidentDashboardPage(),
               ),
               '/approval-queue': (context) => const CommonNavigationPage(
                 title: 'Approval Queue',

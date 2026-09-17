@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart' show Uint8List;
 import 'package:flutter/material.dart';
+import '../utils/page_header.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
@@ -672,28 +673,32 @@ class _EditInvestigationPageState extends State<EditInvestigationPage> {
   }
 
   Widget _embeddedHeader() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-      color: kcvoilet,
+    // Inline header band, design 40-b (29-Aug-2026).
+    return InlineHeaderBand(
       child: Row(
         children: [
-          IconButton(
-            tooltip: 'Back to list',
-            onPressed: _close,
-            icon: const Icon(Icons.arrow_back, color: kcWhite),
-          ),
+          InlineBackButton(onPressed: _close),
           const SizedBox(width: 4),
           const Text(
             'Edit Investigation Report',
             style: TextStyle(
-              color: kcWhite,
+              color: kInlineHeaderInk,
               fontSize: 16,
               fontWeight: FontWeight.w700,
             ),
           ),
           const Spacer(),
-          TextButton.icon(
+          ElevatedButton.icon(
             onPressed: _saving ? null : _save,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: kcvoilet,
+              foregroundColor: kcWhite,
+              elevation: 0,
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20)),
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+            ),
             icon: _saving
                 ? const SizedBox(
                     width: 16,
@@ -701,13 +706,10 @@ class _EditInvestigationPageState extends State<EditInvestigationPage> {
                     child: CircularProgressIndicator(
                         strokeWidth: 2, color: kcWhite),
                   )
-                : const Icon(Icons.save_outlined, color: kcWhite),
+                : const Icon(Icons.save_outlined, size: 18),
             label: const Text(
               'Save Changes',
-              style: TextStyle(
-                color: kcWhite,
-                fontWeight: FontWeight.w700,
-              ),
+              style: TextStyle(fontWeight: FontWeight.w700),
             ),
           ),
         ],
@@ -1059,25 +1061,61 @@ class _EditInvestigationPageState extends State<EditInvestigationPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _factsField(
-            controller: _machineryDetailsController,
-            label:
-                'If caused by machinery, mention the name of the machine/equipment and the parts that caused the incident',
-            hint:
-                'Machine / equipment name and the parts involved (leave blank if not machinery related)',
-            required: false,
-          ),
-          const SizedBox(height: 12),
-          _factsField(
-            controller: _activityBeforeIncidentController,
-            label:
-                'What the Injured Person Was Doing Just Before and at the Time of the Occurrence',
-            hint:
-                'Describe the activity just before and at the time of the occurrence',
-            required: true,
+          // User request 29-Aug-2026: the two fact boxes sit side by side on
+          // wide screens (each in its own bordered box), stacked on narrow ones.
+          LayoutBuilder(
+            builder: (context, c) {
+              final machinery = _factsBox(_factsField(
+                controller: _machineryDetailsController,
+                label:
+                    'If caused by machinery, mention the name of the machine/equipment and the parts that caused the incident',
+                hint:
+                    'Machine / equipment name and the parts involved (leave blank if not machinery related)',
+                required: false,
+              ));
+              final activity = _factsBox(_factsField(
+                controller: _activityBeforeIncidentController,
+                label:
+                    'What the Injured Person Was Doing Just Before and at the Time of the Occurrence',
+                hint:
+                    'Describe the activity just before and at the time of the occurrence',
+                required: true,
+              ));
+              if (c.maxWidth < 700) {
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [machinery, const SizedBox(height: 12), activity],
+                );
+              }
+              // IntrinsicHeight: the Row sits in an unbounded-height Column, so
+              // a stretched cross axis needs a finite height to stretch to.
+              return IntrinsicHeight(
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Expanded(child: machinery),
+                    const SizedBox(width: 16),
+                    Expanded(child: activity),
+                  ],
+                ),
+              );
+            },
           ),
         ],
       ),
+    );
+  }
+
+  /// Bordered box around one fact field (side-by-side layout, 29-Aug-2026).
+  Widget _factsBox(Widget child) {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(14, 12, 14, 6),
+      decoration: BoxDecoration(
+        color: kcvoilet.withValues(alpha: 0.035),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: kcvoilet.withValues(alpha: 0.22)),
+      ),
+      child: child,
     );
   }
 

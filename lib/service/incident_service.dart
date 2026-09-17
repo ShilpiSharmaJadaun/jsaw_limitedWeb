@@ -19,10 +19,49 @@ import 'package:jsaw_limited/model/investigationReport_response_model.dart';
 import 'package:jsaw_limited/model/safetyRemarkList_model.dart';
 import '../error/api_error.dart';
 import '../model/completeMedicalResponse_model.dart';
+import '../model/incident_dashboard_model.dart';
 import 'constant.dart';
 import 'package:http_parser/http_parser.dart';
 
 class IncidentService{
+
+  /// Aggregated counts for the Incident Dashboard; dates are yyyy-MM-dd inclusive.
+  /// The optional filters narrow the scope to one plant / department /
+  /// nature of injury / incident type (per-tab dropdowns).
+  Future<IncidentDashboardStats> getIncidentDashboardStats(
+      String dateFrom, String dateTo,
+      {String? plant,
+      String? deptName,
+      String? nature,
+      String? incidentType}) async {
+    var url =
+        "${root}incidentReport/getDashboardStats?dateFrom=$dateFrom&dateTo=$dateTo";
+    if (plant != null && plant.isNotEmpty) {
+      url += "&plant=${Uri.encodeQueryComponent(plant)}";
+    }
+    if (deptName != null && deptName.isNotEmpty) {
+      url += "&deptName=${Uri.encodeQueryComponent(deptName)}";
+    }
+    if (nature != null && nature.isNotEmpty) {
+      url += "&nature=${Uri.encodeQueryComponent(nature)}";
+    }
+    if (incidentType != null && incidentType.isNotEmpty) {
+      url += "&incidentType=${Uri.encodeQueryComponent(incidentType)}";
+    }
+    final response = await authHttp.get(Uri.parse(url), headers: getHeaders());
+    try {
+      final responseBody = json.decode(response.body);
+      if (responseBody["status"] == true) {
+        return IncidentDashboardStats.fromJson(
+            Map<String, dynamic>.from(responseBody["model"] as Map));
+      } else {
+        throw ApiError.fromResponse(responseBody["msg"]);
+      }
+    } catch (e) {
+      _handleError(e);
+    }
+    return const IncidentDashboardStats();
+  }
 
   Future<List<AllContractorModel>> getAllContractorList()async{
     const url = "${root}incident/getAllContactor";
@@ -840,18 +879,29 @@ class IncidentService{
   /// Phase-2 point 3: Export to Excel. Sends the same scope + filter the list
   /// uses (no paging) and returns the .xlsx bytes. Throws [ApiError] with the
   /// backend message when nothing matches or generation fails.
+  ///
+  /// [consolidated] (customer point A, Sep-2026): true = the FR-16
+  /// "INCIDENT REPORTING & TRACKER" sheet combining FIR + Investigation +
+  /// compliance details with embedded photos (All Incident page).
   Future<Uint8List> exportIncidentsExcel({
     IncidentFilter filter = IncidentFilter.empty,
     String raisedByEmpCode = '',
     String employeeCode = '',
+    // Phase-3 point 2: fixed status scope of the exporting page (e.g. the
+    // Medical Assessment Complete list = PENDING_SAFETY_REMARKS + CLOSED).
+    List<String> statuses = const [],
     required String exportTitle,
     List<String> exportFilters = const [],
+    bool consolidated = false,
   }) async {
-    const url = "${root}incidentReport/exportExcel";
+    final url = consolidated
+        ? "${root}incidentReport/exportTrackerExcel"
+        : "${root}incidentReport/exportExcel";
     final body = {
       ...filter.toBody(),
       "raisedByEmpCode": raisedByEmpCode,
       "employeeCode": employeeCode,
+      "statuses": statuses,
       "exportTitle": exportTitle,
       "exportFilters": exportFilters,
     };
@@ -867,6 +917,42 @@ class IncidentService{
       return response.bodyBytes;
     }
     // JSON {status:false, msg} — empty result or generation failure.
+    String msg = 'Excel export failed';
+    try {
+      final responseBody = json.decode(response.body);
+      if (responseBody is Map) {
+        msg = (responseBody['msg'] ?? responseBody['message'] ?? msg).toString();
+      }
+    } catch (_) {}
+    throw ApiError.fromResponse(msg);
+  }
+
+  /// Phase-3 (29-Aug-2026): Excel export of an All Investigations list
+  /// (scope raised | received | all). Returns the .xlsx bytes; throws
+  /// [ApiError] with the backend message when the list is empty.
+  Future<Uint8List> exportInvestigationsExcel({
+    String scope = 'all',
+    String exportTitle = '',
+    // When given, only this incident's investigation is exported (per-card icon).
+    String incidentUniqueId = '',
+  }) async {
+    const url = "${root}investigationReport/exportExcel";
+    final response = await authHttp.post(Uri.parse(url),
+        body: json.encode({
+          "scope": scope,
+          "exportTitle": exportTitle,
+          "incidentUniqueId": incidentUniqueId,
+        }),
+        headers: getHeaders());
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw ApiError.fromResponse(
+          'Server error ${response.statusCode}: ${response.body}');
+    }
+    final contentType = (response.headers['content-type'] ?? '').toLowerCase();
+    if (contentType.contains('spreadsheetml') ||
+        contentType.contains('octet-stream')) {
+      return response.bodyBytes;
+    }
     String msg = 'Excel export failed';
     try {
       final responseBody = json.decode(response.body);

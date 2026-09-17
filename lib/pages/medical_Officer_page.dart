@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../utils/page_header.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:jsaw_limited/bloc/allBodyParts_bloc.dart';
@@ -334,57 +335,44 @@ class _MedicalOfficerPageState extends State<MedicalOfficerPage> {
   }
 
   Widget _buildFullWidthHeader(String title) {
-    return Container(
-      width: double.infinity,
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.centerLeft,
-          end: Alignment.centerRight,
-          colors: [Color(0xFFFF7B2C), Color(0xFFEF4A8B), Color(0xFF8B5CF6)],
-        ),
-      ),
-      child: SafeArea(
-        bottom: false,
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.start,
-          children: [
-            IconButton(
-              icon: const Icon(Icons.arrow_back, color: kcWhite),
-              onPressed: () { _close(false); },
-            ),
-            Expanded(
-              child: Padding(
-                padding:
-                    const EdgeInsets.symmetric(vertical: 10, horizontal: 10),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      title,
-                      style: const TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold,
-                        color: kcWhite,
-                      ),
+    // Inline header band, design 40-b (29-Aug-2026).
+    return InlineHeaderBand(
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.start,
+        children: [
+          InlineBackButton(onPressed: () => _close(false)),
+          Expanded(
+            child: Padding(
+              padding:
+                  const EdgeInsets.symmetric(vertical: 4, horizontal: 6),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w700,
+                      color: kInlineHeaderInk,
                     ),
-                    const SizedBox(height: 2),
-                    Text(
-                      widget.allMedicalOfficerListModel.uniqueId.isEmpty
-                          ? "Incident details"
-                          : "Incident ID: ${widget.allMedicalOfficerListModel.uniqueId}",
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w500,
-                        color: Colors.white.withValues(alpha: 0.92),
-                      ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    widget.allMedicalOfficerListModel.uniqueId.isEmpty
+                        ? "Incident details"
+                        : "Incident ID: ${widget.allMedicalOfficerListModel.uniqueId}",
+                    style: const TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
+                      color: kcLabelGrey,
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

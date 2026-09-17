@@ -18,6 +18,8 @@ import '../bloc/location_bloc.dart';
 import '../bloc/responsibleHod_bloc.dart';
 import '../bloc/save_observation_bloc.dart';
 import '../model/allTypeIncident_model.dart';
+import '../model/allplant_model.dart';
+import '../model/allDepartment_model.dart';
 import '../model/employeeResponsibility_model.dart';
 import '../model/location_model.dart';
 import '../service/observation_service.dart';
@@ -59,19 +61,23 @@ class _IncidentReportingPageState extends State<IncidentReportingPage> {
 
   TextEditingController dateTimeController = TextEditingController();
 
-  // Back-date allowance: 1 month till 30-Nov-2026 (backlog entry grace period),
-  // then 3 days permanently (customer change request point 1).
-  static final DateTime _oneMonthAllowanceEnd = DateTime(2026, 11, 30, 23, 59, 59);
+  // Backlog incident entry (customer request Sep-2026, supersedes the rolling
+  // 60-day window): incidents dated 1-Apr-2026 onwards can be entered until
+  // 31-Dec-2026 end of day (backlog period + one correction month). From
+  // 1-Jan-2027 the limit auto-switches to 3 days back — no redeploy needed.
+  static final DateTime _backlogWindowEnd = DateTime(2026, 12, 31, 23, 59, 59);
+  static final DateTime _backlogFloor = DateTime(2026, 4, 1);
 
-  Duration get _backDateLimit => DateTime.now().isAfter(_oneMonthAllowanceEnd)
-      ? const Duration(days: 3)
-      : const Duration(days: 30);
+  DateTime get _earliestIncidentDate =>
+      DateTime.now().isAfter(_backlogWindowEnd)
+          ? DateTime.now().subtract(const Duration(days: 3))
+          : _backlogFloor;
 
   Future<void> _selectDateTime(BuildContext context) async {
     DateTime? selectedDate = await showDatePicker(
       context: context,
       initialDate: DateTime.now(),
-      firstDate: DateTime.now().subtract(_backDateLimit),
+      firstDate: _earliestIncidentDate,
       lastDate: DateTime.now(),
     );
 
@@ -793,6 +799,11 @@ class _IncidentReportingPageState extends State<IncidentReportingPage> {
       name: (e) => e.empName,
       code: (e) => e.empCode,
       title: 'Select Employee',
+      // Customer request (Sep-2026): short-duty injured persons may not exist
+      // in the master data — "Others" lets the raiser enter details manually.
+      onOther: _openOtherEmployeeDialog,
+      otherLabel: 'Others — injured person not in the list',
+      otherSubtitle: "Enter the injured person's details manually",
     );
     if (picked == null || !mounted) return;
     employeeName.value = picked.empName;
@@ -805,6 +816,45 @@ class _IncidentReportingPageState extends State<IncidentReportingPage> {
     department.value = picked.deptName;
     departmentId.value = picked.deptCode;
     wrkGrp.value = picked.wrkGrp;
+    locationBloc.initState(departmentId.value);
+  }
+
+  /// "Others" — injured person not present in the employee master.
+  /// Collects the details manually; the form then behaves exactly as if an
+  /// employee had been picked (Employee Code = OTHER).
+  Future<void> _openOtherEmployeeDialog() async {
+    final observationService =
+        Provider.of<ObservationService>(context, listen: false);
+    final result = await showDialog<OtherEmployeeDetails>(
+      context: context,
+      builder: (_) => OtherEmployeeDialog(
+        observationService: observationService,
+        initial: employeeCode.value == 'OTHER'
+            ? OtherEmployeeDetails(
+                name: employeeName.value,
+                age: age.value,
+                contractorName: contractorName.value,
+                wrkGrp: wrkGrp.value,
+                deptName: department.value,
+                deptCode: departmentId.value,
+                statName: plant.value,
+                statCode: plantCode.value,
+              )
+            : null,
+      ),
+    );
+    if (result == null || !mounted) return;
+    employeeName.value = result.name;
+    employeeCode.value = 'OTHER';
+    age.value = result.age;
+    contractorName.value = result.contractorName;
+    contractorID.value = '';
+    wrkGrp.value = result.wrkGrp;
+    department.value = result.deptName;
+    departmentId.value = result.deptCode;
+    plant.value = result.statName;
+    plantCode.value = result.statCode;
+    location.value = '';
     locationBloc.initState(departmentId.value);
   }
 
@@ -1759,5 +1809,317 @@ class IncidentTypeNotifier extends ValueNotifier<List<AllTypeIncidentModel>> {
       value = initialValue.where((e) => e.description.toLowerCase().contains(query.toLowerCase())).toList();
     }
     notifyListeners();
+  }
+}
+
+/// Result of the "Others" manual injured-person entry.
+class OtherEmployeeDetails {
+  final String name;
+  final String age;
+  final String contractorName;
+  final String wrkGrp;
+  final String deptName;
+  final String deptCode;
+  final String statName;
+  final String statCode;
+
+  const OtherEmployeeDetails({
+    required this.name,
+    required this.age,
+    required this.contractorName,
+    required this.wrkGrp,
+    required this.deptName,
+    required this.deptCode,
+    required this.statName,
+    required this.statCode,
+  });
+}
+
+/// Manual entry dialog for an injured person who is not in the employee
+/// master (e.g. reported for duty only 1–2 days). Department and Plant come
+/// from the same masters the rest of the app uses, so the Location dropdown
+/// on the form keeps working (it is keyed by the department code).
+class OtherEmployeeDialog extends StatefulWidget {
+  final ObservationService observationService;
+  final OtherEmployeeDetails? initial;
+
+  const OtherEmployeeDialog({
+    super.key,
+    required this.observationService,
+    this.initial,
+  });
+
+  @override
+  State<OtherEmployeeDialog> createState() => _OtherEmployeeDialogState();
+}
+
+class _OtherEmployeeDialogState extends State<OtherEmployeeDialog> {
+  final _nameController = TextEditingController();
+  final _ageController = TextEditingController();
+  final _contractorController = TextEditingController();
+  final _wrkGrpController = TextEditingController();
+
+  List<AllPlantModel> _departments = [];
+  List<AllDepartmentModel> _plants = [];
+  AllPlantModel? _selectedDept;
+  AllDepartmentModel? _selectedPlant;
+  bool _loadingDepartments = true;
+  bool _loadingPlants = false;
+  String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    final init = widget.initial;
+    if (init != null) {
+      _nameController.text = init.name;
+      _ageController.text = init.age;
+      _contractorController.text = init.contractorName;
+      _wrkGrpController.text = init.wrkGrp;
+    }
+    _loadDepartments();
+  }
+
+  Future<void> _loadDepartments() async {
+    try {
+      final list = await widget.observationService.getAllPlant();
+      if (!mounted) return;
+      setState(() {
+        _departments = list;
+        _loadingDepartments = false;
+        final init = widget.initial;
+        if (init != null && init.deptCode.isNotEmpty) {
+          for (final d in list) {
+            if (d.deptCode == init.deptCode) {
+              _selectedDept = d;
+              break;
+            }
+          }
+          if (_selectedDept != null) _loadPlants(keepInitial: true);
+        }
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _loadingDepartments = false);
+    }
+  }
+
+  Future<void> _loadPlants({bool keepInitial = false}) async {
+    final dept = _selectedDept;
+    if (dept == null) return;
+    setState(() {
+      _loadingPlants = true;
+      if (!keepInitial) _selectedPlant = null;
+      _plants = [];
+    });
+    try {
+      final list = await widget.observationService.getDepartment(dept.deptCode);
+      if (!mounted) return;
+      setState(() {
+        _plants = list;
+        _loadingPlants = false;
+        if (keepInitial && widget.initial != null) {
+          for (final p in list) {
+            if (p.statCode == widget.initial!.statCode) {
+              _selectedPlant = p;
+              break;
+            }
+          }
+        }
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _loadingPlants = false);
+    }
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _ageController.dispose();
+    _contractorController.dispose();
+    _wrkGrpController.dispose();
+    super.dispose();
+  }
+
+  void _save() {
+    final name = _nameController.text.trim();
+    final ageText = _ageController.text.trim();
+    if (name.isEmpty) {
+      setState(() => _error = "Please enter the injured person's name.");
+      return;
+    }
+    if (ageText.isEmpty) {
+      setState(() => _error = "Please enter the age.");
+      return;
+    }
+    if (_selectedDept == null) {
+      setState(() => _error = "Please select the department.");
+      return;
+    }
+    if (_selectedPlant == null) {
+      setState(() => _error = "Please select the plant.");
+      return;
+    }
+    Navigator.pop(
+      context,
+      OtherEmployeeDetails(
+        name: name,
+        age: ageText,
+        contractorName: _contractorController.text.trim(),
+        wrkGrp: _wrkGrpController.text.trim(),
+        deptName: _selectedDept!.deptName.trim(),
+        deptCode: _selectedDept!.deptCode,
+        statName: _selectedPlant!.statName.trim(),
+        statCode: _selectedPlant!.statCode,
+      ),
+    );
+  }
+
+  InputDecoration _decoration(String label, {bool required = false}) {
+    return InputDecoration(
+      isDense: true,
+      label: Text.rich(TextSpan(
+        text: label,
+        children: required
+            ? const [TextSpan(text: ' *', style: TextStyle(color: Colors.red))]
+            : const [],
+      )),
+      border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+      contentPadding:
+          const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      title: const Row(
+        children: [
+          Icon(Icons.person_add_alt_1, color: kcvoilet, size: 20),
+          SizedBox(width: 8),
+          Expanded(
+            child: Text('Injured Person — Manual Entry',
+                style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700)),
+          ),
+        ],
+      ),
+      content: SizedBox(
+        width: 440,
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const Text(
+                'For injured persons not available in the master data '
+                '(e.g. on duty for only 1–2 days). Employee Code will be '
+                'recorded as OTHER.',
+                style: TextStyle(fontSize: 12, color: kcLabelGrey),
+              ),
+              const SizedBox(height: 14),
+              TextField(
+                controller: _nameController,
+                textCapitalization: TextCapitalization.characters,
+                decoration: _decoration('Injured Person Name', required: true),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: _ageController,
+                keyboardType: TextInputType.number,
+                inputFormatters: [
+                  FilteringTextInputFormatter.digitsOnly,
+                  LengthLimitingTextInputFormatter(3),
+                ],
+                decoration: _decoration('Age', required: true),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: _contractorController,
+                decoration: _decoration('Contractor Name'),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: _wrkGrpController,
+                decoration: _decoration('Work Group'),
+              ),
+              const SizedBox(height: 12),
+              _loadingDepartments
+                  ? const Center(
+                      child: Padding(
+                        padding: EdgeInsets.all(8),
+                        child: SizedBox(
+                            width: 20,
+                            height: 20,
+                            child:
+                                CircularProgressIndicator(strokeWidth: 2)),
+                      ),
+                    )
+                  : DropdownButtonFormField<AllPlantModel>(
+                      value: _selectedDept,
+                      isExpanded: true,
+                      decoration: _decoration('Department', required: true),
+                      items: _departments
+                          .map((d) => DropdownMenuItem(
+                                value: d,
+                                child: Text(d.deptName.trim(),
+                                    overflow: TextOverflow.ellipsis,
+                                    style: const TextStyle(fontSize: 13)),
+                              ))
+                          .toList(),
+                      onChanged: (d) {
+                        setState(() => _selectedDept = d);
+                        _loadPlants();
+                      },
+                    ),
+              const SizedBox(height: 12),
+              DropdownButtonFormField<AllDepartmentModel>(
+                value: _selectedPlant,
+                isExpanded: true,
+                decoration: _decoration('Plant', required: true),
+                items: _plants
+                    .map((p) => DropdownMenuItem(
+                          value: p,
+                          child: Text(p.statName.trim(),
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(fontSize: 13)),
+                        ))
+                    .toList(),
+                onChanged:
+                    _loadingPlants ? null : (p) => setState(() => _selectedPlant = p),
+                hint: Text(
+                  _selectedDept == null
+                      ? 'Select the department first'
+                      : (_loadingPlants ? 'Loading…' : 'Select Plant'),
+                  style: const TextStyle(fontSize: 13, color: kcLabelGrey),
+                ),
+              ),
+              if (_error != null) ...[
+                const SizedBox(height: 10),
+                Text(_error!,
+                    style: const TextStyle(color: kcRed, fontSize: 12)),
+              ],
+            ],
+          ),
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Cancel'),
+        ),
+        ElevatedButton(
+          onPressed: _save,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: kcvoilet,
+            foregroundColor: kcWhite,
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          ),
+          child: const Text('Use These Details'),
+        ),
+      ],
+    );
   }
 }

@@ -124,7 +124,6 @@ class _ApproveRejectTablePageState extends State<ApproveRejectTablePage> {
 
   late String employeeName;
   late String employeeCode;
-  late String sessionID = window.localStorage.getItem('ksessionID') ?? "";
   late String statCode = "";
   late String departCode = "";
   late String responsibleCode;
@@ -139,10 +138,47 @@ class _ApproveRejectTablePageState extends State<ApproveRejectTablePage> {
   int currentPage = 0;
   final int itemsPerPage = 10;
 
+  // Last APPLIED filter values — resent on every reload (paging, refresh
+  // after a Close/Reopen action) so the filtered view is retained instead of
+  // falling back to the unfiltered list.
+  String appliedStationCode = "";
+  String appliedFromDate = "";
+  String appliedEndDate = "";
+  String appliedLocation = "";
+  String appliedDeptCode = "";
+  String appliedHazard = "";
+  String appliedUniqueId = "";
+
+  void _reload(int page) {
+    allFilterObservationBloc.initState(
+        page,
+        appliedStationCode,
+        appliedFromDate,
+        appliedEndDate,
+        appliedLocation,
+        appliedDeptCode,
+        "COMPLIANCE",
+        appliedHazard,
+        "",
+        "",
+        "",
+        appliedUniqueId);
+  }
+
+  void _clearAppliedFilter() {
+    appliedStationCode = "";
+    appliedFromDate = "";
+    appliedEndDate = "";
+    appliedLocation = "";
+    appliedDeptCode = "";
+    appliedHazard = "";
+    appliedUniqueId = "";
+  }
+
   void _nextPage() {
     setState(() {
       currentPage++;
-      allFilterObservationBloc.initState(currentPage,"", "", "", "", "", "", "", "", "",sessionID,"");
+      _reload(currentPage);
     });
   }
 
@@ -150,7 +186,7 @@ class _ApproveRejectTablePageState extends State<ApproveRejectTablePage> {
     if (currentPage > 0) {
       setState(() {
         currentPage--;
-        allFilterObservationBloc.initState(currentPage,"", "", "", "", "", "", "", "", "",sessionID,"");
+        _reload(currentPage);
       });
     }
   }
@@ -415,9 +451,9 @@ class _ApproveRejectTablePageState extends State<ApproveRejectTablePage> {
             onPressed: () {
               setState(() {
                 currentPage = 0;
+                _clearAppliedFilter();
               });
-              allFilterObservationBloc.initState(0, "", "", "", "", "",
-                  "COMPLIANCE", "", "", "", "", "");
+              _reload(0);
             },
             icon: const Icon(Icons.refresh, size: 18),
             label: const Text('Refresh'),
@@ -727,6 +763,8 @@ class _ApproveRejectTablePageState extends State<ApproveRejectTablePage> {
                 isLoading = false;
                 selectedIndices.clear();
               });
+              // Reload the same page with the applied filter retained.
+              _reload(currentPage);
             }
           },
           failed: (_, message) {
@@ -864,6 +902,8 @@ class _ApproveRejectTablePageState extends State<ApproveRejectTablePage> {
                   setState(() {
                     selectedIndices.clear();
                   });
+                  // Reload the same page with the applied filter retained.
+                  _reload(currentPage);
                 },
           icon: loading
               ? const SizedBox(
@@ -1070,22 +1110,29 @@ class _ApproveRejectTablePageState extends State<ApproveRejectTablePage> {
         onClear: () {
           clearFormValues();
           Navigator.pop(ctx);
+          setState(() {
+            currentPage = 0;
+            _clearAppliedFilter();
+          });
+          _reload(0);
         },
         onApply: () {
-          // Snapshot the chosen filter values before clearFormValues() wipes them.
-          final fStat = statCode;
-          final fFrom = fromDateInput.text;
-          final fEnd = endDateInput.text;
-          final fLoc = location.value;
-          final fDept = departCode;
-          final fHazard = hazard.value;
-          final fUin = uniqueId.value;
+          // Snapshot the chosen filter values before clearFormValues() wipes
+          // them, and keep them as the APPLIED filter so paging and the
+          // post-action reload re-use them.
+          appliedStationCode = statCode;
+          appliedFromDate = fromDateInput.text;
+          appliedEndDate = endDateInput.text;
+          appliedLocation = location.value;
+          appliedDeptCode = departCode;
+          appliedHazard = hazard.value;
+          appliedUniqueId = uniqueId.value;
 
           // Close the dialog FIRST so it always dismisses.
           Navigator.pop(ctx);
 
-          allFilterObservationBloc.initState(0, fStat, fFrom, fEnd, fLoc, fDept,
-              "COMPLIANCE", fHazard, "", "", "", fUin);
+          setState(() => currentPage = 0);
+          _reload(0);
           html.window.localStorage.removeItem('ksessionID');
           startDateInput.clear();
           endDateInput.clear();

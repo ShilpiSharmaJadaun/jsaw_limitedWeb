@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../utils/page_header.dart';
+import 'widgets/incident_filter.dart';
 
 import '../model/compliance_api_models.dart';
 import '../model/compliance_incident_model.dart';
@@ -43,7 +45,9 @@ class _InvestigationsRaisedPageState extends State<InvestigationsRaisedPage> {
     try {
       final bytes =
           await _incidentService.downloadInvestigationPdfByUid(incidentUniqueId);
-      savePdfBytes('Investigation_Report_$incidentUniqueId.pdf', bytes);
+      if (!mounted) return;
+      await showPdfViewer(context, 'Investigation Report — $incidentUniqueId',
+          'Investigation_Report_$incidentUniqueId.pdf', bytes);
     } on ApiError catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context)
@@ -491,27 +495,12 @@ class _InvestigationsRaisedPageState extends State<InvestigationsRaisedPage> {
                           ),
                         ),
                         const SizedBox(width: 10),
-                        OutlinedButton.icon(
+                        // Icon-only since 29-Aug-2026 (Phase-3: "icon, not text").
+                        PdfDownloadIconButton(
+                          busy: _pdfBusyId == c.incidentUniqueId,
                           onPressed: _pdfBusyId != null
                               ? null
                               : () => _downloadInvestigationPdf(c.incidentUniqueId),
-                          icon: _pdfBusyId == c.incidentUniqueId
-                              ? const SizedBox(
-                                  width: 16,
-                                  height: 16,
-                                  child: CircularProgressIndicator(strokeWidth: 2))
-                              : const Icon(Icons.download_outlined, size: 18),
-                          label: Text(_pdfBusyId == c.incidentUniqueId
-                              ? 'Preparing…'
-                              : 'Investigation Report'),
-                          style: OutlinedButton.styleFrom(
-                            foregroundColor: kcPdfIconRed,
-                            side: const BorderSide(color: kcPdfIconRed),
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 14, vertical: 12),
-                            shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(8)),
-                          ),
                         ),
                         const SizedBox(width: 8),
                         ElevatedButton.icon(
@@ -723,35 +712,24 @@ class _InvestigationsRaisedPageState extends State<InvestigationsRaisedPage> {
 
   // App signature header gradient (matches PageHeader / Compliance detail page).
   Widget _embeddedHeader(String incidentId, String status) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          colors: [Color(0xFFFF7B2C), Color(0xFFEF4A8B), Color(0xFF8B5CF6)],
-          begin: Alignment.centerLeft,
-          end: Alignment.centerRight,
-        ),
-      ),
+    // Inline header band, design 40-b (29-Aug-2026).
+    return InlineHeaderBand(
       child: Row(
         children: [
-          IconButton(
-            tooltip: 'Back to list',
-            onPressed: _closeDetail,
-            icon: const Icon(Icons.arrow_back, color: kcWhite),
-          ),
+          InlineBackButton(onPressed: _closeDetail),
           const SizedBox(width: 4),
           Expanded(
             child: Text(
               incidentId,
               overflow: TextOverflow.ellipsis,
               style: const TextStyle(
-                color: kcWhite,
+                color: kInlineHeaderInk,
                 fontSize: 16,
                 fontWeight: FontWeight.w700,
               ),
             ),
           ),
-          _statusPill(status, onDark: true),
+          _statusPill(status),
         ],
       ),
     );

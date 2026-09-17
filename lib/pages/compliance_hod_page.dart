@@ -79,10 +79,11 @@ class _ComplianceHodPageState extends State<ComplianceHodPage> {
     final s = c.status.toLowerCase();
     switch (_statusFilter) {
       case 'pending':
-        // pending + submitted-but-not-yet-reviewed (HOD still has to act)
-        return s != 'closed' && s != 'review_completed';
+        // pending + submitted-but-not-yet-reviewed (raiser still has to act)
+        return s != 'closed' && s != 'review_completed' && s != 'raiser_reviewed';
       case 'review':
-        return s == 'review_completed'; // HOD done, awaiting Safety closure
+        // raiser closed (new flow) / HOD closed (old flow) — awaiting HSE closure
+        return s == 'review_completed' || s == 'raiser_reviewed';
       case 'closed':
         return s == 'closed';
       default:
@@ -233,10 +234,13 @@ class _ComplianceHodPageState extends State<ComplianceHodPage> {
     // assignees have all submitted — they wait here until the HOD closes them).
     final pending = _countBy((c) {
       final s = c.status.toLowerCase();
-      return s != 'closed' && s != 'review_completed';
+      return s != 'closed' && s != 'review_completed' && s != 'raiser_reviewed';
     });
-    final reviewed =
-        _countBy((c) => c.status.toLowerCase() == 'review_completed');
+    final reviewed = _countBy((c) {
+      final s = c.status.toLowerCase();
+      // Raiser closed (new flow) or HOD closed (old flow) — awaiting HSE closure.
+      return s == 'review_completed' || s == 'raiser_reviewed';
+    });
     final closed = _countBy((c) => c.status.toLowerCase() == 'closed');
     return Row(
       children: [
@@ -251,7 +255,7 @@ class _ComplianceHodPageState extends State<ComplianceHodPage> {
         Expanded(
             child: _statCard(
                 Icons.fact_check_outlined,
-                widget.closureMode ? 'Awaiting Closure' : 'Review Completed',
+                'Awaiting Closure',
                 reviewed,
                 kcStatPurple,
                 'review')),
