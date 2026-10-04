@@ -73,7 +73,10 @@ class _MedicalOfficerPageState extends State<MedicalOfficerPage> {
   ValueNotifier<String> injuryType = ValueNotifier("");
 
   late AllBodyPartsBloc allBodyPartsBloc;
-  ValueNotifier<String> bodyPart = ValueNotifier("");
+  /// Body parts are multi-select (customer request, Oct-2026); saved as one
+  /// comma-separated string in MedicalOfficerResponse.BodyPart (255 chars).
+  ValueNotifier<List<String>> bodyParts = ValueNotifier(const []);
+  static const int _bodyPartMaxLen = 255;
 
   late AllTypeIncidentBloc allTypeIncidentBloc;
   ValueNotifier<String> typeOfIncident = ValueNotifier("");
@@ -634,72 +637,142 @@ class _MedicalOfficerPageState extends State<MedicalOfficerPage> {
   }
 
   Widget _buildBodyPartDropdown(List<AllBodyPartsModel> allBodyPart) {
-    return ValueListenableBuilder<String>(
-      valueListenable: bodyPart,
-      builder: (context, value, child) => _buildSelector(
-        value.isEmpty ? "Select Body Part" : value,
-        value.isEmpty,
-            () => _buildBodyPartDialog(allBodyPart),
+    return ValueListenableBuilder<List<String>>(
+      valueListenable: bodyParts,
+      builder: (context, selected, child) => InkWell(
+        onTap: () => _buildBodyPartDialog(allBodyPart),
+        child: Container(
+          constraints: const BoxConstraints(minHeight: 44),
+          padding: const EdgeInsets.fromLTRB(8, 6, 4, 6),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: Colors.grey.shade400),
+          ),
+          child: Row(
+            children: [
+              Expanded(
+                child: selected.isEmpty
+                    ? const Padding(
+                        padding: EdgeInsets.only(left: 4),
+                        child: Text("Select Body Part(s)",
+                            style: TextStyle(color: Colors.grey, fontSize: 14)),
+                      )
+                    : Wrap(
+                        spacing: 6,
+                        runSpacing: 6,
+                        children: [
+                          for (final part in selected)
+                            InputChip(
+                              label: Text(part, style: const TextStyle(fontSize: 12)),
+                              visualDensity: VisualDensity.compact,
+                              materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                              backgroundColor: Colors.orange.shade50,
+                              side: BorderSide(color: Colors.orange.shade200),
+                              onDeleted: () => bodyParts.value =
+                                  selected.where((p) => p != part).toList(),
+                            ),
+                        ],
+                      ),
+              ),
+              const Icon(Icons.arrow_drop_down, color: Colors.grey),
+            ],
+          ),
+        ),
       ),
     );
   }
 
   Future<void> _buildBodyPartDialog(List<AllBodyPartsModel> allBodyPart) {
     final list = BodyPartListNotifier(allBodyPart);
+    // Work on a copy; only Done commits the selection.
+    final picked = <String>[...bodyParts.value];
     return showDialog(
       context: context,
       builder: (context) {
-        return AlertDialog(
-          shape: const RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(8))),
-          title: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text("Select Body Part",
-                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
-              TextFormField(
-                onChanged: list.filterBasedOn,
-                decoration: const InputDecoration(
-                  hintText: "search here...",
-                  prefixIcon: Icon(Icons.search, color: kcLightGrey),
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            final joinedLen = picked.join(', ').length;
+            return AlertDialog(
+              shape: const RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(8))),
+              title: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      const Expanded(
+                        child: Text("Select Body Part(s)",
+                            style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
+                      ),
+                      Text("${picked.length} selected",
+                          style: const TextStyle(fontSize: 12, color: kcDarkGreyColor)),
+                    ],
+                  ),
+                  TextFormField(
+                    onChanged: list.filterBasedOn,
+                    decoration: const InputDecoration(
+                      hintText: "search here...",
+                      prefixIcon: Icon(Icons.search, color: kcLightGrey),
+                    ),
+                  ),
+                ],
+              ),
+              content: SizedBox(
+                width: 300,
+                height: 400,
+                child: ValueListenableBuilder<List<AllBodyPartsModel>>(
+                  valueListenable: list,
+                  builder: (context, items, _) => ListView.separated(
+                    itemCount: items.length,
+                    shrinkWrap: true,
+                    separatorBuilder: (_, __) => const Divider(height: 1, color: kcDarkGreyColor),
+                    itemBuilder: (context, index) {
+                      final desc = items[index].description;
+                      final checked = picked.contains(desc);
+                      return CheckboxListTile(
+                        dense: true,
+                        controlAffinity: ListTileControlAffinity.leading,
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 4),
+                        value: checked,
+                        title: Text(desc),
+                        onChanged: (v) {
+                          if (v == true) {
+                            final len = joinedLen + (picked.isEmpty ? 0 : 2) + desc.length;
+                            if (len > _bodyPartMaxLen) {
+                              ScaffoldMessenger.maybeOf(this.context)?.showSnackBar(
+                                const SnackBar(content: Text("Too many body parts selected")),
+                              );
+                              return;
+                            }
+                            setDialogState(() => picked.add(desc));
+                          } else {
+                            setDialogState(() => picked.remove(desc));
+                          }
+                        },
+                      );
+                    },
+                  ),
                 ),
               ),
-            ],
-          ),
-          content: SizedBox(
-            width: 300,
-            height: 400,
-            child: ValueListenableBuilder<List<AllBodyPartsModel>>(
-              valueListenable: list,
-              builder: (context, items, _) => ListView.builder(
-                itemCount: items.length,
-                shrinkWrap: true,
-                itemBuilder: (context, index) {
-                  return Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      InkWell(
-                        onTap: () {
-                          bodyPart.value = items[index].description;
-                          Navigator.pop(context);
-                        },
-                        child: Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: Text(items[index].description),
-                        ),
-                      ),
-                      const Divider(height: 1, color: kcDarkGreyColor),
-                    ],
-                  );
-                },
-              ),
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text("close", style: TextStyle(color: kcDarkGreyColor)),
-            ),
-          ],
+              actions: [
+                TextButton(
+                  onPressed: picked.isEmpty ? null : () => setDialogState(picked.clear),
+                  child: const Text("clear", style: TextStyle(color: kcDarkGreyColor)),
+                ),
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text("cancel", style: TextStyle(color: kcDarkGreyColor)),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    bodyParts.value = List.unmodifiable(picked);
+                    Navigator.pop(context);
+                  },
+                  child: const Text("Done"),
+                ),
+              ],
+            );
+          },
         );
       },
     );
@@ -828,7 +901,7 @@ class _MedicalOfficerPageState extends State<MedicalOfficerPage> {
                     final data = {
                       "incidentUniqueId": widget.allMedicalOfficerListModel.uniqueId,
                       // "typeOfInjury": injuryType.value,
-                      "bodyPart": bodyPart.value,
+                      "bodyPart": bodyParts.value.join(', '),
                       "natureOfInjury": typeOfIncident.value,
                       "restUpto": detailsController.text,
                       "fitForDutyFrom": selectedDate == null

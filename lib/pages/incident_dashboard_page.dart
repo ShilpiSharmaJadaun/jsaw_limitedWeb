@@ -8,9 +8,11 @@ import '../service/incident_service.dart';
 import '../utils/app_color.dart';
 import '../utils/compact_date_range_picker.dart';
 
-/// Incident Dashboard (customer request Sep-2026): five tabs — Number of
-/// Injuries, Plant-wise, Department-wise, Category-wise (Nature of Injury)
-/// and Type-wise (Incident Type). Every tab has its OWN date-range filter,
+/// Incident Dashboard (customer request Sep-2026): tabs — Number of
+/// Injuries, Plant-wise, Department-wise, Category-wise (Nature of Injury),
+/// Type-wise (Incident Type), and since Oct-2026 Injury Type-wise (safety
+/// remark's Type of Injury: first aid, MTC, RWC …) and Body Part-wise; the
+/// overview tab also tracks pending / overdue CAPA compliance. Every tab has its OWN date-range filter,
 /// and each dimension tab additionally has a dropdown of its own values
 /// ("All" = comparison bar chart; a specific value = that value's monthly
 /// trend). Visible to every logged-in user.
@@ -22,7 +24,7 @@ class IncidentDashboardPage extends StatefulWidget {
 }
 
 /// Which dimension a tab aggregates on; null = the overview tab.
-enum _Dimension { plant, department, nature, type }
+enum _Dimension { plant, department, nature, type, injuryType, bodyPart }
 
 class _IncidentDashboardPageState extends State<IncidentDashboardPage>
     with SingleTickerProviderStateMixin {
@@ -31,7 +33,7 @@ class _IncidentDashboardPageState extends State<IncidentDashboardPage>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 5, vsync: this);
+    _tabController = TabController(length: 7, vsync: this);
   }
 
   @override
@@ -73,6 +75,8 @@ class _IncidentDashboardPageState extends State<IncidentDashboardPage>
                 _tab(Icons.apartment_outlined, 'Department-wise'),
                 _tab(Icons.category_outlined, 'Category-wise'),
                 _tab(Icons.label_outline, 'Type-wise'),
+                _tab(Icons.healing_outlined, 'Injury Type-wise'),
+                _tab(Icons.accessibility_new_rounded, 'Body Part-wise'),
               ],
             ),
           ),
@@ -86,6 +90,8 @@ class _IncidentDashboardPageState extends State<IncidentDashboardPage>
                 _DashboardTab(dimension: _Dimension.department),
                 _DashboardTab(dimension: _Dimension.nature),
                 _DashboardTab(dimension: _Dimension.type),
+                _DashboardTab(dimension: _Dimension.injuryType),
+                _DashboardTab(dimension: _Dimension.bodyPart),
               ],
             ),
           ),
@@ -113,6 +119,8 @@ class _DashboardTabState extends State<_DashboardTab>
   static const Color _cDepartment = Color(0xFFC2185B); // pink
   static const Color _cNature = Color(0xFFE65100); // orange
   static const Color _cType = Color(0xFF2E7D32); // green
+  static const Color _cInjuryType = Color(0xFF00838F); // teal
+  static const Color _cBodyPart = Color(0xFF6D4C41); // brown
 
   static final DateFormat _apiFmt = DateFormat('yyyy-MM-dd');
   static final DateFormat _labelFmt = DateFormat('dd MMM yyyy');
@@ -137,6 +145,10 @@ class _DashboardTabState extends State<_DashboardTab>
         return _cNature;
       case _Dimension.type:
         return _cType;
+      case _Dimension.injuryType:
+        return _cInjuryType;
+      case _Dimension.bodyPart:
+        return _cBodyPart;
       case null:
         return _cMonthly;
     }
@@ -152,6 +164,10 @@ class _DashboardTabState extends State<_DashboardTab>
         return 'Nature of Injury';
       case _Dimension.type:
         return 'Incident Type';
+      case _Dimension.injuryType:
+        return 'Injury Type';
+      case _Dimension.bodyPart:
+        return 'Body Part';
       case null:
         return '';
     }
@@ -167,6 +183,10 @@ class _DashboardTabState extends State<_DashboardTab>
         return s.byNature;
       case _Dimension.type:
         return s.byType;
+      case _Dimension.injuryType:
+        return s.byInjuryType;
+      case _Dimension.bodyPart:
+        return s.byBodyPart;
       case null:
         return const [];
     }
@@ -195,6 +215,8 @@ class _DashboardTabState extends State<_DashboardTab>
         deptName: d == _Dimension.department ? _selected : null,
         nature: d == _Dimension.nature ? _selected : null,
         incidentType: d == _Dimension.type ? _selected : null,
+        injuryType: d == _Dimension.injuryType ? _selected : null,
+        bodyPart: d == _Dimension.bodyPart ? _selected : null,
       );
       if (!mounted) return;
       setState(() {
@@ -281,11 +303,13 @@ class _DashboardTabState extends State<_DashboardTab>
               else
                 _chartCard(
                   title: '$_dimensionLabel-wise Injuries',
-                  subtitle: widget.dimension == _Dimension.nature
-                      ? 'Nature of injury (latest medical assessment)'
-                      : 'Incidents per ${_dimensionLabel.toLowerCase()}',
+                  subtitle: _dimensionSubtitle,
                   child: _barChart(_dimensionList(_stats), _color),
                 ),
+              if (widget.dimension == null) ...[
+                const SizedBox(height: 16),
+                _overdueCapaCard(),
+              ],
             ],
           );
         },
@@ -403,11 +427,89 @@ class _DashboardTabState extends State<_DashboardTab>
           _color,
           Icons.personal_injury_outlined),
       _statTile('This Month', thisMonth, kcvoilet, Icons.today_outlined),
+      if (widget.dimension == null) ...[
+        _statTile('CAPA Compliance Pending', _stats.capaPending, kcStatAmber,
+            Icons.pending_actions_outlined),
+        _statTile('CAPA Overdue', _stats.capaOverdue, const Color(0xFFC62828),
+            Icons.alarm),
+      ],
       if (widget.dimension != null && _selected == null)
         _statTile('${_dimensionLabel}s Affected',
             _dimensionList(_stats).length, kcStatGreen, Icons.numbers_outlined),
     ];
     return Wrap(spacing: 12, runSpacing: 12, children: tiles);
+  }
+
+  String get _dimensionSubtitle {
+    switch (widget.dimension) {
+      case _Dimension.nature:
+        return 'Nature of injury (latest medical assessment)';
+      case _Dimension.injuryType:
+        return 'Type of injury (safety remarks) — first aid, medical treatment, restricted work …';
+      case _Dimension.bodyPart:
+        return 'Body parts (medical assessment) — an incident with several body parts counts under each';
+      default:
+        return 'Incidents per ${_dimensionLabel.toLowerCase()}';
+    }
+  }
+
+  /// CAPA persons past their target date without submitting compliance,
+  /// for the incidents in the selected date range (most overdue first).
+  Widget _overdueCapaCard() {
+    const red = Color(0xFFC62828);
+    final rows = _stats.overdueCapas;
+    Widget cell(String t, {FontWeight w = FontWeight.w500, Color c = kcValueDark, int flex = 2}) =>
+        Expanded(
+          flex: flex,
+          child: Text(t,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(fontSize: 12.5, fontWeight: w, color: c)),
+        );
+    return _chartCard(
+      title: 'Overdue Compliance Actions',
+      subtitle: 'CAPA persons who have not submitted compliance by the target date',
+      child: rows.isEmpty
+          ? const Padding(
+              padding: EdgeInsets.symmetric(vertical: 24),
+              child: Center(
+                child: Text('No overdue compliance actions 🎉',
+                    style: TextStyle(color: kcLabelGrey, fontSize: 13)),
+              ),
+            )
+          : Column(
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: red.withValues(alpha: 0.06),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Row(children: [
+                    cell('Incident ID', w: FontWeight.w700, c: kcLabelGrey, flex: 3),
+                    cell('Responsible Person', w: FontWeight.w700, c: kcLabelGrey, flex: 3),
+                    cell('Target Date', w: FontWeight.w700, c: kcLabelGrey),
+                    cell('Overdue', w: FontWeight.w700, c: kcLabelGrey),
+                    cell('Status', w: FontWeight.w700, c: kcLabelGrey),
+                  ]),
+                ),
+                for (final r in rows)
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 9),
+                    decoration: const BoxDecoration(
+                      border: Border(bottom: BorderSide(color: kcVeryLightGrey)),
+                    ),
+                    child: Row(children: [
+                      cell(r.incidentUniqueId, w: FontWeight.w600, flex: 3),
+                      cell(r.empName.isEmpty ? r.empUnqId : '${r.empName} (${r.empUnqId})', flex: 3),
+                      cell(r.targetDate),
+                      cell('${r.daysOverdue} ${r.daysOverdue == 1 ? 'day' : 'days'}',
+                          w: FontWeight.w800, c: red),
+                      cell(r.status.toUpperCase() == 'REOPEN' ? 'Reopened' : 'Not submitted'),
+                    ]),
+                  ),
+              ],
+            ),
+    );
   }
 
   Widget _statTile(String label, int value, Color color, IconData icon) {

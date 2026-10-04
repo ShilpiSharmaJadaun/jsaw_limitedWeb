@@ -6,6 +6,7 @@ import '../utils/app_color.dart';
 import 'compliance_incident_detail_page.dart'
     show complianceStageColor, complianceStageLabel;
 import 'compliance_review_page.dart';
+import 'widgets/capa_due.dart';
 
 /// HOD Review — lists ALL compliance incidents; tap one to open its review
 /// (assignee statuses, reopen, close). Drawer-accessible.
@@ -86,6 +87,8 @@ class _ComplianceHodPageState extends State<ComplianceHodPage> {
         return s == 'review_completed' || s == 'raiser_reviewed';
       case 'closed':
         return s == 'closed';
+      case 'overdue':
+        return c.overdueCount > 0;
       default:
         return true;
     }
@@ -242,6 +245,7 @@ class _ComplianceHodPageState extends State<ComplianceHodPage> {
       return s == 'review_completed' || s == 'raiser_reviewed';
     });
     final closed = _countBy((c) => c.status.toLowerCase() == 'closed');
+    final overdue = _countBy((c) => c.overdueCount > 0);
     return Row(
       children: [
         Expanded(
@@ -263,6 +267,10 @@ class _ComplianceHodPageState extends State<ComplianceHodPage> {
         Expanded(
             child: _statCard(
                 Icons.lock_outline, 'Closed', closed, kcvoilet, 'closed')),
+        const SizedBox(width: 12),
+        Expanded(
+            child: _statCard(
+                Icons.alarm, 'Overdue', overdue, kcOverdueRed, 'overdue')),
       ],
     );
   }
@@ -420,6 +428,10 @@ class _ComplianceHodPageState extends State<ComplianceHodPage> {
                                 color: kcLabelGrey,
                                 letterSpacing: 0.2)),
                         const Spacer(),
+                        if (c.overdueCount > 0) ...[
+                          OverdueBadge(count: c.overdueCount),
+                          const SizedBox(width: 8),
+                        ],
                         _assignedChip(c.assignedCount),
                       ],
                     ),
@@ -450,6 +462,11 @@ class _ComplianceHodPageState extends State<ComplianceHodPage> {
                                   c.raisedBy, kcvoilet),
                               _metaLine(Icons.event_outlined,
                                   'Reporting Date', c.reportingDate, kcInfoDate),
+                              if (c.pendingCount > 0)
+                                DueDateLine(
+                                    label: 'Next CAPA Due',
+                                    date: c.nextDueDate,
+                                    overdue: c.overdueCount > 0),
                             ],
                           ),
                         ),

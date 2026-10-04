@@ -33,7 +33,9 @@ class IncidentService{
       {String? plant,
       String? deptName,
       String? nature,
-      String? incidentType}) async {
+      String? incidentType,
+      String? injuryType,
+      String? bodyPart}) async {
     var url =
         "${root}incidentReport/getDashboardStats?dateFrom=$dateFrom&dateTo=$dateTo";
     if (plant != null && plant.isNotEmpty) {
@@ -47,6 +49,12 @@ class IncidentService{
     }
     if (incidentType != null && incidentType.isNotEmpty) {
       url += "&incidentType=${Uri.encodeQueryComponent(incidentType)}";
+    }
+    if (injuryType != null && injuryType.isNotEmpty) {
+      url += "&injuryType=${Uri.encodeQueryComponent(injuryType)}";
+    }
+    if (bodyPart != null && bodyPart.isNotEmpty) {
+      url += "&bodyPart=${Uri.encodeQueryComponent(bodyPart)}";
     }
     final response = await authHttp.get(Uri.parse(url), headers: getHeaders());
     try {

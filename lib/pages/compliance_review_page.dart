@@ -11,6 +11,7 @@ import 'compliance_incident_detail_page.dart'
         complianceStageColor,
         complianceStageLabel,
         ComplianceIncidentDetailPage;
+import 'widgets/capa_due.dart';
 
 /// HOD review screen for one incident's compliance.
 ///
@@ -374,9 +375,20 @@ class _ComplianceReviewPageState extends State<ComplianceReviewPage> {
                         style:
                             const TextStyle(fontSize: 11.5, color: kcLabelGrey),
                       ),
+                      if (a.targetDate.isNotEmpty) ...[
+                        const SizedBox(height: 3),
+                        DueDateLine(
+                            label: 'Target Date',
+                            date: a.targetDate,
+                            overdue: a.overdue),
+                      ],
                     ],
                   ),
                 ),
+                if (a.overdue) ...[
+                  OverdueBadge(days: a.daysOverdue, compact: true),
+                  const SizedBox(width: 6),
+                ],
                 _statusPill(a.status, color),
               ],
             ),

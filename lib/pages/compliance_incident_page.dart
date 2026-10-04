@@ -4,6 +4,7 @@ import '../model/compliance_api_models.dart';
 import '../service/compliance_service.dart';
 import '../utils/app_color.dart';
 import 'compliance_incident_detail_page.dart';
+import 'widgets/capa_due.dart';
 
 /// Compliance Incident — LIST screen (live, wired to the backend).
 class ComplianceIncidentPage extends StatefulWidget {
@@ -94,6 +95,8 @@ class _ComplianceIncidentPageState extends State<ComplianceIncidentPage> {
         return m == 'reopen';
       case 'complete':
         return m == 'complete' || m == 'completed' || m == 'closed';
+      case 'overdue':
+        return c.myOverdue;
       default:
         return true;
     }
@@ -246,6 +249,7 @@ class _ComplianceIncidentPageState extends State<ComplianceIncidentPage> {
       final m = c.myStatus.toLowerCase();
       return m == 'complete' || m == 'completed' || m == 'closed';
     });
+    final overdue = _countBy((c) => c.myOverdue);
     return Row(
       children: [
         Expanded(
@@ -263,6 +267,10 @@ class _ComplianceIncidentPageState extends State<ComplianceIncidentPage> {
         Expanded(
             child: _statCard(Icons.verified_outlined, 'Complete', completed,
                 kcStatGreen, 'complete')),
+        const SizedBox(width: 12),
+        Expanded(
+            child: _statCard(
+                Icons.alarm, 'Overdue', overdue, kcOverdueRed, 'overdue')),
       ],
     );
   }
@@ -417,6 +425,10 @@ class _ComplianceIncidentPageState extends State<ComplianceIncidentPage> {
                                 color: kcLabelGrey,
                                 letterSpacing: 0.2)),
                         const Spacer(),
+                        if (c.myOverdue) ...[
+                          OverdueBadge(days: c.myDaysOverdue),
+                          const SizedBox(width: 8),
+                        ],
                         _overallChip(complianceStatusLabel(c.status)),
                       ],
                     ),
@@ -447,6 +459,10 @@ class _ComplianceIncidentPageState extends State<ComplianceIncidentPage> {
                                   c.raisedBy, kcvoilet),
                               _metaLine(Icons.event_outlined,
                                   'Reporting Date', c.reportingDate, kcInfoDate),
+                              DueDateLine(
+                                  label: 'Target Date',
+                                  date: c.myTargetDate,
+                                  overdue: c.myOverdue),
                             ],
                           ),
                         ),

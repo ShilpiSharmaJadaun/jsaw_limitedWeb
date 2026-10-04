@@ -12,6 +12,34 @@ class LabelCount {
       );
 }
 
+/// One CAPA person past the target date without submitting compliance.
+class OverdueCapa {
+  final String incidentUniqueId;
+  final String empUnqId;
+  final String empName;
+  final String targetDate;
+  final int daysOverdue;
+  final String status; // PENDING (never submitted) | REOPEN
+
+  const OverdueCapa({
+    required this.incidentUniqueId,
+    required this.empUnqId,
+    required this.empName,
+    required this.targetDate,
+    required this.daysOverdue,
+    required this.status,
+  });
+
+  factory OverdueCapa.fromJson(Map<String, dynamic> json) => OverdueCapa(
+        incidentUniqueId: (json['incidentUniqueId'] ?? '').toString(),
+        empUnqId: (json['empUnqId'] ?? '').toString(),
+        empName: (json['empName'] ?? '').toString(),
+        targetDate: (json['targetDate'] ?? '').toString(),
+        daysOverdue: (json['daysOverdue'] as num?)?.toInt() ?? 0,
+        status: (json['status'] ?? '').toString(),
+      );
+}
+
 class IncidentDashboardStats {
   final int totalIncidents;
   final List<LabelCount> byMonth;
@@ -19,6 +47,11 @@ class IncidentDashboardStats {
   final List<LabelCount> byDepartment;
   final List<LabelCount> byNature;
   final List<LabelCount> byType;
+  final List<LabelCount> byInjuryType; // safety remark's Type of Injury
+  final List<LabelCount> byBodyPart; // an incident counts under each part
+  final int capaPending;
+  final int capaOverdue;
+  final List<OverdueCapa> overdueCapas;
 
   const IncidentDashboardStats({
     this.totalIncidents = 0,
@@ -27,6 +60,11 @@ class IncidentDashboardStats {
     this.byDepartment = const [],
     this.byNature = const [],
     this.byType = const [],
+    this.byInjuryType = const [],
+    this.byBodyPart = const [],
+    this.capaPending = 0,
+    this.capaOverdue = 0,
+    this.overdueCapas = const [],
   });
 
   static List<LabelCount> _list(dynamic v) => v is List
@@ -43,5 +81,14 @@ class IncidentDashboardStats {
         byDepartment: _list(json['byDepartment']),
         byNature: _list(json['byNature']),
         byType: _list(json['byType']),
+        byInjuryType: _list(json['byInjuryType']),
+        byBodyPart: _list(json['byBodyPart']),
+        capaPending: (json['capaPending'] as num?)?.toInt() ?? 0,
+        capaOverdue: (json['capaOverdue'] as num?)?.toInt() ?? 0,
+        overdueCapas: json['overdueCapas'] is List
+            ? (json['overdueCapas'] as List)
+                .map((e) => OverdueCapa.fromJson(Map<String, dynamic>.from(e as Map)))
+                .toList()
+            : const [],
       );
 }

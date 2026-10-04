@@ -25,6 +25,13 @@ class ComplianceSummary {
   final String imageUrl;
   final int assignedCount;
   final bool alreadySubmitted;
+  // Due tracking (Oct-2026): pending = not submitted / reopened, incident open.
+  final int pendingCount;
+  final int overdueCount;
+  final String nextDueDate;  // earliest pending target date (dd-MMMM-yyyy)
+  final String myTargetDate; // this user's earliest CAPA target date
+  final bool myOverdue;
+  final int myDaysOverdue;
 
   const ComplianceSummary({
     required this.incidentUniqueId,
@@ -37,6 +44,12 @@ class ComplianceSummary {
     required this.imageUrl,
     required this.assignedCount,
     required this.alreadySubmitted,
+    this.pendingCount = 0,
+    this.overdueCount = 0,
+    this.nextDueDate = '',
+    this.myTargetDate = '',
+    this.myOverdue = false,
+    this.myDaysOverdue = 0,
   });
 
   factory ComplianceSummary.fromJson(Map<String, dynamic> m) => ComplianceSummary(
@@ -50,6 +63,12 @@ class ComplianceSummary {
         imageUrl: _s(m['imageUrl']),
         assignedCount: _i(m['assignedCount']),
         alreadySubmitted: _b(m['alreadySubmitted']),
+        pendingCount: _i(m['pendingCount']),
+        overdueCount: _i(m['overdueCount']),
+        nextDueDate: _s(m['nextDueDate']),
+        myTargetDate: _s(m['myTargetDate']),
+        myOverdue: _b(m['myOverdue']),
+        myDaysOverdue: _i(m['myDaysOverdue']),
       );
 }
 
@@ -64,6 +83,9 @@ class ComplianceAssigneeReview {
   final String submittedDate;
   final String reviewRemark;
   final String reopenSource; // RAISER / HOD / SAFETY (who reopened, if REOPEN)
+  final String targetDate;   // earliest CAPA target date (dd-MMMM-yyyy)
+  final bool overdue;        // still pending and past targetDate
+  final int daysOverdue;
 
   const ComplianceAssigneeReview({
     required this.empUnqId,
@@ -75,6 +97,9 @@ class ComplianceAssigneeReview {
     required this.submittedDate,
     required this.reviewRemark,
     this.reopenSource = '',
+    this.targetDate = '',
+    this.overdue = false,
+    this.daysOverdue = 0,
   });
 
   factory ComplianceAssigneeReview.fromJson(Map<String, dynamic> m) =>
@@ -88,6 +113,9 @@ class ComplianceAssigneeReview {
         submittedDate: _s(m['submittedDate']),
         reviewRemark: _s(m['reviewRemark']),
         reopenSource: _s(m['reopenSource']),
+        targetDate: _s(m['targetDate']),
+        overdue: _b(m['overdue']),
+        daysOverdue: _i(m['daysOverdue']),
       );
 }
 

@@ -740,7 +740,8 @@ class _InvestigationTeamPageState extends State<InvestigationTeamPage>
     final picked = await showDatePicker(
       context: context,
       initialDate: row.targetDate ?? DateTime.now(),
-      firstDate: DateTime.now(),
+      // Back dates allowed (customer request, Oct-2026) — same as the edit form.
+      firstDate: DateTime(2000),
       lastDate: DateTime(2100),
     );
     if (picked == null) return;
