@@ -19,6 +19,7 @@ import '../model/activeEmployeeLookup_model.dart';
 import 'image_picker.dart';
 import '../utils/pdf_download.dart';
 import '../error/api_error.dart';
+import '../service/incident_admin_service.dart';
 
 class InvestigationTeamPage extends StatefulWidget {
   const InvestigationTeamPage({super.key});
@@ -878,6 +879,7 @@ class _InvestigationTeamPageState extends State<InvestigationTeamPage>
         key: ValueKey('inv-view-${viewing.uniqueId}'),
         incident: viewing,
         onBack: () => setState(() => _viewIncident = null),
+        onChanged: () => _loadInvestigationList(page: _listPage),
       );
     }
     return Column(
@@ -1071,7 +1073,8 @@ class _InvestigationTeamPageState extends State<InvestigationTeamPage>
             _InvestigationReportCard(
               item: _listItems[i],
               onEdit: (r) => setState(() => _editingReport = r),
-            readOnly: _listScope != 'raised',
+            // HSE team may edit any investigation (customer request Oct-2026).
+            readOnly: _listScope != 'raised' && !isHseUser(),
             onView: _openReadOnlyView,
             onPdf: _downloadInvestigationPdf,
             pdfBusy: _pdfBusyId == _listItems[i].incidentUniqueId,
@@ -1095,7 +1098,8 @@ class _InvestigationTeamPageState extends State<InvestigationTeamPage>
           _InvestigationReportCard(
             item: _listSearchResults[i],
             onEdit: (r) => setState(() => _editingReport = r),
-            readOnly: _listScope != 'raised',
+            // HSE team may edit any investigation (customer request Oct-2026).
+            readOnly: _listScope != 'raised' && !isHseUser(),
             onView: _openReadOnlyView,
             onPdf: _downloadInvestigationPdf,
             pdfBusy: _pdfBusyId == _listSearchResults[i].incidentUniqueId,

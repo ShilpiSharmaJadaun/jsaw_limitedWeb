@@ -233,8 +233,6 @@ class _AllObservationPageState extends State<AllObservationPage>
 
   late String employeeName;
   late String employeeCode;
-  late String allObservationSessionID =
-      window.localStorage.getItem('kAllSessionID') ?? '';
   late String statCode = '';
   late String departCode = '';
   late String responsibleCode = '';
@@ -246,19 +244,36 @@ class _AllObservationPageState extends State<AllObservationPage>
   final List<String> statusList = ['PENDING', 'CLOSED', 'IN PROGRESS', 'COMPLIANCE'];
   int currentPage = 0;
 
+  /// This tab's own list filters, in initState order: station, from, to, location, dept,
+  /// status, hazard, responsibility-engg code, raised-by code, UIN. Paging re-sends them
+  /// (fix 17-Oct-2026): Next/Previous used to send a session ID that every observation tab
+  /// overwrote in localStorage, so paging could show another tab's records.
+  List<String> get _defaultFilters => const ['', '', '', '', '', '', '', '', '', ''];
+  late List<String> _filters = _defaultFilters;
+
+  /// Page count from the item count: filterObservation reports totalPages one short
+  /// (backend sends getTotalPages() - 1), which hid the last page (fix 17-Oct-2026).
+  int _pageCount(num totalItems) => (totalItems / 10).ceil();
+
+  /// Loads [page]; [filters] replaces the remembered filters when given.
+  void _fetch(int page, [List<String>? filters]) {
+    if (filters != null) _filters = filters;
+    final f = _filters;
+    allFilterObservationBloc.initState(
+        page, f[0], f[1], f[2], f[3], f[4], f[5], f[6], f[7], f[8], '', f[9]);
+  }
+
   // ── Pagination ────────────────────────────────────────────────────────────
   void _nextPage() => setState(() {
     currentPage++;
-    allFilterObservationBloc.initState(currentPage, '', '', '', '', '', '',
-        '', '', '', allObservationSessionID, '');
+    _fetch(currentPage);
   });
 
   void _previousPage() {
     if (currentPage > 0) {
       setState(() {
         currentPage--;
-        allFilterObservationBloc.initState(currentPage, '', '', '', '', '', '',
-            '', '', '', allObservationSessionID, '');
+        _fetch(currentPage);
       });
     }
   }
@@ -275,7 +290,7 @@ class _AllObservationPageState extends State<AllObservationPage>
     allObservaionTillDateBloc = AllObservaionTillDateBloc(observationService);
     filterObservationBloc = FilterObservationBloc(observationService);
     allFilterObservationBloc = AllFilterObservationBloc(observationService);
-    allFilterObservationBloc.initState(currentPage, '', '', '', '', '', '', '', '', '', '', '');
+    _fetch(currentPage, _defaultFilters);
     allPlantBloc = AllPlantBloc(observationService)..initState();
     allDepartBloc = AllDepartBloc(observationService);
     employeeResponsibilityBloc = EmployeeResponsibilityBloc(observationService);
@@ -321,7 +336,7 @@ class _AllObservationPageState extends State<AllObservationPage>
   // ─────────────────────────────────────────────────────────────────────────
   Widget _buildTopBar(AllFilterObservationModel model) {
     final hasPrev = currentPage > 0;
-    final hasNext = currentPage < model.totalPages - 1;
+    final hasNext = currentPage < _pageCount(model.totalItems) - 1;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       decoration: const BoxDecoration(
@@ -345,7 +360,7 @@ class _AllObservationPageState extends State<AllObservationPage>
               border: Border.all(color: kcvoilet.withValues(alpha: 0.15), width: 1),
             ),
             child: Text(
-              'Page ${currentPage + 1} of ${model.totalPages}',
+              'Page ${currentPage + 1} of ${_pageCount(model.totalItems)}',
               style: const TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
@@ -358,8 +373,7 @@ class _AllObservationPageState extends State<AllObservationPage>
               IconButton(
                 onPressed: () {
                   setState(() => currentPage = 0);
-                  allFilterObservationBloc.initState(
-                      0, '', '', '', '', '', '', '', '', '', '', '');
+                  _fetch(0, _defaultFilters);
                 },
                 style: IconButton.styleFrom(
                   backgroundColor: kcgreen,
@@ -424,8 +438,7 @@ class _AllObservationPageState extends State<AllObservationPage>
             color: kcgreen,
             onPressed: () {
               setState(() => currentPage = 0);
-              allFilterObservationBloc.initState(
-                  0, '', '', '', '', '', '', '', '', '', '', '');
+              _fetch(0, _defaultFilters);
             },
           ),
           const SizedBox(width: 10),
@@ -486,7 +499,7 @@ class _AllObservationPageState extends State<AllObservationPage>
   // ─────────────────────────────────────────────────────────────────────────
   Widget _buildPaginationBar(AllFilterObservationModel model) {
     final hasPrev = currentPage > 0;                          // ✅ fixed: was currentPage < totalPages
-    final hasNext = currentPage < model.totalPages - 1;       // ✅ fixed
+    final hasNext = currentPage < _pageCount(model.totalItems) - 1;       // ✅ fixed
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
@@ -512,7 +525,7 @@ class _AllObservationPageState extends State<AllObservationPage>
                   color: kcvoilet.withValues(alpha: 0.15), width: 1),
             ),
             child: Text(
-              'Page ${currentPage + 1} of ${model.totalPages}',
+              'Page ${currentPage + 1} of ${_pageCount(model.totalItems)}',
               style: const TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
@@ -637,8 +650,7 @@ class _AllObservationPageState extends State<AllObservationPage>
           Navigator.of(dialogContext).pop();
 
           // Reload all observations (no employee filter) with the chosen filters.
-          allFilterObservationBloc.initState(
-              0, fStat, fFrom, fEnd, fLoc, fDept, fStatus, fHazard, '', '', '', fUin);
+          _fetch(0, [fStat, fFrom, fEnd, fLoc, fDept, fStatus, fHazard, '', '', fUin]);
 
           html.window.localStorage.removeItem('kAllSessionID');
           startDateInput.clear();

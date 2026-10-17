@@ -414,7 +414,8 @@ class _ApproveRejectTablePageState extends State<ApproveRejectTablePage> {
             child: Text(
               model.totalItems == 0
                   ? 'No records'
-                  : 'Page $currentPage / ${model.totalPages}',
+                  // 1-based; count from items: filterObservation's totalPages is one short.
+                  : 'Page ${currentPage + 1} / ${(model.totalItems / 10).ceil()}',
               style: const TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w700,

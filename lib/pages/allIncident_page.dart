@@ -299,6 +299,7 @@ class _IncidentListTabState extends State<IncidentListTab>
         key: ValueKey('view-${selected.uniqueId}'),
         incident: selected,
         onBack: () => setState(() => _selected = null),
+        onChanged: allIncidentbloc.refresh,
       );
     }
     final reviewId = _reviewIncidentId;

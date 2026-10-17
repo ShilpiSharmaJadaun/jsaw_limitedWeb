@@ -13,6 +13,8 @@ class AllIncidentModel with _$AllIncidentModel{
     @Default("") String shift,
     @Default("") String employeeCode,
     @Default("") String employeeName,
+    @Default("") String gender,
+    @Default("") String wrkGrp,
     @Default(0) int age,
     @Default("") String contractorName,
     @Default("") String contCode,

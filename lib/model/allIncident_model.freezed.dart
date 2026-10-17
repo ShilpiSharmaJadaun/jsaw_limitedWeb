@@ -26,6 +26,8 @@ mixin _$AllIncidentModel {
   String get shift => throw _privateConstructorUsedError;
   String get employeeCode => throw _privateConstructorUsedError;
   String get employeeName => throw _privateConstructorUsedError;
+  String get gender => throw _privateConstructorUsedError;
+  String get wrkGrp => throw _privateConstructorUsedError;
   int get age => throw _privateConstructorUsedError;
   String get contractorName => throw _privateConstructorUsedError;
   String get contCode => throw _privateConstructorUsedError;
@@ -82,6 +84,8 @@ abstract class $AllIncidentModelCopyWith<$Res> {
       String shift,
       String employeeCode,
       String employeeName,
+      String gender,
+      String wrkGrp,
       int age,
       String contractorName,
       String contCode,
@@ -139,6 +143,8 @@ class _$AllIncidentModelCopyWithImpl<$Res, $Val extends AllIncidentModel>
     Object? shift = null,
     Object? employeeCode = null,
     Object? employeeName = null,
+    Object? gender = null,
+    Object? wrkGrp = null,
     Object? age = null,
     Object? contractorName = null,
     Object? contCode = null,
@@ -200,6 +206,14 @@ class _$AllIncidentModelCopyWithImpl<$Res, $Val extends AllIncidentModel>
       employeeName: null == employeeName
           ? _value.employeeName
           : employeeName // ignore: cast_nullable_to_non_nullable
+              as String,
+      gender: null == gender
+          ? _value.gender
+          : gender // ignore: cast_nullable_to_non_nullable
+              as String,
+      wrkGrp: null == wrkGrp
+          ? _value.wrkGrp
+          : wrkGrp // ignore: cast_nullable_to_non_nullable
               as String,
       age: null == age
           ? _value.age
@@ -364,6 +378,8 @@ abstract class _$$AllIncidentModelImplCopyWith<$Res>
       String shift,
       String employeeCode,
       String employeeName,
+      String gender,
+      String wrkGrp,
       int age,
       String contractorName,
       String contCode,
@@ -419,6 +435,8 @@ class __$$AllIncidentModelImplCopyWithImpl<$Res>
     Object? shift = null,
     Object? employeeCode = null,
     Object? employeeName = null,
+    Object? gender = null,
+    Object? wrkGrp = null,
     Object? age = null,
     Object? contractorName = null,
     Object? contCode = null,
@@ -480,6 +498,14 @@ class __$$AllIncidentModelImplCopyWithImpl<$Res>
       employeeName: null == employeeName
           ? _value.employeeName
           : employeeName // ignore: cast_nullable_to_non_nullable
+              as String,
+      gender: null == gender
+          ? _value.gender
+          : gender // ignore: cast_nullable_to_non_nullable
+              as String,
+      wrkGrp: null == wrkGrp
+          ? _value.wrkGrp
+          : wrkGrp // ignore: cast_nullable_to_non_nullable
               as String,
       age: null == age
           ? _value.age
@@ -639,6 +665,8 @@ class _$AllIncidentModelImpl implements _AllIncidentModel {
       this.shift = "",
       this.employeeCode = "",
       this.employeeName = "",
+      this.gender = "",
+      this.wrkGrp = "",
       this.age = 0,
       this.contractorName = "",
       this.contCode = "",
@@ -697,6 +725,12 @@ class _$AllIncidentModelImpl implements _AllIncidentModel {
   @override
   @JsonKey()
   final String employeeName;
+  @override
+  @JsonKey()
+  final String gender;
+  @override
+  @JsonKey()
+  final String wrkGrp;
   @override
   @JsonKey()
   final int age;
@@ -808,7 +842,7 @@ class _$AllIncidentModelImpl implements _AllIncidentModel {
 
   @override
   String toString() {
-    return 'AllIncidentModel(id: $id, uniqueId: $uniqueId, incidentDateTime: $incidentDateTime, shift: $shift, employeeCode: $employeeCode, employeeName: $employeeName, age: $age, contractorName: $contractorName, contCode: $contCode, plant: $plant, plantCode: $plantCode, deptName: $deptName, deptCode: $deptCode, location: $location, responsibleShiftEngg: $responsibleShiftEngg, responsibleHod: $responsibleHod, raisedByEmpCode: $raisedByEmpCode, raisedByEmpName: $raisedByEmpName, status: $status, investigationStatus: $investigationStatus, contactNumber: $contactNumber, incidentType: $incidentType, workInjury: $workInjury, descpOfIncident: $descpOfIncident, firDateTime: $firDateTime, imageUrl: $imageUrl, raisedDate: $raisedDate, updatedDate: $updatedDate, medicalOfficerTypeOfInjury: $medicalOfficerTypeOfInjury, bodyPart: $bodyPart, natureOfInjury: $natureOfInjury, restUpto: $restUpto, fitForDutyFrom: $fitForDutyFrom, medicalOfficerRemarks: $medicalOfficerRemarks, medicalOfficerResponseDate: $medicalOfficerResponseDate, medicalOfficerUpdatedDate: $medicalOfficerUpdatedDate, safetyTypeOfInjury: $safetyTypeOfInjury, safetyRemarks: $safetyRemarks, safetyResponseDate: $safetyResponseDate, safetyUpdatedDate: $safetyUpdatedDate, lowQualityImageUrl: $lowQualityImageUrl, highQualityImageUrl: $highQualityImageUrl)';
+    return 'AllIncidentModel(id: $id, uniqueId: $uniqueId, incidentDateTime: $incidentDateTime, shift: $shift, employeeCode: $employeeCode, employeeName: $employeeName, gender: $gender, wrkGrp: $wrkGrp, age: $age, contractorName: $contractorName, contCode: $contCode, plant: $plant, plantCode: $plantCode, deptName: $deptName, deptCode: $deptCode, location: $location, responsibleShiftEngg: $responsibleShiftEngg, responsibleHod: $responsibleHod, raisedByEmpCode: $raisedByEmpCode, raisedByEmpName: $raisedByEmpName, status: $status, investigationStatus: $investigationStatus, contactNumber: $contactNumber, incidentType: $incidentType, workInjury: $workInjury, descpOfIncident: $descpOfIncident, firDateTime: $firDateTime, imageUrl: $imageUrl, raisedDate: $raisedDate, updatedDate: $updatedDate, medicalOfficerTypeOfInjury: $medicalOfficerTypeOfInjury, bodyPart: $bodyPart, natureOfInjury: $natureOfInjury, restUpto: $restUpto, fitForDutyFrom: $fitForDutyFrom, medicalOfficerRemarks: $medicalOfficerRemarks, medicalOfficerResponseDate: $medicalOfficerResponseDate, medicalOfficerUpdatedDate: $medicalOfficerUpdatedDate, safetyTypeOfInjury: $safetyTypeOfInjury, safetyRemarks: $safetyRemarks, safetyResponseDate: $safetyResponseDate, safetyUpdatedDate: $safetyUpdatedDate, lowQualityImageUrl: $lowQualityImageUrl, highQualityImageUrl: $highQualityImageUrl)';
   }
 
   @override
@@ -826,6 +860,8 @@ class _$AllIncidentModelImpl implements _AllIncidentModel {
                 other.employeeCode == employeeCode) &&
             (identical(other.employeeName, employeeName) ||
                 other.employeeName == employeeName) &&
+            (identical(other.gender, gender) || other.gender == gender) &&
+            (identical(other.wrkGrp, wrkGrp) || other.wrkGrp == wrkGrp) &&
             (identical(other.age, age) || other.age == age) &&
             (identical(other.contractorName, contractorName) ||
                 other.contractorName == contractorName) &&
@@ -909,6 +945,8 @@ class _$AllIncidentModelImpl implements _AllIncidentModel {
         shift,
         employeeCode,
         employeeName,
+        gender,
+        wrkGrp,
         age,
         contractorName,
         contCode,
@@ -970,6 +1008,8 @@ abstract class _AllIncidentModel implements AllIncidentModel {
       final String shift,
       final String employeeCode,
       final String employeeName,
+      final String gender,
+      final String wrkGrp,
       final int age,
       final String contractorName,
       final String contCode,
@@ -1022,6 +1062,10 @@ abstract class _AllIncidentModel implements AllIncidentModel {
   String get employeeCode;
   @override
   String get employeeName;
+  @override
+  String get gender;
+  @override
+  String get wrkGrp;
   @override
   int get age;
   @override

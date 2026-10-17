@@ -115,7 +115,6 @@ class _RaisedObservationPageState extends State<RaisedObservationPage>
 
   late String employeeName;
   late String employeeCode;
-  late String raisedSessionID = window.localStorage.getItem('kRaisedSessionID') ?? "";
   late String statCode = "";
   late String departCode = "";
   late String responsibleCode;
@@ -129,6 +128,25 @@ class _RaisedObservationPageState extends State<RaisedObservationPage>
   List<String> statusList = ['PENDING', 'CLOSED', 'IN PROGRESS', 'COMPLIANCE'];
 
   int currentPage = 0;
+
+  /// This tab's own list filters, in initState order: station, from, to, location, dept,
+  /// status, hazard, responsibility-engg code, raised-by code, UIN. Paging re-sends them
+  /// (fix 17-Oct-2026): Next/Previous used to send a session ID that every observation tab
+  /// overwrote in localStorage, so paging could show another tab's records.
+  List<String> get _defaultFilters => ['', '', '', '', '', '', '', '', window.localStorage.getItem('kEmployeeCode') ?? '', ''];
+  late List<String> _filters = _defaultFilters;
+
+  /// Page count from the item count: filterObservation reports totalPages one short
+  /// (backend sends getTotalPages() - 1), which hid the last page (fix 17-Oct-2026).
+  int _pageCount(num totalItems) => (totalItems / 10).ceil();
+
+  /// Loads [page]; [filters] replaces the remembered filters when given.
+  void _fetch(int page, [List<String>? filters]) {
+    if (filters != null) _filters = filters;
+    final f = _filters;
+    allFilterObservationBloc.initState(
+        page, f[0], f[1], f[2], f[3], f[4], f[5], f[6], f[7], f[8], '', f[9]);
+  }
   // int intialCurrentPage = 0;
 
   final int itemsPerPage = 10;
@@ -147,7 +165,7 @@ class _RaisedObservationPageState extends State<RaisedObservationPage>
     allPlantBloc = AllPlantBloc(observationService);
     allPlantBloc.initState();
     allFilterObservationBloc = AllFilterObservationBloc(observationService);
-    allFilterObservationBloc.initState(currentPage,"", "", "", "", "", "", "", "", window.localStorage.getItem('kEmployeeCode') ?? "", "","");
+    _fetch(currentPage, _defaultFilters);
     allDepartBloc = AllDepartBloc(observationService);
     employeeResponsibilityBloc = EmployeeResponsibilityBloc(observationService);
     employeeName = window.localStorage.getItem('kEmployeename') ?? "";
@@ -169,7 +187,7 @@ class _RaisedObservationPageState extends State<RaisedObservationPage>
   void _nextPage() {
     setState(() {
       currentPage++;
-      allFilterObservationBloc.initState(currentPage,"", "", "", "", "", "", "", "", "",raisedSessionID,"");
+      _fetch(currentPage);
     });
   }
 
@@ -177,7 +195,7 @@ class _RaisedObservationPageState extends State<RaisedObservationPage>
     if (currentPage > 0) {
       setState(() {
         currentPage--;
-        allFilterObservationBloc.initState(currentPage,"", "", "", "", "", "", "", "", "",raisedSessionID,"");
+        _fetch(currentPage);
       });
     }
   }
@@ -230,7 +248,7 @@ class _RaisedObservationPageState extends State<RaisedObservationPage>
               Text(
                 model.totalItems == 0
                     ? "No records"
-                    : "Page ${currentPage + 1} of ${model.totalPages}",
+                    : "Page ${currentPage + 1} of ${_pageCount(model.totalItems)}",
                 style: const TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
@@ -242,8 +260,7 @@ class _RaisedObservationPageState extends State<RaisedObservationPage>
                   IconButton(
                     onPressed: () {
                       setState(() => currentPage = 0);
-                      allFilterObservationBloc.initState(0, "", "", "", "", "", "", "", "",
-                          window.localStorage.getItem('kEmployeeCode') ?? "", "", "");
+                      _fetch(0, _defaultFilters);
                     },
                     style: IconButton.styleFrom(
                       backgroundColor: kcgreen,
@@ -275,7 +292,7 @@ class _RaisedObservationPageState extends State<RaisedObservationPage>
                   ),
                   const SizedBox(width: 8),
                   ElevatedButton.icon(
-                    onPressed: model.totalItems != 0 && currentPage < model.totalPages - 1
+                    onPressed: model.totalItems != 0 && currentPage < _pageCount(model.totalItems) - 1
                         ? _nextPage
                         : null,
                     style: ElevatedButton.styleFrom(
@@ -607,21 +624,7 @@ class _RaisedObservationPageState extends State<RaisedObservationPage>
                                         ),
                                       );
                                       if (shouldInit != null && shouldInit) {
-                                        allFilterObservationBloc.initState(
-                                            currentPage,
-                                            "",
-                                            "",
-                                            "",
-                                            "",
-                                            "",
-                                            "",
-                                            "",
-                                            "",
-                                            window.localStorage
-                                                    .getItem('kEmployeeCode') ??
-                                                "",
-                                            "",
-                                            "");
+                                        _fetch(currentPage);
                                       }
                                     },
                                     icon: const Icon(
@@ -895,8 +898,7 @@ class _RaisedObservationPageState extends State<RaisedObservationPage>
                 Navigator.pop(ctx);
 
                 // Reload raised observations (observationRaisedByEmpUnqId = me).
-                allFilterObservationBloc.initState(0, fStat, fFrom, fEnd,
-                    fLoc, fDept, fStatus, fHazard, "", employeeCode, "", fUin);
+                _fetch(0, [fStat, fFrom, fEnd, fLoc, fDept, fStatus, fHazard, "", employeeCode, fUin]);
 
                 html.window.localStorage.removeItem('kRaisedSessionID');
                 startDateInput.clear();

@@ -10,12 +10,16 @@ import '../bloc/downloadPdf_bloc.dart';
 import '../model/allIncident_model.dart';
 import '../model/compliance_api_models.dart';
 import '../model/compliance_incident_model.dart';
+import '../model/investigationReport_response_model.dart';
+import '../service/incident_admin_service.dart';
 import '../service/compliance_service.dart';
 import '../service/incident_service.dart';
 import '../state/downloadPdf_state.dart';
 import '../utils/app_color.dart';
 import '../utils/progressive_image.dart';
 import 'compliance_incident_detail_page.dart';
+import 'edit_investigation_page.dart';
+import 'widgets/hse_incident_admin.dart';
 import 'widgets/incident_filter.dart';
 import '../utils/pdf_download.dart';
 import '../error/api_error.dart';
@@ -31,7 +35,8 @@ import '../error/api_error.dart';
 ///      detail sections, loaded on open (skipped when no investigation yet)
 ///   5. Compliance status — per-CAPA-owner submissions + overall stage
 /// plus a workflow strip (current stage) and a Download FIR PDF button.
-/// Strictly read-only: nothing here edits data.
+/// Read-only for everyone except the HSE team, who get Edit buttons on every
+/// section and a permanent Delete (customer request Oct-2026).
 class IncidentViewPage extends StatefulWidget {
   const IncidentViewPage({
     super.key,
@@ -39,10 +44,14 @@ class IncidentViewPage extends StatefulWidget {
     required this.onBack,
     this.showChain = true,
     this.title = 'Incident — View',
+    this.onChanged,
   });
 
   final AllIncidentModel incident;
   final VoidCallback onBack;
+
+  /// Called after an HSE edit or delete so the host list can reload.
+  final VoidCallback? onChanged;
 
   /// When false (Safety Remarks "Check Details"), only the Incident /
   /// Medical / Safety sections are shown — no workflow strip, no
@@ -60,10 +69,18 @@ class _IncidentViewPageState extends State<IncidentViewPage> {
   late final DownloadPdfBloc _pdfBloc;
 
   /// Investigation bundle; `null` when the call fails or nothing exists yet.
-  late final Future<ComplianceIncident?> _detail;
+  late Future<ComplianceIncident?> _detail;
 
   /// Compliance review state; `null` when unavailable.
-  late final Future<ComplianceReview?> _review;
+  late Future<ComplianceReview?> _review;
+
+  /// The row shown; replaced by a fresh copy after an HSE edit.
+  late AllIncidentModel _row;
+  final bool _hse = isHseUser();
+  bool _working = false;
+
+  /// Set while the HSE user edits the investigation inline.
+  InvestigationReportResponse? _editingInvestigation;
 
   /// True once the bundle shows an investigation exists (enables Report PDF).
   bool _hasInvestigation = false;
@@ -101,7 +118,13 @@ class _IncidentViewPageState extends State<IncidentViewPage> {
     final incidentService =
         Provider.of<IncidentService>(context, listen: false);
     _pdfBloc = DownloadPdfBloc(incidentService);
-    final id = widget.incident.uniqueId;
+    _row = widget.incident;
+    _loadChain();
+  }
+
+  void _loadChain() {
+    final id = _row.uniqueId;
+    _hasInvestigation = false;
     if (widget.showChain) {
       _detail = _compliance
           .getComplianceDetailForReview(id)
@@ -122,19 +145,79 @@ class _IncidentViewPageState extends State<IncidentViewPage> {
     }
   }
 
+  // ──────────────────────────────────────────────────────── HSE edit / delete
+  /// Re-reads the row and the investigation/compliance bundle after an edit.
+  Future<void> _refresh() async {
+    widget.onChanged?.call();
+    try {
+      final res = await Provider.of<IncidentService>(context, listen: false)
+          .getAllIncident(
+              filter: IncidentFilter(uniqueId: _row.uniqueId),
+              page: 1,
+              pageSize: 1);
+      if (!mounted) return;
+      setState(() {
+        if (res.items.isNotEmpty) _row = res.items.first;
+        _loadChain();
+      });
+    } catch (_) {
+      if (mounted) setState(_loadChain);
+    }
+  }
+
+  Future<void> _run(Future<bool> Function() edit) async {
+    if (await edit() && mounted) await _refresh();
+  }
+
+  Future<void> _editInvestigation() async {
+    setState(() => _working = true);
+    try {
+      final list = await Provider.of<IncidentService>(context, listen: false)
+          .getInvestigationReportByUniqueId(_row.uniqueId);
+      if (!mounted) return;
+      if (list.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+            content: Text('Investigation not found for this incident.')));
+        return;
+      }
+      setState(() => _editingInvestigation = list.first);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text(e.toString().replaceFirst('Exception: ', ''))));
+      }
+    } finally {
+      if (mounted) setState(() => _working = false);
+    }
+  }
+
+  Future<void> _delete() async {
+    if (!await showDeleteIncidentDialog(context, _row) || !mounted) return;
+    widget.onChanged?.call();
+    widget.onBack();
+  }
+
   @override
   void dispose() {
     _pdfBloc.close();
     super.dispose();
   }
 
-  AllIncidentModel get r => widget.incident;
+  AllIncidentModel get r => _row;
 
   bool get _hasMedical => r.medicalOfficerResponseDate.trim().isNotEmpty;
   bool get _hasSafety => r.safetyResponseDate.trim().isNotEmpty;
 
   @override
   Widget build(BuildContext context) {
+    final editing = _editingInvestigation;
+    if (editing != null) {
+      return EditInvestigationPage(
+        report: editing,
+        onClose: () => setState(() => _editingInvestigation = null),
+        onSaved: _refresh,
+      );
+    }
     return BlocListener<DownloadPdfBloc, DownloadPdfState>(
       bloc: _pdfBloc,
       listener: (_, state) {
@@ -183,6 +266,11 @@ class _IncidentViewPageState extends State<IncidentViewPage> {
                               title: 'Incident Details',
                               icon: Icons.assignment_outlined,
                               accent: kcStatBlue,
+                              action: _hse
+                                  ? HseEditButton(
+                                      onPressed: () => _run(
+                                          () => showEditIncidentDialog(context, r)))
+                                  : null,
                               child: _incidentBody(),
                             ),
                             const SizedBox(height: 16),
@@ -190,6 +278,11 @@ class _IncidentViewPageState extends State<IncidentViewPage> {
                               title: 'Medical Assessment',
                               icon: Icons.medical_services_outlined,
                               accent: kcInfoFir,
+                              action: _hse && _hasMedical
+                                  ? HseEditButton(
+                                      onPressed: () => _run(
+                                          () => showEditMedicalDialog(context, r)))
+                                  : null,
                               child: _hasMedical
                                   ? _medicalBody()
                                   : _emptyHint(
@@ -200,6 +293,11 @@ class _IncidentViewPageState extends State<IncidentViewPage> {
                               title: 'Safety Remarks',
                               icon: Icons.rate_review_outlined,
                               accent: kcobservationgreen,
+                              action: _hse && _hasSafety
+                                  ? HseEditButton(
+                                      onPressed: () => _run(
+                                          () => showEditSafetyDialog(context, r)))
+                                  : null,
                               child: _hasSafety
                                   ? _safetyBody()
                                   : _emptyHint(
@@ -223,7 +321,21 @@ class _IncidentViewPageState extends State<IncidentViewPage> {
                                 child: _emptyHint(
                                     'Investigation not yet submitted for this incident.'),
                               )
-                            else
+                            else ...[
+                              if (_hse)
+                                Align(
+                                  alignment: Alignment.centerRight,
+                                  child: Padding(
+                                    padding: const EdgeInsets.only(bottom: 8),
+                                    child: HseEditButton(
+                                      label: _working
+                                          ? 'Opening…'
+                                          : 'Edit Investigation / CAPA',
+                                      onPressed:
+                                          _working ? null : _editInvestigation,
+                                    ),
+                                  ),
+                                ),
                               // Investigation / CAPA / Risk photo — the same
                               // read-only sections the compliance pages use.
                               ComplianceIncidentDetailPage(
@@ -233,12 +345,21 @@ class _IncidentViewPageState extends State<IncidentViewPage> {
                                 showCapa: true,
                                 showIncidentSections: false,
                               ),
+                            ],
                             const SizedBox(height: 16),
                             if (widget.showChain && loaded)
                               _SectionCard(
                                 title: 'Compliance Status',
                                 icon: Icons.verified_outlined,
                                 accent: kcmegenta,
+                                action: _hse &&
+                                        (review?.assignees ?? const [])
+                                            .any((a) => a.submittedDate.isNotEmpty)
+                                    ? HseEditButton(
+                                        onPressed: () => _run(() =>
+                                            showEditComplianceDialog(
+                                                context, r.uniqueId)))
+                                    : null,
                                 child: _complianceBody(review, detail),
                               ),
                             const SizedBox(height: 28),
@@ -282,6 +403,23 @@ class _IncidentViewPageState extends State<IncidentViewPage> {
                     .trim(),
           ),
           const Spacer(),
+          if (_hse) ...[
+            OutlinedButton.icon(
+              onPressed: _delete,
+              style: OutlinedButton.styleFrom(
+                foregroundColor: Colors.red,
+                side: const BorderSide(color: Colors.red),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20)),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              ),
+              icon: const Icon(Icons.delete_outline, size: 18),
+              label: const Text('Delete',
+                  style: TextStyle(fontWeight: FontWeight.w700)),
+            ),
+            const SizedBox(width: 8),
+          ],
           if (widget.showChain && _hasInvestigation) ...[
             // Icon-only since 29-Aug-2026 (Phase-3: "icon, not text").
             PdfDownloadIconButton(
@@ -734,11 +872,15 @@ class _SectionCard extends StatefulWidget {
   final IconData icon;
   final Color accent;
   final Widget child;
+
+  /// Optional header action (HSE Edit button).
+  final Widget? action;
   const _SectionCard({
     required this.title,
     required this.icon,
     required this.accent,
     required this.child,
+    this.action,
   });
 
   @override
@@ -794,6 +936,10 @@ class _SectionCardState extends State<_SectionCard> {
                             fontWeight: FontWeight.w800,
                             color: kcValueDark)),
                   ),
+                  if (widget.action != null) ...[
+                    widget.action!,
+                    const SizedBox(width: 8),
+                  ],
                   AnimatedRotation(
                     turns: _expanded ? 0.5 : 0,
                     duration: const Duration(milliseconds: 180),

@@ -272,7 +272,8 @@ class _ApprovedObservationPageState extends State<ApprovedObservationPage> {
             child: Text(
               model.totalItems == 0
                   ? 'No records'
-                  : 'Page ${currentPage + 1} of ${model.totalPages}',
+                  // Count from items: filterObservation's totalPages is one short.
+                  : 'Page ${currentPage + 1} of ${(model.totalItems / 10).ceil()}',
               style: const TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.w600,

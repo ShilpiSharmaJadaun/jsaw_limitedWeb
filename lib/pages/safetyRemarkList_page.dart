@@ -192,6 +192,7 @@ class _SafetyRemarkListPageState extends State<SafetyRemarkListPage> {
               key: ValueKey('safety-view-${viewing.uniqueId}'),
               incident: viewing,
               onBack: () => setState(() => _viewIncident = null),
+              onChanged: completeSafetyRemarkbloc.initState,
               // Only incident + medical + safety here (user request).
               showChain: false,
               title: 'Check Details — Safety Remarks',
