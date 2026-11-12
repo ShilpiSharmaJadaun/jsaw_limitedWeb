@@ -105,8 +105,8 @@ class ComplianceService {
     final url = "${root}compliance/getComplianceDetail";
     final response = await authHttp.post(
       Uri.parse(url),
-      body: json.encode(
-          {"incidentUniqueId": incidentUniqueId, "empUnqId": _empUnqId}),
+      // No empUnqId: the server would otherwise return only the viewer's own CAPA.
+      body: json.encode({"incidentUniqueId": incidentUniqueId, "empUnqId": ""}),
       headers: getHeaders(),
     );
     final body = json.decode(response.body);
@@ -120,9 +120,10 @@ class ComplianceService {
         'Failed to load compliance detail');
   }
 
-  /// Submit this employee's compliance remark (+ optional image).
+  /// Submit this employee's compliance remark (+ optional image) for one CAPA.
   Future<String?> submitCompliance({
     required String incidentUniqueId,
+    required int capaId,
     required String remark,
     Uint8List? imageBytes,
   }) async {
@@ -142,6 +143,7 @@ class ComplianceService {
     request.fields['incidentUniqueId'] = incidentUniqueId;
     request.fields['empUnqId'] = _empUnqId;
     request.fields['empName'] = _empName;
+    request.fields['capaId'] = capaId.toString();
 
     final res = await request.send();
     final results = await http.Response.fromStream(res);
@@ -189,6 +191,7 @@ class ComplianceService {
   Future<String?> rejectCompliance({
     required String incidentUniqueId,
     required String empUnqId,
+    int capaId = 0, // the CAPA to reopen (per-CAPA compliance); 0 = whole employee (legacy)
     required String reviewRemark,
     String source = 'HOD',
   }) async {
@@ -198,6 +201,7 @@ class ComplianceService {
       body: json.encode({
         "incidentUniqueId": incidentUniqueId,
         "empUnqId": empUnqId,
+        if (capaId > 0) "capaId": capaId,
         "hodEmpUnqId": _empUnqId,
         "reviewRemark": reviewRemark,
         "source": source,

@@ -33,8 +33,10 @@ class SaveIncidentReportingBloc extends Cubit<SaveIncidentReportingState> {
       String contactNumber,
       String incidentType,
       String descpOfIncident,
-      String responsibleHodCode,
-      ) async {
+      String responsibleHodCode, {
+      String hodHeadEmpCode = '',
+      String hodHeadName = '',
+      }) async {
     emit(SaveIncidentReportingState.loading(state.saveIncident));
     try {
       final msg = await incidentService.getSaveObservation(
@@ -58,6 +60,8 @@ class SaveIncidentReportingBloc extends Cubit<SaveIncidentReportingState> {
         incidentType,
         descpOfIncident,
         responsibleHodCode,
+        hodHeadEmpCode: hodHeadEmpCode,
+        hodHeadName: hodHeadName,
       );
       emit(SaveIncidentReportingState.success(state.saveIncident, msg!));
     } on ApiError catch (error) {

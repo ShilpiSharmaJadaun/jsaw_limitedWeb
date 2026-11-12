@@ -23,8 +23,10 @@ class ComplianceSummary {
   final String status;   // OVERALL: PENDING / COMPLETE / CLOSED
   final String myStatus; // THIS user: PENDING / COMPLETE / REOPEN / CLOSED
   final String imageUrl;
-  final int assignedCount;
+  final int assignedCount; // CAPA count (compliance is per CAPA since Oct-2026)
   final bool alreadySubmitted;
+  final int myCapaCount;      // CAPA assigned to this user
+  final int mySubmittedCount; // ... of which answered
   // Due tracking (Oct-2026): pending = not submitted / reopened, incident open.
   final int pendingCount;
   final int overdueCount;
@@ -44,6 +46,8 @@ class ComplianceSummary {
     required this.imageUrl,
     required this.assignedCount,
     required this.alreadySubmitted,
+    this.myCapaCount = 0,
+    this.mySubmittedCount = 0,
     this.pendingCount = 0,
     this.overdueCount = 0,
     this.nextDueDate = '',
@@ -63,6 +67,8 @@ class ComplianceSummary {
         imageUrl: _s(m['imageUrl']),
         assignedCount: _i(m['assignedCount']),
         alreadySubmitted: _b(m['alreadySubmitted']),
+        myCapaCount: _i(m['myCapaCount']),
+        mySubmittedCount: _i(m['mySubmittedCount']),
         pendingCount: _i(m['pendingCount']),
         overdueCount: _i(m['overdueCount']),
         nextDueDate: _s(m['nextDueDate']),
@@ -72,8 +78,12 @@ class ComplianceSummary {
       );
 }
 
-/// One assigned employee's row on the HOD review screen.
+/// One CAPA's row on the review screens (per-CAPA compliance, Oct-2026).
 class ComplianceAssigneeReview {
+  final int capaId;
+  final int capaSeq;
+  final String capaText;
+  final bool legacy; // response is a pre-Oct-2026 one covering all the person's CAPA
   final String empUnqId;
   final String empName;
   final String deptCode;
@@ -83,11 +93,15 @@ class ComplianceAssigneeReview {
   final String submittedDate;
   final String reviewRemark;
   final String reopenSource; // RAISER / HOD / SAFETY (who reopened, if REOPEN)
-  final String targetDate;   // earliest CAPA target date (dd-MMMM-yyyy)
+  final String targetDate;   // this CAPA's target date (dd-MMMM-yyyy)
   final bool overdue;        // still pending and past targetDate
   final int daysOverdue;
 
   const ComplianceAssigneeReview({
+    this.capaId = 0,
+    this.capaSeq = 0,
+    this.capaText = '',
+    this.legacy = false,
     required this.empUnqId,
     required this.empName,
     required this.deptCode,
@@ -104,6 +118,10 @@ class ComplianceAssigneeReview {
 
   factory ComplianceAssigneeReview.fromJson(Map<String, dynamic> m) =>
       ComplianceAssigneeReview(
+        capaId: _i(m['capaId']),
+        capaSeq: _i(m['capaSeq']),
+        capaText: _s(m['capaText']),
+        legacy: _b(m['legacy']),
         empUnqId: _s(m['empUnqId']),
         empName: _s(m['empName']),
         deptCode: _s(m['deptCode']),
@@ -227,6 +245,7 @@ ComplianceIncident complianceIncidentFromDetail(Map<String, dynamic> m,
   }).map((e) {
     final c = e.cast<String, dynamic>();
     return CapaAction(
+      id: _i(c['id']),
       action: _s(c['capaText']),
       respEmpName: _s(c['respEmpName']),
       respEmpCode: _s(c['respEmpCode']),
@@ -272,6 +291,9 @@ ComplianceIncident complianceIncidentFromDetail(Map<String, dynamic> m,
     assignedEmployees: assigned,
     attachmentName: attachmentUrl.isEmpty ? '' : _fileNameFromUrl(attachmentUrl),
     attachmentImageUrl: _nullIfEmpty(attachmentUrl),
+    trainingCommImageUrl: _nullIfEmpty(_s(inv['trainingCommImageUrl'])),
+    onePointLesson: _s(inv['onePointLesson']).toUpperCase(),
+    oplImageUrl: _nullIfEmpty(_s(inv['oplImageUrl'])),
   );
 
   MyComplianceSubmission? mySub;
@@ -287,11 +309,35 @@ ComplianceIncident complianceIncidentFromDetail(Map<String, dynamic> m,
     );
   }
 
+  final myCapa = (m['myCapa'] is List ? m['myCapa'] as List : const [])
+      .whereType<Map>()
+      .map((e) {
+    final r = ComplianceAssigneeReview.fromJson(e.cast<String, dynamic>());
+    return CapaCompliance(
+      capaId: r.capaId,
+      seq: r.capaSeq,
+      capaText: r.capaText,
+      empUnqId: r.empUnqId,
+      empName: r.empName,
+      status: r.status,
+      remark: r.remark,
+      imageUrl: r.imageUrl,
+      submittedDate: r.submittedDate,
+      reviewRemark: r.reviewRemark,
+      reopenSource: r.reopenSource,
+      targetDate: r.targetDate,
+      overdue: r.overdue,
+      daysOverdue: r.daysOverdue,
+      legacy: r.legacy,
+    );
+  }).toList();
+
   return ComplianceIncident(
     status: _s(m['status']).isEmpty ? 'PENDING' : _s(m['status']),
     myStatus: _s(m['myStatus']).isEmpty ? 'PENDING' : _s(m['myStatus']),
     safety: safety,
     investigation: investigation,
     mySubmission: mySub,
+    myCapa: myCapa,
   );
 }

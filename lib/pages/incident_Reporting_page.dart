@@ -119,6 +119,12 @@ class _IncidentReportingPageState extends State<IncidentReportingPage> {
   late String responsibleEnggDesignationCode;
   String responsibleHODCode = "";
 
+  // Optional HOD's Head (customer request Oct-2026): the picked HOD's own reporting head.
+  List<EmployeeResponsibilityModel>? _hodHeads; // null = not loaded / no HOD picked yet
+  bool _hodHeadsLoading = false;
+  String hodHeadCode = "";
+  final ValueNotifier<String> hodHeadName = ValueNotifier("");
+
 
   ValueNotifier<String> employeeName = ValueNotifier("");
   ValueNotifier<String> employeeCode = ValueNotifier("");
@@ -515,6 +521,32 @@ class _IncidentReportingPageState extends State<IncidentReportingPage> {
                   ],
                 ),
 
+                const SizedBox(height: 10),
+
+                /// Row 7b : optional HOD's Head (Oct-2026) — the Responsible HOD's own head.
+
+                Row(
+                  children: [
+                    Expanded(
+                      child: Row(
+                        children: [
+                          _fieldIcon(Icons.supervisor_account_outlined, const Color(0xFF8B5CF6), const Color(0xFFEDE9FE)),
+                          const SizedBox(width: 8),
+                          _buildHeadingText("Add HOD's Head "),
+                          Expanded(child: _buildHodHead()),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 20),
+                    const Expanded(
+                      child: Text(
+                        "Optional — the selected person also receives the incident mail.",
+                        style: TextStyle(fontSize: 12, color: kcLightGrey, fontStyle: FontStyle.italic),
+                      ),
+                    ),
+                  ],
+                ),
+
                 const SizedBox(height: 20),
 
                 /// Row 9 : incident Details and FIR date and time
@@ -613,6 +645,7 @@ class _IncidentReportingPageState extends State<IncidentReportingPage> {
     // NOTE: responsibleEngg is NOT cleared — it comes from localStorage (logged-in user)
     // NOTE: responsibleHODCode is tied to the HOD dropdown selection, so clear it
     responsibleHODCode = "";
+    _clearHodHead(resetList: true);
 
     // Image
     _clearImage();
@@ -701,6 +734,8 @@ class _IncidentReportingPageState extends State<IncidentReportingPage> {
                       typeOfIncident.value,
                       detailsController.text,
                       responsibleHODCode,
+                      hodHeadEmpCode: hodHeadCode,
+                      hodHeadName: hodHeadName.value,
                     );
                   },
                   child: const Padding(
@@ -1376,8 +1411,109 @@ class _IncidentReportingPageState extends State<IncidentReportingPage> {
       title: 'Select Responsible HOD',
     );
     if (picked == null || !mounted) return;
+    final changed = picked.empUnqId != responsibleHODCode;
     responsibleHOD.value = picked.empName;
     responsibleHODCode = picked.empUnqId;
+    if (changed) _loadHodHeads(picked.empUnqId);
+  }
+
+  // ---------------------------------------------------------------- HOD's Head
+
+  void _clearHodHead({bool resetList = false}) {
+    hodHeadCode = "";
+    hodHeadName.value = "";
+    if (resetList) {
+      setState(() {
+        _hodHeads = null;
+        _hodHeadsLoading = false;
+      });
+    }
+  }
+
+  /// The HOD's own head(s) from App_Reporting (same lookup as the HOD list,
+  /// keyed by the HOD's code). A previously picked head is cleared.
+  Future<void> _loadHodHeads(String hodCode) async {
+    _clearHodHead();
+    setState(() {
+      _hodHeads = null;
+      _hodHeadsLoading = true;
+    });
+    List<EmployeeResponsibilityModel> heads = const [];
+    try {
+      heads = await Provider.of<ObservationService>(context, listen: false)
+          .getResponsibleHOD('', '', '', hodCode);
+    } catch (_) {}
+    if (!mounted || hodCode != responsibleHODCode) return; // HOD changed meanwhile
+    setState(() {
+      // Never offer the HOD themselves as their own head.
+      _hodHeads = heads.where((h) => h.empUnqId.trim() != hodCode.trim()).toList();
+      _hodHeadsLoading = false;
+    });
+  }
+
+  Widget _buildHodHead() {
+    final heads = _hodHeads;
+    String hint;
+    if (responsibleHODCode.isEmpty) {
+      hint = "Select the Responsible HOD first";
+    } else if (_hodHeadsLoading) {
+      hint = "Loading…";
+    } else if (heads == null || heads.isEmpty) {
+      hint = "No HOD's Head found";
+    } else {
+      hint = "Select HOD's Head (optional)";
+    }
+    final enabled = heads != null && heads.isNotEmpty && !_hodHeadsLoading;
+    return Padding(
+      padding: const EdgeInsets.all(2),
+      child: InkWell(
+        onTap: enabled ? () => _pickHodHead(heads) : null,
+        child: Container(
+          height: 40,
+          decoration: BoxDecoration(borderRadius: BorderRadius.circular(8.0), color: kcWhite),
+          child: ValueListenableBuilder<String>(
+            valueListenable: hodHeadName,
+            builder: (context, value, child) => Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Flexible(
+                  child: Text(
+                    value.isEmpty ? hint : value,
+                    textAlign: TextAlign.center,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(color: value.isEmpty ? kcDarkGreyColor : kcLightGrey),
+                  ),
+                ),
+                if (value.isNotEmpty)
+                  IconButton(
+                    tooltip: 'Clear',
+                    visualDensity: VisualDensity.compact,
+                    icon: const Icon(Icons.close, size: 16),
+                    onPressed: () => setState(_clearHodHead),
+                  )
+                else if (enabled)
+                  const Icon(Icons.arrow_drop_down_sharp),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _pickHodHead(List<EmployeeResponsibilityModel> heads) async {
+    final picked = await showEmployeePicker<EmployeeResponsibilityModel>(
+      context,
+      items: heads,
+      name: (e) => e.empName,
+      code: (e) => e.empUnqId,
+      title: "Select HOD's Head",
+    );
+    if (picked == null || !mounted) return;
+    setState(() {
+      hodHeadCode = picked.empUnqId;
+      hodHeadName.value = picked.empName;
+    });
   }
 
   /// Nature Of Injury

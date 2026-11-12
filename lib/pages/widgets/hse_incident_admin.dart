@@ -87,6 +87,7 @@ class _EditIncidentDialogState extends State<_EditIncidentDialog> {
   List<EmployeeShiftModel> _shifts = const [];
   List<String> _types = const [];
   List<String> _locations = const [];
+  bool _locationsLoading = false;
   List<EmployeeResponsibilityModel> _hods = const [];
 
   AllIncidentModel get r => widget.r;
@@ -139,14 +140,22 @@ class _EditIncidentDialogState extends State<_EditIncidentDialog> {
     super.dispose();
   }
 
+  /// App_Locations is keyed by the PLANT code (its column is misleadingly named
+  /// DeptCode), so look locations up by the incident's plantCode.
   void _loadLocations() {
-    if (_deptCode.trim().isEmpty) return;
-    widget.observationService.getAllLocation(_deptCode).then((l) {
-      if (mounted) {
+    if (_plantCode.trim().isEmpty) return;
+    final plantCode = _plantCode;
+    setState(() => _locationsLoading = true);
+    widget.observationService.getAllLocation(plantCode).then((l) {
+      if (mounted && plantCode == _plantCode) {
         setState(() => _locations =
             l.map((e) => e.locations).where((s) => s.trim().isNotEmpty).toSet().toList());
       }
-    }).catchError((_) {});
+    }).catchError((_) {
+      // e.g. "Location Not Found For This Department" — leave the list empty.
+    }).whenComplete(() {
+      if (mounted && plantCode == _plantCode) setState(() => _locationsLoading = false);
+    });
   }
 
   /// HOD list as the raiser saw it (raiser's dept / station / grade), falling back to
@@ -187,7 +196,10 @@ class _EditIncidentDialogState extends State<_EditIncidentDialog> {
       otherSubtitle: "Enter the injured person's details manually",
     );
     if (picked == null || !mounted) return;
-    final deptChanged = picked.deptCode != _deptCode;
+    // The employee master (and OtherEmployeeDetails) carry the PLANT in
+    // deptCode/deptName and the DEPARTMENT in statCode/statName — the raise form
+    // swaps them back when saving, so do the same here.
+    final plantChanged = picked.deptCode != _plantCode;
     setState(() {
       _empName = picked.empName;
       _empCode = picked.empCode;
@@ -195,16 +207,16 @@ class _EditIncidentDialogState extends State<_EditIncidentDialog> {
       _contName = picked.contName;
       _contCode = picked.contCode;
       _wrkGrp = picked.wrkGrp;
-      _plant = picked.statName;
-      _plantCode = picked.statCode;
-      _dept = picked.deptName;
-      _deptCode = picked.deptCode;
-      if (deptChanged) {
+      _plant = picked.deptName.trim();
+      _plantCode = picked.deptCode;
+      _dept = picked.statName.trim();
+      _deptCode = picked.statCode;
+      if (plantChanged) {
         _location = '';
         _locations = const [];
       }
     });
-    if (deptChanged) _loadLocations();
+    if (plantChanged) _loadLocations();
   }
 
   Future<void> _otherEmployee() async {
@@ -218,10 +230,10 @@ class _EditIncidentDialogState extends State<_EditIncidentDialog> {
                 age: _age,
                 contractorName: _contName,
                 wrkGrp: _wrkGrp,
-                deptName: _dept,
-                deptCode: _deptCode,
-                statName: _plant,
-                statCode: _plantCode,
+                deptName: _plant,
+                deptCode: _plantCode,
+                statName: _dept,
+                statCode: _deptCode,
               )
             : null,
       ),
@@ -234,10 +246,10 @@ class _EditIncidentDialogState extends State<_EditIncidentDialog> {
       _contName = result.contractorName;
       _contCode = '';
       _wrkGrp = result.wrkGrp;
-      _dept = result.deptName;
-      _deptCode = result.deptCode;
-      _plant = result.statName;
-      _plantCode = result.statCode;
+      _plant = result.deptName;
+      _plantCode = result.deptCode;
+      _dept = result.statName;
+      _deptCode = result.statCode;
       _location = '';
       _locations = const [];
     });
@@ -392,8 +404,14 @@ class _EditIncidentDialogState extends State<_EditIncidentDialog> {
               onTap: _busy
                   ? null
                   : () async {
+                      if (_locationsLoading) {
+                        _toast(context, 'Locations are still loading — please try again.');
+                        return;
+                      }
                       final v = await _pickOne(context,
-                          title: 'Select Location', options: _locations);
+                          title: 'Select Location',
+                          options: _locations,
+                          emptyText: 'No locations found for ${_plant.trim().isEmpty ? 'this plant' : 'plant $_plant'}');
                       if (v != null && mounted) setState(() => _location = v);
                     },
             ),
@@ -684,6 +702,17 @@ class _EditSafetyDialogState extends State<_EditSafetyDialog> {
 
 // ─────────────────────────────────────────────────────────────── compliance
 
+/// " · CAPA n" when an engineer has several per-CAPA responses (n in CAPA order).
+String _capaLabel(List<ComplianceSubmissionRow> rows, ComplianceSubmissionRow s) {
+  if (s.capaId <= 0) return '';
+  final mine = rows
+      .where((r) => r.capaId > 0 && r.empUnqId.trim() == s.empUnqId.trim())
+      .map((r) => r.capaId)
+      .toList()
+    ..sort();
+  return mine.length > 1 ? ' · CAPA ${mine.indexOf(s.capaId) + 1}' : '';
+}
+
 Future<bool> showEditComplianceDialog(BuildContext context, String incidentUniqueId) async {
   final res = await showDialog<bool>(
     context: context,
@@ -728,9 +757,14 @@ class _EditComplianceDialogState extends State<_EditComplianceDialog> {
   Future<void> _load() async {
     try {
       final all = await _admin.getComplianceSubmissions(widget.uid);
-      // Newest row per engineer is the live one (same rule as the compliance pages).
+      // Newest row per CAPA is the live one (per-CAPA compliance, Oct-2026);
+      // legacy rows (no CAPA) stay one per engineer.
       final seen = <String>{};
-      final latest = all.where((s) => seen.add(s.empUnqId.trim().toUpperCase())).toList();
+      final latest = all
+          .where((s) => seen.add(s.capaId > 0
+              ? 'C${s.capaId}'
+              : 'E${s.empUnqId.trim().toUpperCase()}'))
+          .toList();
       if (!mounted) return;
       setState(() {
         _rows = latest;
@@ -794,12 +828,14 @@ class _EditComplianceDialogState extends State<_EditComplianceDialog> {
         children: [
           DropdownButtonFormField<int>(
             value: _sel?.id,
-            decoration: _dec('Engineer'),
+            decoration: _dec('Engineer / CAPA'),
             items: [
               for (final s in rows)
                 DropdownMenuItem(
                     value: s.id,
-                    child: Text('${s.empName} (${s.empUnqId}) · ${s.status}',
+                    child: Text(
+                        '${s.empName} (${s.empUnqId})'
+                        '${_capaLabel(rows, s)} · ${s.status}',
                         overflow: TextOverflow.ellipsis)),
             ],
             onChanged: _busy
@@ -1262,18 +1298,25 @@ Future<String?> _pickOne(
   required String title,
   required List<String> options,
   String Function(String)? label,
+  String? emptyText,
 }) {
   return showDialog<String>(
     context: context,
-    builder: (_) => _SinglePickDialog(title: title, options: options, label: label),
+    builder: (_) =>
+        _SinglePickDialog(title: title, options: options, label: label, emptyText: emptyText),
   );
 }
 
 class _SinglePickDialog extends StatefulWidget {
-  const _SinglePickDialog({required this.title, required this.options, this.label});
+  const _SinglePickDialog(
+      {required this.title, required this.options, this.label, this.emptyText});
   final String title;
   final List<String> options;
   final String Function(String)? label;
+
+  /// Shown instead of the spinner when [options] is empty because the list
+  /// finished loading with nothing in it (null = still loading).
+  final String? emptyText;
 
   @override
   State<_SinglePickDialog> createState() => _SinglePickDialogState();
@@ -1304,7 +1347,10 @@ class _SinglePickDialogState extends State<_SinglePickDialog> {
             const SizedBox(height: 8),
             Expanded(
               child: widget.options.isEmpty
-                  ? const Center(child: CircularProgressIndicator())
+                  ? Center(
+                      child: widget.emptyText == null
+                          ? const CircularProgressIndicator()
+                          : Text(widget.emptyText!, textAlign: TextAlign.center))
                   : shown.isEmpty
                       ? const Center(child: Text('No match'))
                       : ListView.separated(

@@ -47,12 +47,14 @@ class InquiredWithRef {
 
 /// A single CAPA action row (corrective / suppressive / preventive).
 class CapaAction {
+  final int id; // InvestigationCapa.ID (0 in mock data)
   final String action;
   final String respEmpName;
   final String respEmpCode;
   final String department;
   final String targetDate;
   const CapaAction({
+    this.id = 0,
     required this.action,
     required this.respEmpName,
     required this.respEmpCode,
@@ -163,6 +165,12 @@ class InvestigationDetail {
   final String? attachmentImageUrl;
   final String attachmentName;
 
+  /// Training & Communication photo / One Point Lesson ("YES"/"NO"/"") + photo
+  /// (Oct-2026). Blank on reports filed before this change.
+  final String? trainingCommImageUrl;
+  final String onePointLesson;
+  final String? oplImageUrl;
+
   const InvestigationDetail({
     required this.incidentId,
     required this.team,
@@ -177,6 +185,9 @@ class InvestigationDetail {
     required this.assignedEmployees,
     required this.attachmentName,
     this.attachmentImageUrl,
+    this.trainingCommImageUrl,
+    this.onePointLesson = '',
+    this.oplImageUrl,
   });
 
   bool get isEmpty => team.isEmpty && rootCauses.isEmpty;
@@ -195,12 +206,17 @@ class ComplianceIncident {
   final String myStatus; // PENDING / COMPLETE / REOPEN / CLOSED
   final MyComplianceSubmission? mySubmission;
 
+  /// This employee's CAPA, each with its own response (compliance is per CAPA
+  /// since Oct-2026). Empty for viewers who own no CAPA.
+  final List<CapaCompliance> myCapa;
+
   const ComplianceIncident({
     required this.status,
     required this.safety,
     required this.investigation,
     this.myStatus = 'PENDING',
     this.mySubmission,
+    this.myCapa = const [],
   });
 
   // Convenience getters used by the list card / header.
@@ -212,6 +228,45 @@ class ComplianceIncident {
           ? investigation.reportDate
           : safety.raisedDate;
   int get assignedEmployeesCount => investigation.assignedEmployees.length;
+}
+
+/// One CAPA and its compliance response (per-CAPA compliance, Oct-2026).
+class CapaCompliance {
+  final int capaId;
+  final int seq;
+  final String capaText;
+  final String empUnqId;
+  final String empName;
+  final String status; // PENDING / COMPLETE / REOPEN / CLOSED
+  final String remark;
+  final String imageUrl;
+  final String submittedDate;
+  final String reviewRemark;
+  final String reopenSource;
+  final String targetDate;
+  final bool overdue;
+  final int daysOverdue;
+
+  /// The response shown is a pre-Oct-2026 one covering all of the person's CAPA.
+  final bool legacy;
+
+  const CapaCompliance({
+    required this.capaId,
+    this.seq = 0,
+    this.capaText = '',
+    this.empUnqId = '',
+    this.empName = '',
+    this.status = 'PENDING',
+    this.remark = '',
+    this.imageUrl = '',
+    this.submittedDate = '',
+    this.reviewRemark = '',
+    this.reopenSource = '',
+    this.targetDate = '',
+    this.overdue = false,
+    this.daysOverdue = 0,
+    this.legacy = false,
+  });
 }
 
 /// This employee's own compliance submission (from the detail API).

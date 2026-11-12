@@ -228,6 +228,15 @@ class _InvestigationTeamPageState extends State<InvestigationTeamPage>
   final GlobalKey<ImagePickerPageState> _riskPhotoKey =
       GlobalKey<ImagePickerPageState>();
 
+  // ---------- Training & Communication / One Point Lesson (Oct-2026) ----------
+  Uint8List? _trainingCommBytes;
+  final GlobalKey<ImagePickerPageState> _trainingPhotoKey =
+      GlobalKey<ImagePickerPageState>();
+  String _onePointLesson = ''; // '' (not answered) / 'YES' / 'NO'
+  Uint8List? _oplBytes;
+  final GlobalKey<ImagePickerPageState> _oplPhotoKey =
+      GlobalKey<ImagePickerPageState>();
+
   // ---------- Submit state ----------
   bool _submitting = false;
 
@@ -625,6 +634,18 @@ class _InvestigationTeamPageState extends State<InvestigationTeamPage>
       _showSnack('Please attach the Associated Risk / Hazard Register photo');
       return;
     }
+    if (_trainingCommBytes == null || _trainingCommBytes!.isEmpty) {
+      _showSnack('Please attach the Training & Communication photo');
+      return;
+    }
+    if (_onePointLesson.isEmpty) {
+      _showSnack('Please select One Point Lesson: Yes or No');
+      return;
+    }
+    if (_onePointLesson == 'YES' && (_oplBytes == null || _oplBytes!.isEmpty)) {
+      _showSnack('Please attach the One Point Lesson photo');
+      return;
+    }
 
     final team = _investigationTeam
         .where((e) => e != null)
@@ -686,6 +707,9 @@ class _InvestigationTeamPageState extends State<InvestigationTeamPage>
     try {
       final msg = await _incidentService.saveInvestigationReport(
         imageBytes: _associatedRiskBytes!,
+        trainingCommImageBytes: _trainingCommBytes!,
+        onePointLesson: _onePointLesson,
+        oplImageBytes: _onePointLesson == 'YES' ? _oplBytes : null,
         incidentUniqueId: _selectedIncidentUniqueId.trim(),
         reportDate: _fmtYmd(_reportDate),
         team: team,
@@ -731,10 +755,15 @@ class _InvestigationTeamPageState extends State<InvestigationTeamPage>
 
       _associatedRiskImage = null;
       _associatedRiskBytes = null;
+      _trainingCommBytes = null;
+      _onePointLesson = '';
+      _oplBytes = null;
     });
     // Point 8: the ImagePickerPage keeps its own preview state — clear it too,
     // otherwise the Hazard Register photo lingers after a successful submit.
     _riskPhotoKey.currentState?.clearImage();
+    _trainingPhotoKey.currentState?.clearImage();
+    _oplPhotoKey.currentState?.clearImage();
   }
 
   Future<void> _pickTargetDate(_CapaRow row) async {
@@ -854,6 +883,10 @@ class _InvestigationTeamPageState extends State<InvestigationTeamPage>
             _buildCapaTable(),
             const SizedBox(height: 20),
             _buildAssociatedRiskSection(),
+            const SizedBox(height: 20),
+            _buildTrainingCommSection(),
+            const SizedBox(height: 20),
+            _buildOnePointLessonSection(),
             const SizedBox(height: 24),
             _submitButton(),
             const SizedBox(height: 12),
@@ -1873,6 +1906,132 @@ class _InvestigationTeamPageState extends State<InvestigationTeamPage>
         ],
       ),
     );
+  }
+
+  // ============== Training & Communication / One Point Lesson (Oct-2026) ==============
+
+  /// Card shell matching the Associated Risk section: gradient header + body.
+  Widget _photoSectionCard({
+    required String title,
+    required IconData icon,
+    required Color from,
+    required Color to,
+    required Widget child,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        color: kcWhite,
+        border: Border.all(color: from.withOpacity(0.25)),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [from, to],
+                begin: Alignment.centerLeft,
+                end: Alignment.centerRight,
+              ),
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(10),
+                topRight: Radius.circular(10),
+              ),
+            ),
+            padding:
+                const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            child: Row(
+              children: [
+                Icon(icon, color: kcWhite, size: 18),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    title,
+                    style: const TextStyle(
+                        color: kcWhite,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700),
+                  ),
+                ),
+                const Text('*',
+                    style: TextStyle(
+                        color: Colors.red,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold)),
+              ],
+            ),
+          ),
+          Padding(padding: const EdgeInsets.all(12), child: child),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTrainingCommSection() {
+    return _photoSectionCard(
+      title: 'Training & Communication',
+      icon: Icons.school_outlined,
+      from: kcvoilet,
+      to: kcInfoFir,
+      child: ImagePickerPage(
+        key: _trainingPhotoKey,
+        onImagePicked: (image, [bytes]) {
+          setState(() => _trainingCommBytes = bytes);
+        },
+      ),
+    );
+  }
+
+  Widget _buildOnePointLessonSection() {
+    Widget choice(String value, String label) => InkWell(
+          borderRadius: BorderRadius.circular(6),
+          onTap: () => _setOnePointLesson(value),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Checkbox(
+                value: _onePointLesson == value,
+                activeColor: kcmegenta,
+                onChanged: (_) => _setOnePointLesson(value),
+              ),
+              Text(label, style: const TextStyle(fontSize: 14)),
+              const SizedBox(width: 16),
+            ],
+          ),
+        );
+    return _photoSectionCard(
+      title: 'One Point Lesson',
+      icon: Icons.lightbulb_outline,
+      from: kcmegenta,
+      to: kcInfoResponsibility,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(children: [choice('YES', 'Yes'), choice('NO', 'No')]),
+          if (_onePointLesson == 'YES') ...[
+            const SizedBox(height: 8),
+            const Text('Upload One Point Lesson photo *',
+                style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+            const SizedBox(height: 8),
+            ImagePickerPage(
+              key: _oplPhotoKey,
+              onImagePicked: (image, [bytes]) {
+                setState(() => _oplBytes = bytes);
+              },
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  /// Yes/No behave as one choice; switching to No drops any picked photo.
+  void _setOnePointLesson(String value) {
+    setState(() {
+      _onePointLesson = value;
+      if (value != 'YES') _oplBytes = null;
+    });
   }
 
   // ============== Investigation Team ==============
@@ -3105,6 +3264,37 @@ class _InvestigationReportCardState extends State<_InvestigationReportCard> {
           )
         else
           ...item.capa.map(_capaRowView).toList(),
+        // Training & Communication / One Point Lesson (Oct-2026)
+        _sectionBand(
+          color: kcvoilet,
+          icon: Icons.school_outlined,
+          title: 'Training & Communication',
+          count: item.trainingCommImageUrl.isEmpty ? 0 : 1,
+        ),
+        if (item.trainingCommImageUrl.isEmpty)
+          const Padding(
+            padding: EdgeInsets.fromLTRB(16, 8, 16, 12),
+            child: Text('Not provided',
+                style: TextStyle(color: kcLabelGrey, fontSize: 12)),
+          )
+        else
+          _imageSection(highUrl: item.trainingCommImageUrl),
+        _sectionBand(
+          color: kcmegenta,
+          icon: Icons.lightbulb_outline,
+          title: 'One Point Lesson',
+          count: item.oplImageUrl.isEmpty ? 0 : 1,
+        ),
+        _kvRow(
+          'OPL',
+          item.onePointLesson == 'YES'
+              ? 'Yes'
+              : item.onePointLesson == 'NO'
+                  ? 'No'
+                  : 'Not provided',
+        ),
+        if (item.onePointLesson == 'YES' && item.oplImageUrl.isNotEmpty)
+          _imageSection(highUrl: item.oplImageUrl),
         const SizedBox(height: 8),
         Padding(
           padding: const EdgeInsets.fromLTRB(14, 4, 14, 14),

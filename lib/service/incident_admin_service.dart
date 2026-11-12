@@ -14,6 +14,7 @@ bool isHseUser() => (window.localStorage.getItem('khseCode') ?? '').trim() == '1
 /// One compliance submission row as returned by `incidentAdmin/getComplianceSubmissions`.
 class ComplianceSubmissionRow {
   final int id;
+  final int capaId; // CAPA this response answers (0 = legacy per-employee row)
   final String empUnqId;
   final String empName;
   final String remark;
@@ -23,6 +24,7 @@ class ComplianceSubmissionRow {
 
   const ComplianceSubmissionRow({
     required this.id,
+    this.capaId = 0,
     required this.empUnqId,
     required this.empName,
     required this.remark,
@@ -35,6 +37,7 @@ class ComplianceSubmissionRow {
     String s(String k) => (j[k] ?? '').toString();
     return ComplianceSubmissionRow(
       id: j['id'] is int ? j['id'] as int : int.tryParse(s('id')) ?? 0,
+      capaId: j['capaId'] is int ? j['capaId'] as int : int.tryParse(s('capaId')) ?? 0,
       empUnqId: s('empUnqId'),
       empName: s('empName'),
       remark: s('remark'),

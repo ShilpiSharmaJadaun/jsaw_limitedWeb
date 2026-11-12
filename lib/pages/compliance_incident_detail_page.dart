@@ -65,10 +65,9 @@ class ComplianceIncidentDetailPage extends StatelessWidget {
                       _sections(context),
                       const SizedBox(height: 16),
 
-                      // Compliance submission — the assigned user attaches
-                      // their compliance image + remark, then submits.
-                      _ComplianceSubmitSection(
-                          incident: incident, onSubmitted: onBack),
+                      // Compliance submission — one form per CAPA assigned to
+                      // this user (per-CAPA compliance, Oct-2026).
+                      _MyCapaSubmitList(incident: incident, onAllDone: onBack),
                       const SizedBox(height: 28),
                     ],
                   ),
@@ -146,6 +145,30 @@ class ComplianceIncidentDetailPage extends StatelessWidget {
           icon: Icons.image_outlined,
           accent: kcInfoResponsibility,
           child: _investigationAttachmentBody(context, inv),
+        ),
+        const SizedBox(height: 16),
+
+        // 7. Training & Communication / 8. One Point Lesson (Oct-2026)
+        _SectionCard(
+          title: 'Training & Communication',
+          icon: Icons.school_outlined,
+          accent: kcvoilet,
+          child: inv.trainingCommImageUrl == null
+              ? _emptyHint('No Training & Communication image was uploaded.')
+              : _imageTile(
+                  context,
+                  label: 'Training & Communication photo',
+                  url: inv.trainingCommImageUrl,
+                  fileName: 'training_communication.jpg',
+                  show: true,
+                ),
+        ),
+        const SizedBox(height: 16),
+        _SectionCard(
+          title: 'One Point Lesson',
+          icon: Icons.lightbulb_outline,
+          accent: kcmegenta,
+          child: _onePointLessonBody(context, inv),
         ),
       ],
     );
@@ -365,6 +388,43 @@ class ComplianceIncidentDetailPage extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _onePointLessonBody(BuildContext context, InvestigationDetail inv) {
+    if (inv.onePointLesson != 'YES' && inv.onePointLesson != 'NO') {
+      return _emptyHint('One Point Lesson was not recorded for this investigation.');
+    }
+    final yes = inv.onePointLesson == 'YES';
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Icon(yes ? Icons.check_box : Icons.check_box_outline_blank,
+                size: 20, color: yes ? kcmegenta : kcLabelGrey),
+            const SizedBox(width: 4),
+            const Text('Yes'),
+            const SizedBox(width: 16),
+            Icon(!yes ? Icons.check_box : Icons.check_box_outline_blank,
+                size: 20, color: !yes ? kcmegenta : kcLabelGrey),
+            const SizedBox(width: 4),
+            const Text('No'),
+          ],
+        ),
+        if (yes) ...[
+          const SizedBox(height: 10),
+          inv.oplImageUrl == null
+              ? _emptyHint('No One Point Lesson image was uploaded.')
+              : _imageTile(
+                  context,
+                  label: 'One Point Lesson photo',
+                  url: inv.oplImageUrl,
+                  fileName: 'one_point_lesson.jpg',
+                  show: true,
+                ),
+        ],
+      ],
     );
   }
 
@@ -955,11 +1015,70 @@ class _AttachmentImage extends StatelessWidget {
 /// Bottom section where the reviewing user attaches a compliance image and a
 /// remark, then submits. No backend yet — submission is simulated with a short
 /// delay, then a success dialog, then [onSubmitted] returns to the list.
+/// One [_ComplianceSubmitSection] per CAPA of the logged-in user. Each CAPA is
+/// answered on its own; once every open CAPA has been submitted the page goes
+/// back to the list (which refreshes).
+class _MyCapaSubmitList extends StatefulWidget {
+  final ComplianceIncident incident;
+  final VoidCallback onAllDone;
+  const _MyCapaSubmitList({required this.incident, required this.onAllDone});
+
+  @override
+  State<_MyCapaSubmitList> createState() => _MyCapaSubmitListState();
+}
+
+class _MyCapaSubmitListState extends State<_MyCapaSubmitList> {
+  final Set<int> _submitted = {};
+
+  bool _needsAnswer(CapaCompliance c) {
+    final st = c.status.toUpperCase();
+    return st == 'PENDING' || st == 'REOPEN';
+  }
+
+  void _onSubmitted(int capaId) {
+    setState(() => _submitted.add(capaId));
+    final open = widget.incident.myCapa
+        .where((c) => _needsAnswer(c) && !_submitted.contains(c.capaId));
+    if (open.isEmpty) widget.onAllDone();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final capas = widget.incident.myCapa;
+    if (capas.isEmpty) return const SizedBox.shrink();
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        for (int i = 0; i < capas.length; i++) ...[
+          if (i > 0) const SizedBox(height: 14),
+          _ComplianceSubmitSection(
+            key: ValueKey(capas[i].capaId),
+            incident: widget.incident,
+            capa: capas[i],
+            index: i + 1,
+            count: capas.length,
+            onSubmitted: () => _onSubmitted(capas[i].capaId),
+          ),
+        ],
+      ],
+    );
+  }
+}
+
 class _ComplianceSubmitSection extends StatefulWidget {
   final ComplianceIncident incident;
+  final CapaCompliance capa;
+  final int index;
+  final int count;
   final VoidCallback onSubmitted;
-  const _ComplianceSubmitSection(
-      {required this.incident, required this.onSubmitted});
+  const _ComplianceSubmitSection({
+    super.key,
+    required this.incident,
+    required this.capa,
+    required this.index,
+    required this.count,
+    required this.onSubmitted,
+  });
 
   @override
   State<_ComplianceSubmitSection> createState() =>
@@ -975,16 +1094,36 @@ class _ComplianceSubmitSectionState extends State<_ComplianceSubmitSection> {
   static const Color _accent = kcobservationgreen;
   static const Color _green = Color(0xFF16A34A);
 
-  bool get _isReopen => widget.incident.myStatus.toUpperCase() == 'REOPEN';
-  bool get _isComplete => widget.incident.myStatus.toUpperCase() == 'COMPLETE';
+  /// Set after a successful submit so the card flips to "Submitted" in place.
+  MyComplianceSubmission? _justSubmitted;
+
+  String get _status =>
+      _justSubmitted != null ? 'COMPLETE' : widget.capa.status.toUpperCase();
+
+  /// This CAPA's response (null while pending).
+  MyComplianceSubmission? get _sub {
+    if (_justSubmitted != null) return _justSubmitted;
+    final c = widget.capa;
+    if (c.status.toUpperCase() == 'PENDING' && c.remark.isEmpty) return null;
+    return MyComplianceSubmission(
+      remark: c.remark,
+      imageUrl: c.imageUrl,
+      status: c.status,
+      reviewRemark: c.reviewRemark,
+      submittedDate: c.submittedDate,
+      reopenSource: c.reopenSource,
+    );
+  }
+
+  bool get _isReopen => _status == 'REOPEN';
+  bool get _isComplete => _status == 'COMPLETE';
   bool get _isClosed =>
-      widget.incident.myStatus.toUpperCase() == 'CLOSED' ||
-      widget.incident.status.toUpperCase() == 'CLOSED';
+      _status == 'CLOSED' || widget.incident.status.toUpperCase() == 'CLOSED';
 
   @override
   void initState() {
     super.initState();
-    final sub = widget.incident.mySubmission;
+    final sub = _sub;
     if (_isReopen && sub != null) {
       _remarkController.text = sub.remark; // prefill so they can edit + resubmit
     }
@@ -1032,6 +1171,7 @@ class _ComplianceSubmitSectionState extends State<_ComplianceSubmitSection> {
     try {
       final msg = await _service.submitCompliance(
         incidentUniqueId: widget.incident.incidentId,
+        capaId: widget.capa.capaId,
         remark: remark,
         imageBytes: _imageBytes,
       );
@@ -1039,8 +1179,11 @@ class _ComplianceSubmitSectionState extends State<_ComplianceSubmitSection> {
       Navigator.of(context, rootNavigator: true).pop(); // close progress
       await _showSuccessDialog(msg ?? 'Compliance submitted successfully.');
       if (!mounted) return;
-      setState(() => _saving = false);
-      widget.onSubmitted(); // back to the list (which refreshes)
+      setState(() {
+        _saving = false;
+        _justSubmitted = MyComplianceSubmission(remark: remark, status: 'COMPLETE');
+      });
+      widget.onSubmitted(); // back to the list once every CAPA is answered
     } catch (e) {
       if (!mounted) return;
       Navigator.of(context, rootNavigator: true).pop(); // close progress
@@ -1141,13 +1284,39 @@ class _ComplianceSubmitSectionState extends State<_ComplianceSubmitSection> {
           ),
           const SizedBox(width: 10),
           Expanded(
-            child: Text(title,
-                style: const TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w800,
-                    color: kcValueDark)),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                    widget.count > 1
+                        ? 'CAPA ${widget.index} of ${widget.count} — $title'
+                        : title,
+                    style: const TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w800,
+                        color: kcValueDark)),
+                if (widget.capa.capaText.isNotEmpty) ...[
+                  const SizedBox(height: 3),
+                  Text(widget.capa.capaText,
+                      style: const TextStyle(
+                          fontSize: 13, color: kcValueDark, height: 1.3)),
+                ],
+                if (widget.capa.targetDate.isNotEmpty) ...[
+                  const SizedBox(height: 2),
+                  Text(
+                      'Target date: ${widget.capa.targetDate}'
+                      '${widget.capa.overdue && !_isComplete ? ' · Overdue by ${widget.capa.daysOverdue} day(s)' : ''}',
+                      style: TextStyle(
+                          fontSize: 11.5,
+                          fontWeight: FontWeight.w600,
+                          color: widget.capa.overdue && !_isComplete
+                              ? kcRed
+                              : kcLabelGrey)),
+                ],
+              ],
+            ),
           ),
-          _statusChip(widget.incident.myStatus),
+          _statusChip(_status),
         ],
       ),
     );
@@ -1232,7 +1401,7 @@ class _ComplianceSubmitSectionState extends State<_ComplianceSubmitSection> {
   }
 
   Widget _reopenBanner() {
-    final reason = widget.incident.mySubmission?.reviewRemark ?? '';
+    final reason = _sub?.reviewRemark ?? '';
     return Container(
       width: double.infinity,
       margin: const EdgeInsets.only(bottom: 14),
@@ -1252,7 +1421,7 @@ class _ComplianceSubmitSectionState extends State<_ComplianceSubmitSection> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                    switch ((widget.incident.mySubmission?.reopenSource ?? '')
+                    switch ((_sub?.reopenSource ?? '')
                         .toUpperCase()) {
                       'SAFETY' => 'Reopened by Safety Team',
                       'RAISER' => 'Reopened by the Incident Raiser',
@@ -1279,7 +1448,7 @@ class _ComplianceSubmitSectionState extends State<_ComplianceSubmitSection> {
     required Color color,
     required String message,
   }) {
-    final sub = widget.incident.mySubmission;
+    final sub = _sub;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [

@@ -28,6 +28,11 @@ mixin _$InvestigationReportResponse {
   String get associatedRiskImageUrl => throw _privateConstructorUsedError;
   String get lowQualityImageUrl => throw _privateConstructorUsedError;
   String get highQualityImageUrl =>
+      throw _privateConstructorUsedError; // Training & Communication photo / One Point Lesson ("YES"/"NO") + photo (Oct-2026).
+// Blank on reports filed before this change.
+  String get trainingCommImageUrl => throw _privateConstructorUsedError;
+  String get onePointLesson => throw _privateConstructorUsedError;
+  String get oplImageUrl =>
       throw _privateConstructorUsedError; // Facts Leading to the Incident or Dangerous Occurrence (points 4 & 5)
   String get machineryDetails => throw _privateConstructorUsedError;
   String get activityBeforeIncident => throw _privateConstructorUsedError;
@@ -65,6 +70,9 @@ abstract class $InvestigationReportResponseCopyWith<$Res> {
       String associatedRiskImageUrl,
       String lowQualityImageUrl,
       String highQualityImageUrl,
+      String trainingCommImageUrl,
+      String onePointLesson,
+      String oplImageUrl,
       String machineryDetails,
       String activityBeforeIncident,
       String raisedDate,
@@ -98,6 +106,9 @@ class _$InvestigationReportResponseCopyWithImpl<$Res,
     Object? associatedRiskImageUrl = null,
     Object? lowQualityImageUrl = null,
     Object? highQualityImageUrl = null,
+    Object? trainingCommImageUrl = null,
+    Object? onePointLesson = null,
+    Object? oplImageUrl = null,
     Object? machineryDetails = null,
     Object? activityBeforeIncident = null,
     Object? raisedDate = null,
@@ -137,6 +148,18 @@ class _$InvestigationReportResponseCopyWithImpl<$Res,
       highQualityImageUrl: null == highQualityImageUrl
           ? _value.highQualityImageUrl
           : highQualityImageUrl // ignore: cast_nullable_to_non_nullable
+              as String,
+      trainingCommImageUrl: null == trainingCommImageUrl
+          ? _value.trainingCommImageUrl
+          : trainingCommImageUrl // ignore: cast_nullable_to_non_nullable
+              as String,
+      onePointLesson: null == onePointLesson
+          ? _value.onePointLesson
+          : onePointLesson // ignore: cast_nullable_to_non_nullable
+              as String,
+      oplImageUrl: null == oplImageUrl
+          ? _value.oplImageUrl
+          : oplImageUrl // ignore: cast_nullable_to_non_nullable
               as String,
       machineryDetails: null == machineryDetails
           ? _value.machineryDetails
@@ -199,6 +222,9 @@ abstract class _$$InvestigationReportResponseImplCopyWith<$Res>
       String associatedRiskImageUrl,
       String lowQualityImageUrl,
       String highQualityImageUrl,
+      String trainingCommImageUrl,
+      String onePointLesson,
+      String oplImageUrl,
       String machineryDetails,
       String activityBeforeIncident,
       String raisedDate,
@@ -231,6 +257,9 @@ class __$$InvestigationReportResponseImplCopyWithImpl<$Res>
     Object? associatedRiskImageUrl = null,
     Object? lowQualityImageUrl = null,
     Object? highQualityImageUrl = null,
+    Object? trainingCommImageUrl = null,
+    Object? onePointLesson = null,
+    Object? oplImageUrl = null,
     Object? machineryDetails = null,
     Object? activityBeforeIncident = null,
     Object? raisedDate = null,
@@ -270,6 +299,18 @@ class __$$InvestigationReportResponseImplCopyWithImpl<$Res>
       highQualityImageUrl: null == highQualityImageUrl
           ? _value.highQualityImageUrl
           : highQualityImageUrl // ignore: cast_nullable_to_non_nullable
+              as String,
+      trainingCommImageUrl: null == trainingCommImageUrl
+          ? _value.trainingCommImageUrl
+          : trainingCommImageUrl // ignore: cast_nullable_to_non_nullable
+              as String,
+      onePointLesson: null == onePointLesson
+          ? _value.onePointLesson
+          : onePointLesson // ignore: cast_nullable_to_non_nullable
+              as String,
+      oplImageUrl: null == oplImageUrl
+          ? _value.oplImageUrl
+          : oplImageUrl // ignore: cast_nullable_to_non_nullable
               as String,
       machineryDetails: null == machineryDetails
           ? _value.machineryDetails
@@ -327,6 +368,9 @@ class _$InvestigationReportResponseImpl
       this.associatedRiskImageUrl = "",
       this.lowQualityImageUrl = "",
       this.highQualityImageUrl = "",
+      this.trainingCommImageUrl = "",
+      this.onePointLesson = "",
+      this.oplImageUrl = "",
       this.machineryDetails = "",
       this.activityBeforeIncident = "",
       this.raisedDate = "",
@@ -368,6 +412,17 @@ class _$InvestigationReportResponseImpl
   @override
   @JsonKey()
   final String highQualityImageUrl;
+// Training & Communication photo / One Point Lesson ("YES"/"NO") + photo (Oct-2026).
+// Blank on reports filed before this change.
+  @override
+  @JsonKey()
+  final String trainingCommImageUrl;
+  @override
+  @JsonKey()
+  final String onePointLesson;
+  @override
+  @JsonKey()
+  final String oplImageUrl;
 // Facts Leading to the Incident or Dangerous Occurrence (points 4 & 5)
   @override
   @JsonKey()
@@ -434,7 +489,7 @@ class _$InvestigationReportResponseImpl
 
   @override
   String toString() {
-    return 'InvestigationReportResponse(id: $id, incidentReportId: $incidentReportId, incidentUniqueId: $incidentUniqueId, reportDate: $reportDate, associatedRiskImageUrl: $associatedRiskImageUrl, lowQualityImageUrl: $lowQualityImageUrl, highQualityImageUrl: $highQualityImageUrl, machineryDetails: $machineryDetails, activityBeforeIncident: $activityBeforeIncident, raisedDate: $raisedDate, updatedDate: $updatedDate, team: $team, rootCauses: $rootCauses, capa: $capa, inquiredWith: $inquiredWith, createdByEmpCode: $createdByEmpCode, receivedAs: $receivedAs)';
+    return 'InvestigationReportResponse(id: $id, incidentReportId: $incidentReportId, incidentUniqueId: $incidentUniqueId, reportDate: $reportDate, associatedRiskImageUrl: $associatedRiskImageUrl, lowQualityImageUrl: $lowQualityImageUrl, highQualityImageUrl: $highQualityImageUrl, trainingCommImageUrl: $trainingCommImageUrl, onePointLesson: $onePointLesson, oplImageUrl: $oplImageUrl, machineryDetails: $machineryDetails, activityBeforeIncident: $activityBeforeIncident, raisedDate: $raisedDate, updatedDate: $updatedDate, team: $team, rootCauses: $rootCauses, capa: $capa, inquiredWith: $inquiredWith, createdByEmpCode: $createdByEmpCode, receivedAs: $receivedAs)';
   }
 
   @override
@@ -455,6 +510,12 @@ class _$InvestigationReportResponseImpl
                 other.lowQualityImageUrl == lowQualityImageUrl) &&
             (identical(other.highQualityImageUrl, highQualityImageUrl) ||
                 other.highQualityImageUrl == highQualityImageUrl) &&
+            (identical(other.trainingCommImageUrl, trainingCommImageUrl) ||
+                other.trainingCommImageUrl == trainingCommImageUrl) &&
+            (identical(other.onePointLesson, onePointLesson) ||
+                other.onePointLesson == onePointLesson) &&
+            (identical(other.oplImageUrl, oplImageUrl) ||
+                other.oplImageUrl == oplImageUrl) &&
             (identical(other.machineryDetails, machineryDetails) ||
                 other.machineryDetails == machineryDetails) &&
             (identical(other.activityBeforeIncident, activityBeforeIncident) ||
@@ -477,25 +538,29 @@ class _$InvestigationReportResponseImpl
 
   @JsonKey(ignore: true)
   @override
-  int get hashCode => Object.hash(
-      runtimeType,
-      id,
-      incidentReportId,
-      incidentUniqueId,
-      reportDate,
-      associatedRiskImageUrl,
-      lowQualityImageUrl,
-      highQualityImageUrl,
-      machineryDetails,
-      activityBeforeIncident,
-      raisedDate,
-      updatedDate,
-      const DeepCollectionEquality().hash(_team),
-      const DeepCollectionEquality().hash(_rootCauses),
-      const DeepCollectionEquality().hash(_capa),
-      const DeepCollectionEquality().hash(_inquiredWith),
-      createdByEmpCode,
-      const DeepCollectionEquality().hash(_receivedAs));
+  int get hashCode => Object.hashAll([
+        runtimeType,
+        id,
+        incidentReportId,
+        incidentUniqueId,
+        reportDate,
+        associatedRiskImageUrl,
+        lowQualityImageUrl,
+        highQualityImageUrl,
+        trainingCommImageUrl,
+        onePointLesson,
+        oplImageUrl,
+        machineryDetails,
+        activityBeforeIncident,
+        raisedDate,
+        updatedDate,
+        const DeepCollectionEquality().hash(_team),
+        const DeepCollectionEquality().hash(_rootCauses),
+        const DeepCollectionEquality().hash(_capa),
+        const DeepCollectionEquality().hash(_inquiredWith),
+        createdByEmpCode,
+        const DeepCollectionEquality().hash(_receivedAs)
+      ]);
 
   @JsonKey(ignore: true)
   @override
@@ -522,6 +587,9 @@ abstract class _InvestigationReportResponse
       final String associatedRiskImageUrl,
       final String lowQualityImageUrl,
       final String highQualityImageUrl,
+      final String trainingCommImageUrl,
+      final String onePointLesson,
+      final String oplImageUrl,
       final String machineryDetails,
       final String activityBeforeIncident,
       final String raisedDate,
@@ -550,6 +618,13 @@ abstract class _InvestigationReportResponse
   String get lowQualityImageUrl;
   @override
   String get highQualityImageUrl;
+  @override // Training & Communication photo / One Point Lesson ("YES"/"NO") + photo (Oct-2026).
+// Blank on reports filed before this change.
+  String get trainingCommImageUrl;
+  @override
+  String get onePointLesson;
+  @override
+  String get oplImageUrl;
   @override // Facts Leading to the Incident or Dangerous Occurrence (points 4 & 5)
   String get machineryDetails;
   @override

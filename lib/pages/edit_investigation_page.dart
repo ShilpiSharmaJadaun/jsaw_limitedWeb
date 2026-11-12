@@ -59,6 +59,11 @@ class _EditInvestigationPageState extends State<EditInvestigationPage> {
   Uint8List? _newImageBytes;
   bool _imageRemoved = false;
 
+  // ---------- Training & Communication / One Point Lesson (Oct-2026) ----------
+  late final _PhotoDraft _trainingPhoto;
+  late final _PhotoDraft _oplPhoto;
+  String _onePointLesson = ''; // '' only on reports filed before this change
+
   bool _saving = false;
 
   // ---------- Lookup state (employees + departments) ----------
@@ -84,6 +89,9 @@ class _EditInvestigationPageState extends State<EditInvestigationPage> {
     _existingImageUrl = r.highQualityImageUrl.isNotEmpty
         ? r.highQualityImageUrl
         : r.associatedRiskImageUrl;
+    _trainingPhoto = _PhotoDraft(r.trainingCommImageUrl);
+    _oplPhoto = _PhotoDraft(r.oplImageUrl);
+    _onePointLesson = r.onePointLesson;
 
     _team = r.team
         .map((t) => _TeamDraft(
@@ -361,6 +369,23 @@ class _EditInvestigationPageState extends State<EditInvestigationPage> {
     });
   }
 
+  Future<void> _pickPhoto(_PhotoDraft d) async {
+    try {
+      final picked = await ImagePicker()
+          .pickImage(source: ImageSource.gallery, imageQuality: 80);
+      if (picked == null) return;
+      final bytes = await picked.readAsBytes();
+      if (!mounted) return;
+      setState(() {
+        d.newBytes = bytes;
+        d.removed = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      _showSnack('Could not pick image: $e');
+    }
+  }
+
   // ---------- Team actions ----------
   void _addTeamMember() {
     if (_team.length >= _maxTeam) {
@@ -498,6 +523,8 @@ class _EditInvestigationPageState extends State<EditInvestigationPage> {
         return;
       }
       capaPayload.add({
+        // Existing CAPA keep their id so per-CAPA compliance stays attached.
+        if (c.id > 0) 'id': c.id,
         'capaText': capaText,
         'respEmpCode': code,
         'respEmpName': name,
@@ -519,6 +546,17 @@ class _EditInvestigationPageState extends State<EditInvestigationPage> {
     // Image action
     final clearImage = _imageRemoved && _newImageBytes == null;
     final newImage = _newImageBytes;
+
+    // Training & Communication is mandatory once a report has one; One Point
+    // Lesson = Yes needs a photo. Older reports may stay blank.
+    if (_trainingPhoto.removed && _trainingPhoto.newBytes == null) {
+      _showSnack('Training & Communication photo is required — choose a new one instead of removing it.');
+      return;
+    }
+    if (_onePointLesson == 'YES' && !_oplPhoto.hasImage) {
+      _showSnack('Please attach the One Point Lesson photo (One Point Lesson = Yes).');
+      return;
+    }
 
     setState(() => _saving = true);
 
@@ -543,6 +581,10 @@ class _EditInvestigationPageState extends State<EditInvestigationPage> {
         inquiredWith: inquiredPayload,
         newImageBytes: newImage,
         clearImage: clearImage,
+        newTrainingCommImageBytes: _trainingPhoto.newBytes,
+        onePointLesson: _onePointLesson,
+        newOplImageBytes: _onePointLesson == 'YES' ? _oplPhoto.newBytes : null,
+        clearOplImage: _onePointLesson == 'YES' && _oplPhoto.removed && _oplPhoto.newBytes == null,
       );
       if (!mounted) return;
       Navigator.of(context, rootNavigator: true).pop(); // dismiss progress
@@ -648,6 +690,10 @@ class _EditInvestigationPageState extends State<EditInvestigationPage> {
                       _readOnlyHeader(r),
                       const SizedBox(height: 20),
                       _imageCard(),
+                      const SizedBox(height: 20),
+                      _trainingCommCard(),
+                      const SizedBox(height: 20),
+                      _onePointLessonCard(),
                       const SizedBox(height: 20),
                       _teamCard(),
                       const SizedBox(height: 20),
@@ -869,6 +915,120 @@ class _EditInvestigationPageState extends State<EditInvestigationPage> {
           ),
         ],
       ),
+    );
+  }
+
+  // ---------- Training & Communication / One Point Lesson (Oct-2026) ----------
+  Widget _trainingCommCard() {
+    return _sectionContainer(
+      title: 'Training & Communication',
+      icon: Icons.school_outlined,
+      accent: kcvoilet,
+      child: _photoEditor(_trainingPhoto, canRemove: false),
+    );
+  }
+
+  Widget _onePointLessonCard() {
+    Widget choice(String value, String label) => InkWell(
+          borderRadius: BorderRadius.circular(6),
+          onTap: () => setState(() => _onePointLesson = value),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Checkbox(
+                value: _onePointLesson == value,
+                activeColor: kcmegenta,
+                onChanged: (_) => setState(() => _onePointLesson = value),
+              ),
+              Text(label, style: const TextStyle(fontSize: 14)),
+              const SizedBox(width: 16),
+            ],
+          ),
+        );
+    return _sectionContainer(
+      title: 'One Point Lesson',
+      icon: Icons.lightbulb_outline,
+      accent: kcmegenta,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(children: [choice('YES', 'Yes'), choice('NO', 'No')]),
+          if (_onePointLesson == 'YES') ...[
+            const SizedBox(height: 8),
+            _photoEditor(_oplPhoto, canRemove: true),
+          ],
+        ],
+      ),
+    );
+  }
+
+  /// Preview + Change/Remove buttons for one of the extra photos.
+  Widget _photoEditor(_PhotoDraft d, {required bool canRemove}) {
+    Widget preview;
+    if (d.newBytes != null) {
+      preview = Image.memory(d.newBytes!, fit: BoxFit.contain);
+    } else if (!d.removed && d.existingUrl.isNotEmpty) {
+      preview = Image.network(
+        d.existingUrl,
+        fit: BoxFit.contain,
+        errorBuilder: (_, __, ___) => const Center(
+          child: Text('Image unavailable',
+              style: TextStyle(color: kcLabelGrey)),
+        ),
+        loadingBuilder: (context, child, progress) {
+          if (progress == null) return child;
+          return const Center(child: CircularProgressIndicator());
+        },
+      );
+    } else {
+      preview = const Center(
+        child: Text('No image', style: TextStyle(color: kcLabelGrey)),
+      );
+    }
+    return Column(
+      children: [
+        Container(
+          height: 220,
+          decoration: BoxDecoration(
+            color: kcDashboardBg2,
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: Colors.grey.shade300),
+          ),
+          clipBehavior: Clip.antiAlias,
+          child: SizedBox.expand(child: preview),
+        ),
+        const SizedBox(height: 10),
+        Row(
+          children: [
+            ElevatedButton.icon(
+              onPressed: () => _pickPhoto(d),
+              icon: const Icon(Icons.upload_outlined, size: 18),
+              label: Text(d.hasImage ? 'Change image' : 'Upload image'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: kcvoilet,
+                foregroundColor: kcWhite,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8)),
+              ),
+            ),
+            const SizedBox(width: 8),
+            if (canRemove && d.hasImage)
+              OutlinedButton.icon(
+                onPressed: () => setState(() {
+                  d.newBytes = null;
+                  d.removed = true;
+                }),
+                icon: const Icon(Icons.delete_outline, color: kcRed, size: 18),
+                label: const Text('Remove', style: TextStyle(color: kcRed)),
+                style: OutlinedButton.styleFrom(
+                  side: const BorderSide(color: kcRed),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8)),
+                ),
+              ),
+          ],
+        ),
+      ],
     );
   }
 
@@ -1842,4 +2002,14 @@ class _CapaDraft {
     capaController.dispose();
     targetDateController.dispose();
   }
+}
+
+/// Editable state of one extra investigation photo (Training & Communication / OPL).
+class _PhotoDraft {
+  _PhotoDraft(this.existingUrl);
+  final String existingUrl;
+  Uint8List? newBytes;
+  bool removed = false;
+
+  bool get hasImage => newBytes != null || (!removed && existingUrl.isNotEmpty);
 }

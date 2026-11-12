@@ -13,6 +13,11 @@ class InvestigationReportResponse with _$InvestigationReportResponse {
     @Default("") String associatedRiskImageUrl,
     @Default("") String lowQualityImageUrl,
     @Default("") String highQualityImageUrl,
+    // Training & Communication photo / One Point Lesson ("YES"/"NO") + photo (Oct-2026).
+    // Blank on reports filed before this change.
+    @Default("") String trainingCommImageUrl,
+    @Default("") String onePointLesson,
+    @Default("") String oplImageUrl,
     // Facts Leading to the Incident or Dangerous Occurrence (points 4 & 5)
     @Default("") String machineryDetails,
     @Default("") String activityBeforeIncident,

@@ -199,8 +199,10 @@ class IncidentService{
       String contactNumber,
       String incidentType,
       String descpOfIncident,
-      String responsibleHodCode,
-      ) async {
+      String responsibleHodCode, {
+      String hodHeadEmpCode = '',
+      String hodHeadName = '',
+      }) async {
     const url = "${root}incidentReport/saveNewIncidentReport";
 
     try {
@@ -236,6 +238,10 @@ class IncidentService{
       request.fields['incidentType'] = incidentType;
       request.fields['descpOfIncident'] = descpOfIncident;
       request.fields['responsibleHodCode'] = responsibleHodCode;
+      if (hodHeadEmpCode.isNotEmpty) {
+        request.fields['hodHeadEmpCode'] = hodHeadEmpCode;
+        request.fields['hodHeadName'] = hodHeadName;
+      }
       var res = await request.send();
       var results = await http.Response.fromStream(res);
       authHttp.check(results);
@@ -262,8 +268,20 @@ class IncidentService{
   }
 
 
+  static http.MultipartFile _jpeg(String field, Uint8List bytes) =>
+      http.MultipartFile.fromBytes(
+        field,
+        bytes,
+        filename: 'upload.jpg',
+        contentType: MediaType('image', 'jpeg'),
+      );
+
+  /// [onePointLesson] is "YES" or "NO"; [oplImageBytes] is required when "YES".
   Future<String?> saveInvestigationReport({
     required Uint8List imageBytes,
+    required Uint8List trainingCommImageBytes,
+    required String onePointLesson,
+    Uint8List? oplImageBytes,
     required String incidentUniqueId,
     required String reportDate,
     required List<Map<String, String>> team,
@@ -285,6 +303,11 @@ class IncidentService{
         contentType: MediaType('image', 'jpeg'),
       ));
 
+      request.files.add(_jpeg('trainingCommImage', trainingCommImageBytes));
+      if (onePointLesson == 'YES' && oplImageBytes != null) {
+        request.files.add(_jpeg('oplImage', oplImageBytes));
+      }
+
       request.fields['incidentUniqueId'] = incidentUniqueId;
       request.fields['reportDate'] = reportDate;
       request.fields['team'] = jsonEncode(team);
@@ -293,6 +316,7 @@ class IncidentService{
       request.fields['machineryDetails'] = machineryDetails;
       request.fields['activityBeforeIncident'] = activityBeforeIncident;
       request.fields['inquiredWith'] = jsonEncode(inquiredWith);
+      request.fields['onePointLesson'] = onePointLesson;
 
       var res = await request.send();
       var results = await http.Response.fromStream(res);
@@ -314,6 +338,9 @@ class IncidentService{
   /// Update an existing Investigation Report.
   /// Pass [newImageBytes] only to replace the image; pass [clearImage]=true to
   /// remove it. Leave both alone to keep the current image.
+  /// Training & Communication / One Point Lesson photos follow the same rule
+  /// ([newTrainingCommImageBytes] / [clearTrainingCommImage], [newOplImageBytes] /
+  /// [clearOplImage]); pass [onePointLesson] ("YES"/"NO") or leave it blank to keep it.
   Future<String?> updateInvestigationReport({
     required int id,
     required String incidentUniqueId,
@@ -326,6 +353,11 @@ class IncidentService{
     List<Map<String, String>> inquiredWith = const [],
     Uint8List? newImageBytes,
     bool clearImage = false,
+    Uint8List? newTrainingCommImageBytes,
+    bool clearTrainingCommImage = false,
+    String onePointLesson = '',
+    Uint8List? newOplImageBytes,
+    bool clearOplImage = false,
   }) async {
     const url = "${root}investigationReport/updateInvestigationReport";
     try {
@@ -341,8 +373,18 @@ class IncidentService{
         ));
       }
 
+      if (newTrainingCommImageBytes != null) {
+        request.files.add(_jpeg('trainingCommImage', newTrainingCommImageBytes));
+      }
+      if (onePointLesson == 'YES' && newOplImageBytes != null) {
+        request.files.add(_jpeg('oplImage', newOplImageBytes));
+      }
+
       request.fields['id'] = id.toString();
       request.fields['clearImage'] = clearImage ? 'true' : 'false';
+      request.fields['clearTrainingCommImage'] = clearTrainingCommImage ? 'true' : 'false';
+      request.fields['clearOplImage'] = clearOplImage ? 'true' : 'false';
+      if (onePointLesson.isNotEmpty) request.fields['onePointLesson'] = onePointLesson;
       request.fields['incidentUniqueId'] = incidentUniqueId;
       request.fields['reportDate'] = reportDate;
       request.fields['team'] = jsonEncode(team);

@@ -25,6 +25,9 @@ class AllIncidentModel with _$AllIncidentModel{
     @Default("") String location,
     @Default("") String responsibleShiftEngg,
     @Default("") String responsibleHod,
+    // Optional HOD's Head picked on the raise page (Oct-2026).
+    @Default("") String hodHeadEmpCode,
+    @Default("") String hodHeadName,
     @Default("") String raisedByEmpCode,
     @Default("") String raisedByEmpName,
     @Default("") String status,

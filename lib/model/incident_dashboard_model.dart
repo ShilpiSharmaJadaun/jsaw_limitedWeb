@@ -12,9 +12,10 @@ class LabelCount {
       );
 }
 
-/// One CAPA person past the target date without submitting compliance.
+/// One CAPA past its target date without a compliance response (per CAPA since Oct-2026).
 class OverdueCapa {
   final String incidentUniqueId;
+  final String capaText;
   final String empUnqId;
   final String empName;
   final String targetDate;
@@ -23,6 +24,7 @@ class OverdueCapa {
 
   const OverdueCapa({
     required this.incidentUniqueId,
+    this.capaText = '',
     required this.empUnqId,
     required this.empName,
     required this.targetDate,
@@ -32,6 +34,7 @@ class OverdueCapa {
 
   factory OverdueCapa.fromJson(Map<String, dynamic> json) => OverdueCapa(
         incidentUniqueId: (json['incidentUniqueId'] ?? '').toString(),
+        capaText: (json['capaText'] ?? '').toString(),
         empUnqId: (json['empUnqId'] ?? '').toString(),
         empName: (json['empName'] ?? '').toString(),
         targetDate: (json['targetDate'] ?? '').toString(),

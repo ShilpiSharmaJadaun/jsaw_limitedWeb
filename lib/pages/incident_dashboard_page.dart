@@ -467,7 +467,7 @@ class _DashboardTabState extends State<_DashboardTab>
         );
     return _chartCard(
       title: 'Overdue Compliance Actions',
-      subtitle: 'CAPA persons who have not submitted compliance by the target date',
+      subtitle: 'CAPA not answered with compliance by the target date',
       child: rows.isEmpty
           ? const Padding(
               padding: EdgeInsets.symmetric(vertical: 24),
@@ -500,7 +500,10 @@ class _DashboardTabState extends State<_DashboardTab>
                     ),
                     child: Row(children: [
                       cell(r.incidentUniqueId, w: FontWeight.w600, flex: 3),
-                      cell(r.empName.isEmpty ? r.empUnqId : '${r.empName} (${r.empUnqId})', flex: 3),
+                      cell(
+                          '${r.empName.isEmpty ? r.empUnqId : '${r.empName} (${r.empUnqId})'}'
+                          '${r.capaText.isEmpty ? '' : '\n${r.capaText}'}',
+                          flex: 3),
                       cell(r.targetDate),
                       cell('${r.daysOverdue} ${r.daysOverdue == 1 ? 'day' : 'days'}',
                           w: FontWeight.w800, c: red),

@@ -220,13 +220,13 @@ class _ComplianceReviewPageState extends State<ComplianceReviewPage> {
                           const SizedBox(height: 20),
                         ],
                         _sectionTitle(
-                            Icons.groups_outlined, 'Employee Compliance'),
+                            Icons.task_alt_outlined, 'CAPA Compliance'),
                         const SizedBox(height: 10),
                         if (assignees.isEmpty)
                           const Padding(
                             padding: EdgeInsets.all(24),
                             child: Center(
-                              child: Text('No assigned employees found.',
+                              child: Text('No CAPA found.',
                                   style: TextStyle(color: kcLabelGrey)),
                             ),
                           )
@@ -299,7 +299,7 @@ class _ComplianceReviewPageState extends State<ComplianceReviewPage> {
                         fontSize: 16,
                         fontWeight: FontWeight.w800)),
                 const SizedBox(height: 2),
-                Text('$done of $total employees submitted',
+                Text('$done of $total CAPA submitted',
                     style: TextStyle(
                         color: kcWhite.withOpacity(0.92), fontSize: 12.5)),
               ],
@@ -393,7 +393,8 @@ class _ComplianceReviewPageState extends State<ComplianceReviewPage> {
               ],
             ),
           ),
-          _assigneeCapa(a.empUnqId),
+          // Per-CAPA compliance (Oct-2026): each card is one CAPA.
+          if (a.capaText.isNotEmpty) _capaHeader(a) else _assigneeCapa(a.empUnqId),
           if (submitted || a.remark.isNotEmpty || a.imageUrl.isNotEmpty)
             Padding(
               padding: const EdgeInsets.fromLTRB(14, 4, 14, 12),
@@ -490,6 +491,46 @@ class _ComplianceReviewPageState extends State<ComplianceReviewPage> {
                       fontSize: 12.5)),
             ),
         ],
+      ),
+    );
+  }
+
+  /// The CAPA this card is about, plus a note when the response shown is a
+  /// pre-Oct-2026 one that covered all of the person's CAPA.
+  Widget _capaHeader(ComplianceAssigneeReview a) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(14, 0, 14, 8),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(10),
+        decoration: const BoxDecoration(
+          color: kcDashboardBg1,
+          borderRadius: BorderRadius.all(Radius.circular(8)),
+          border: Border(left: BorderSide(color: kcmegenta, width: 3)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(a.capaSeq > 0 ? 'CAPA ${a.capaSeq}' : 'CAPA',
+                style: const TextStyle(
+                    fontSize: 11.5,
+                    fontWeight: FontWeight.w800,
+                    color: kcmegenta)),
+            const SizedBox(height: 3),
+            Text(a.capaText,
+                style: const TextStyle(
+                    fontSize: 13.5, color: kcValueDark, height: 1.35)),
+            if (a.legacy) ...[
+              const SizedBox(height: 4),
+              const Text(
+                  'Response submitted before per-CAPA compliance — covers all of this person\'s CAPA.',
+                  style: TextStyle(
+                      fontSize: 11,
+                      fontStyle: FontStyle.italic,
+                      color: kcLabelGrey)),
+            ],
+          ],
+        ),
       ),
     );
   }
@@ -728,7 +769,8 @@ class _ComplianceReviewPageState extends State<ComplianceReviewPage> {
       context: context,
       builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        title: Text('Reopen — ${a.empName.isEmpty ? a.empUnqId : a.empName}'),
+        title: Text('Reopen — ${a.empName.isEmpty ? a.empUnqId : a.empName}'
+            '${a.capaSeq > 0 ? ' (CAPA ${a.capaSeq})' : ''}'),
         content: TextField(
           controller: controller,
           maxLines: 4,
@@ -759,6 +801,7 @@ class _ComplianceReviewPageState extends State<ComplianceReviewPage> {
       final msg = await _service.rejectCompliance(
         incidentUniqueId: widget.incidentUniqueId,
         empUnqId: a.empUnqId,
+        capaId: a.capaId,
         reviewRemark: reason,
         source: widget.raiserMode
             ? 'RAISER'

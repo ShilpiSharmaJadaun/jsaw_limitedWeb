@@ -1,12 +1,12 @@
 import 'package:web/web.dart' show window;
 
-// const root = 'http://103.107.26.146:8078/JSAW/';
+const root = 'http://103.107.26.146:8078/JSAW/';
 // const root = 'http://103.107.26.146:8079/JSAW/';
-const root = 'http://localhost:8091/JSAW/';
+// const root = 'http://localhost:8091/JSAW/';
 // const root = 'http://172.16.23.7:8686/JSAW/';
 
 /// Bump this alongside pubspec.yaml's version on each release.
-const appVersion = '1.0.5';
+const appVersion = '1.0.6';
 
 const headers = <String, String>{
   'Accept': 'Application/json',

@@ -489,7 +489,7 @@ class _InvestigationsRaisedPageState extends State<InvestigationsRaisedPage> {
                                   c.raisedBy, kcvoilet),
                               _metaLine(Icons.event_outlined, 'Reporting Date',
                                   c.reportingDate, kcInfoDate),
-                              _metaLine(Icons.groups_outlined, 'Assignees',
+                              _metaLine(Icons.groups_outlined, 'CAPA',
                                   '${c.assignedCount}', kcInfoResponsibility),
                             ],
                           ),
@@ -846,10 +846,13 @@ class _InvestigationsRaisedPageState extends State<InvestigationsRaisedPage> {
   }
 
   Widget _capaSection(InvestigationDetail inv, ComplianceReview? review) {
-    // Merge each CAPA action with its assignee's latest compliance status.
+    // Merge each CAPA action with its own compliance response (per-CAPA since
+    // Oct-2026); fall back to the person's row for older review payloads.
+    final byCapa = <int, ComplianceAssigneeReview>{};
     final assignees = <String, ComplianceAssigneeReview>{};
     for (final a in (review?.assignees ?? const <ComplianceAssigneeReview>[])) {
-      assignees[a.empUnqId.trim().toLowerCase()] = a;
+      if (a.capaId > 0) byCapa[a.capaId] = a;
+      assignees.putIfAbsent(a.empUnqId.trim().toLowerCase(), () => a);
     }
     final capa = inv.correctiveActions;
     return _sectionCard(
@@ -861,7 +864,8 @@ class _InvestigationsRaisedPageState extends State<InvestigationsRaisedPage> {
           : Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: capa.map((c) {
-                final a = assignees[c.respEmpCode.trim().toLowerCase()];
+                final a = byCapa[c.id] ??
+                    (byCapa.isEmpty ? assignees[c.respEmpCode.trim().toLowerCase()] : null);
                 final status = a?.status ?? 'PENDING';
                 return Container(
                   margin: const EdgeInsets.only(bottom: 10),

@@ -512,7 +512,7 @@ class _ComplianceHodPageState extends State<ComplianceHodPage> {
         children: [
           const Icon(Icons.groups_outlined, size: 13, color: kcvoilet),
           const SizedBox(width: 5),
-          Text('$count assigned',
+          Text('$count CAPA',
               style: const TextStyle(
                   fontSize: 11, fontWeight: FontWeight.w700, color: kcvoilet)),
         ],

@@ -524,6 +524,8 @@ class _IncidentViewPageState extends State<IncidentViewPage> {
           _KV('Location', r.location),
           _KV('Responsible Engineer', r.responsibleShiftEngg),
           _KV('Responsible HOD', r.responsibleHod),
+          if (r.hodHeadName.isNotEmpty)
+            _KV("HOD's Head", '${r.hodHeadName} (${r.hodHeadEmpCode})'),
           _KV('Contact Number', r.contactNumber),
           _KV('Status', incidentStatusLabel(r.status)),
           _KV('Raised By', raisedBy),
@@ -621,6 +623,14 @@ class _IncidentViewPageState extends State<IncidentViewPage> {
               _pill(complianceStatusLabel(a.status), color),
             ],
           ),
+          // Per-CAPA compliance (Oct-2026): which CAPA this row answers.
+          if (a.capaText.isNotEmpty) ...[
+            const SizedBox(height: 6),
+            Text(
+              '${a.capaSeq > 0 ? 'CAPA ${a.capaSeq}: ' : ''}${a.capaText}',
+              style: const TextStyle(fontSize: 12.5, color: kcValueDark, height: 1.3),
+            ),
+          ],
           if (a.submittedDate.isNotEmpty) ...[
             const SizedBox(height: 6),
             Text('Submitted on ${a.submittedDate}',
